@@ -13,7 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/systeme-rh-behavana/manifest.json">
+
 
 
     <style>
@@ -6410,7 +6411,8 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker.register('/systeme-rh-behavana/service-worker.js')
+
                 .then(registration => {
                 console.log('ServiceWorker voasoratra anarana: ', registration);
                 })

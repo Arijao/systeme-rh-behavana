@@ -1,14 +1,12 @@
 const CACHE_NAME = 'rh-behavana-cache-v1';
 // Ampidirina eto ny lisitry ny rakitra REHETRA ilain'ny fampiharana
 const urlsToCache = [
-  '/',
-  'index.html',
-  'roboto.css',
-  'icons.css',
-  // Ampio eto ny anaran'ireo rakitra JavaScript sy CSS hafa raha misy
-  // Ohatra: 'style.css', 'script.js'
+  '/systeme-rh-behavana/',
+  '/systeme-rh-behavana/index.html',
+  '/systeme-rh-behavana/roboto.css',
+  '/systeme-rh-behavana/icons.css',
   
-  // Ireo librairies ampiasaina
+  // Ireo librairies dia tsy ovaina satria adiresy feno (URL) izy ireo
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
@@ -18,10 +16,11 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/chart.js',
 
   // Ireo sary famantarana
-  'images/icon-192.png',
-  'images/icon-512.png',
-  'images/maskable-icon.png'
+  '/systeme-rh-behavana/images/icon-192.png',
+  '/systeme-rh-behavana/images/icon-512.png',
+  '/systeme-rh-behavana/images/maskable-icon.png'
 ];
+
 
 // Dingana 1: Fametrahana (Installation )
 self.addEventListener('install', event => {
