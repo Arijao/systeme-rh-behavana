@@ -9,17 +9,17 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/systeme-rh-behavana/images/icon-192.png",
+      "src": "/systeme-rh-behavana/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/systeme-rh-behavana/images/icon-512.png",
+      "src": "/systeme-rh-behavana/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "/systeme-rh-behavana/images/maskable-icon.png",
+      "src": "/systeme-rh-behavana/maskable-icon.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"

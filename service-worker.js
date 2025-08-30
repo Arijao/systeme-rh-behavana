@@ -16,9 +16,9 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/chart.js',
 
   // Ireo sary famantarana
-  '/systeme-rh-behavana/images/icon-192.png',
-  '/systeme-rh-behavana/images/icon-512.png',
-  '/systeme-rh-behavana/images/maskable-icon.png'
+  '/systeme-rh-behavana/icon-192.png',
+  '/systeme-rh-behavana/icon-512.png',
+  '/systeme-rh-behavana/maskable-icon.png'
 ];
 
 
