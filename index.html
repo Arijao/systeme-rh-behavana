@@ -1123,6 +1123,12 @@
                 <span class="material-icons">payments</span>
                 Paie
             </button>
+            
+            <button class="nav-tab" onclick="showSection('stc')">
+                <span class="material-icons">exit_to_app</span>
+                Solde de Tout Compte
+            </button>
+
             <button class="nav-tab" onclick="showSection('payments')">
                 <span class="material-icons">history</span>
                 Paiements
@@ -1673,6 +1679,31 @@
             </div>
         </div>
 
+        <!-- Solde de Tout Compte Section -->
+        <div id="stc" class="section">
+            <div class="card">
+                <h2><span class="material-icons">exit_to_app</span>Calcul du Solde de Tout Compte</h2>
+                <p style="margin-top: -12px; margin-bottom: 20px; color: var(--md-sys-color-on-surface-variant);">
+                    Calculez et finalisez le paiement pour les employés qui quittent l'entreprise.
+                </p>
+
+                <div class="form-group">
+                    <label>Sélectionner l'Employé (Départ Programmé)</label>
+                    <div class="select-dropdown">
+                        <select class="form-control" id="stcEmployeeSelect" onchange="calculateSTC()">
+                            <option value="">-- Choisir un employé --</option>
+                            <!-- Ho fenoina amin'ny JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <div id="stcResultsContainer" style="margin-top: 24px; display: none;">
+                    <!-- Ho fenoina amin'ny JavaScript ny vokatry ny kajy -->
+                </div>
+            </div>
+        </div>
+
+
         <!-- Reports Section -->
         <div id="reports" class="section">
             <div class="stats-grid">
@@ -1878,6 +1909,20 @@
                         <input type="text" class="form-control currency-input" id="editEmployeeSalary" required data-type="currency">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Statut de l'Employé</label>
+                    <div class="select-dropdown">
+                        <select class="form-control" id="employeeStatus">
+                            <option value="actif">Actif</option>
+                            <option value="depart">Départ Programmé</option>
+                            <option value="inactif">Inactif (A quitté)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" id="departureDateContainer" style="display: none;">
+                    <label>Date de Départ</label>
+                    <input type="date" class="form-control" id="employeeDepartureDate">
+                </div>
                 <button type="submit" class="btn">
                     <span class="material-icons">save</span>
                     Sauvegarder
@@ -1971,6 +2016,20 @@
                         <label>Salaire Mensuel (Ar)</label>
                         <input type="text" class="form-control currency-input" id="employeeSalary" required data-type="currency">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label>Statut de l'Employé</label>
+                    <div class="select-dropdown">
+                        <select class="form-control" id="employeeStatus">
+                            <option value="actif">Actif</option>
+                            <option value="depart">Départ Programmé</option>
+                            <option value="inactif">Inactif (A quitté)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" id="departureDateContainer" style="display: none;">
+                    <label>Date de Départ</label>
+                    <input type="date" class="form-control" id="employeeDepartureDate">
                 </div>
                 <button type="submit" class="btn">
                     <span class="material-icons">add</span>
@@ -2426,6 +2485,9 @@
                 employees[employeeIndex].gender = newGender;
                 employees[employeeIndex].salary = newSalary;
                 employees[employeeIndex].groupId = newGroupId || null;
+                employees[employeeIndex].status = document.getElementById('editEmployeeStatus').value;
+                employees[employeeIndex].departureDate = document.getElementById('editEmployeeDepartureDate').value || null;
+
 
                 await saveData();
                 closeModal('editEmployeeModal');
@@ -3966,11 +4028,11 @@
             const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
 
             // Sivana ny mpiasa (tsy miova)
-            let filteredEmployees = employees;
+            let filteredEmployees = employees.filter(e => e.status !== 'inactif');
             if (groupFilter === 'none') {
-                filteredEmployees = employees.filter(emp => !emp.groupId);
+                filteredEmployees = filteredEmployees.filter(emp => !emp.groupId);
             } else if (groupFilter !== 'all') {
-                filteredEmployees = employees.filter(emp => emp.groupId === groupFilter);
+                filteredEmployees = filteredEmployees.filter(emp => emp.groupId === groupFilter);
             }
             if (searchTerm) {
                 filteredEmployees = filteredEmployees.filter(emp => 
@@ -4055,31 +4117,32 @@
             };
         }
 
-
-
         function displayAttendance() {
             const container = document.getElementById('attendanceList');
             const selectedDate = document.getElementById('attendanceDate').value;
+            const searchTerm = document.getElementById('attendanceEmployeeSearch').value.toLowerCase();
 
             if (!selectedDate) {
-                container.innerHTML = '<p>Veuillez sélectionner une date.</p>';
-                document.getElementById('attendancePagination').innerHTML = '';
+                container.innerHTML = '<p style="text-align: center; padding: 20px;">Veuillez sélectionner une date pour commencer.</p>';
+                document.getElementById('attendancePagination').innerHTML = ''; 
                 return;
             }
 
+            // Raha mbola tsy misy firaketana ho an'io daty io, dia amboarina ny "objet" banga
             if (!attendance[selectedDate]) {
                 attendance[selectedDate] = {};
             }
-            
-            const searchTerm = document.getElementById('attendanceEmployeeSearch').value.toLowerCase();
-            const filteredEmployees = employees.filter(emp => 
-                emp.name.toLowerCase().includes(searchTerm) || 
+
+            let activeEmployees = employees.filter(e => e.status !== 'inactif' || !e.status);
+
+            const filteredEmployees = activeEmployees.filter(emp =>
+                emp.name.toLowerCase().includes(searchTerm) ||
                 emp.position.toLowerCase().includes(searchTerm)
             );
 
-            // Lojika pagination
             const totalItems = filteredEmployees.length;
             const totalPages = Math.ceil(totalItems / attendanceItemsPerPage);
+
             if (attendanceCurrentPage > totalPages) {
                 attendanceCurrentPage = totalPages > 0 ? totalPages : 1;
             }
@@ -4087,57 +4150,67 @@
             const endIndex = startIndex + attendanceItemsPerPage;
             const paginatedEmployees = filteredEmployees.slice(startIndex, endIndex);
 
-            container.innerHTML = paginatedEmployees.map(employee => {
-                // ... (ny kaody fampisehoana ny attendance-item dia tsy miova) ...
-                const presenceData = attendance[selectedDate][employee.id];
-                let presenceHTML = '';
-                if (presenceData) {
-                    const arrivalTime = presenceData.arrivee || 'N/A';
-                    const departureTime = presenceData.depart || '...';
-                    const method = presenceData.method || 'MANUAL';
-                    const methodColor = method === 'QR' ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-secondary)';
-                    const methodIcon = method === 'QR' ? 'qr_code_scanner' : 'edit';
-                    presenceHTML = `
-                        <div style="text-align: right;">
-                            <div style="font-size: 14px; margin-bottom: 8px;">
-                                <span>Arrivée: <b>${arrivalTime}</b></span> | <span>Départ: <b>${departureTime}</b></span>
-                                <span style="color: ${methodColor}; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin-left: 8px;">
-                                    <span class="material-icons" style="font-size: 14px;">${methodIcon}</span> ${method}
-                                </span>
+            if (paginatedEmployees.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 20px;">Aucun employé trouvé pour la date et les filtres sélectionnés.</p>`;
+            } else {
+            
+                container.innerHTML = paginatedEmployees.map(employee => {
+                    const presenceData = attendance[selectedDate]?.[employee.id];
+                    let presenceHTML = '';
+
+                    if (presenceData) {
+                        const arrivalTime = presenceData.arrivee || 'N/A';
+                        const departureTime = presenceData.depart || '...';
+                        const method = presenceData.method || 'MANUAL';
+                        const methodColor = method === 'QR' ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-secondary)';
+                        const methodIcon = method === 'QR' ? 'qr_code_scanner' : 'edit';
+
+                        presenceHTML = `
+                            <div style="text-align: right;">
+                                <div style="font-size: 14px; margin-bottom: 8px;">
+                                    <span>Arrivée: <b>${arrivalTime}</b></span> | <span>Départ: <b>${departureTime}</b></span>
+                                    <span style="color: ${methodColor}; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin-left: 8px;">
+                                        <span class="material-icons" style="font-size: 14px;">${methodIcon}</span> ${method}
+                                    </span>
+                                </div>
+                                <!-- Asehoy ny bokotra "Départ" raha mbola tsy nanao izy -->
+                                ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
+                                <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
                             </div>
-                            ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
-                            <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
+                        `;
+                    } else {
+                        // Raha mbola tsy nanao pointage
+                        presenceHTML = `<button class="btn btn-success" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'arrivee', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">login</span> Arrivée</button>`;
+                    }
+
+                    return `
+                        <div class="attendance-item">
+                            <div class="attendance-status">
+                                <div class="status-indicator ${presenceData ? 'present' : ''}"></div>
+                                <div>
+                                    <h4 class="employee-name">${employee.name}</h4>
+                                    <p class="employee-position">${employee.position}</p>
+                                </div>
+                            </div>
+                            <div>${presenceHTML}</div>
                         </div>
                     `;
-                } else {
-                    presenceHTML = `<button class="btn btn-success" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'arrivee', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">login</span> Arrivée</button>`;
-                }
-                return `
-                    <div class="attendance-item">
-                        <div class="attendance-status">
-                            <div class="status-indicator ${presenceData ? 'present' : ''}"></div>
-                            <div><h4 class="employee-name">${employee.name}</h4><p class="employee-position">${employee.position}</p></div>
-                        </div>
-                        <div>${presenceHTML}</div>
-                    </div>
-                `;
-            }).join('');
+                }).join('');
+            }
 
-            // Fampisehoana ny bokotra PAGINATION
             renderPaginationControls(
-                'attendancePagination', 
-                attendanceCurrentPage, 
-                totalPages, 
-                totalItems, 
-                attendanceItemsPerPage, 
+                'attendancePagination',
+                attendanceCurrentPage,
+                totalPages,
+                totalItems,
+                attendanceItemsPerPage,
                 (page) => {
                     attendanceCurrentPage = page;
-                    displayAttendance();
+                    displayAttendance(); 
                 }
             );
         }
 
-        // SOLOINA MANONTOLO AMIN'ITY NY displayAdvances()
         function displayAdvances() {
             const container = document.getElementById('advancesList');
     
@@ -4571,12 +4644,12 @@
             let unpaidEmployeesData = [];
 
             // Sivana ny mpiasa
-            let employeesToProcess = employees;
+            let employeesToProcess = employees.filter(e => e.status === 'actif' || e.status === 'depart' || !e.status);
             if (selectedGroupId !== 'all') {
                 employeesToProcess = employeesToProcess.filter(emp => emp.groupId === selectedGroupId);
             }
             if (selectedEmployeeId) {
-                employeesToProcess = employees.filter(e => e.id === selectedEmployeeId);
+                employeesToProcess = employeesToProcess.filter(e => e.id === selectedEmployeeId);
             }
 
             if (employeesToProcess.length === 0) {
@@ -5089,20 +5162,17 @@
         // ===============================
         // SELECTS ET FORMULAIRES
         // ===============================
-        // ===============================
-        // SELECTS ET FORMULAIRES
-        // ===============================
         /**
          * Mameno ny lisitra fisafidianana mpiasa rehetra.
          * Afaka mandray sivana vondrona mba hampisehoana mpiasa voafantina ihany.
          * @param {string | null} groupIdFilter - Ny ID an'ny vondrona hasivana. Raha null, dia ny mpiasa rehetra no alaina.
          */
         function populateEmployeeSelects(groupIdFilter = null) {
-            let employeesToList = employees;
+            let employeesToList = employees.filter(e => e.status === 'actif' || e.status === 'depart' || !e.status);
 
             // Raha misy sivana vondrona, dia ireo mpiasa ao anatiny ihany no alaina
             if (groupIdFilter) {
-                employeesToList = employees.filter(emp => emp.groupId === groupIdFilter);
+                employeesToList = employeesToList.filter(emp => emp.groupId === groupIdFilter);
             }
 
             const employeeOptionsHTML = employeesToList.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
@@ -5155,12 +5225,10 @@
                 position,
                 gender,
                 salary,
-                
-                // --- DINGANA 2: Ampidirina ao anatin'ilay object "employee" ilay groupId ---
-                // Raha tsy misy voafidy dia tehirizina ho 'null' izy, izay midika hoe "tsy manana vondrona"
-                groupId: groupId || null, 
-                
-                dateAdded: new Date().toISOString()
+                groupId: groupId || null,                
+                dateAdded: new Date().toISOString(),
+                status: 'actif', // Rehefa mpiasa vaovao dia "Actif" foana ny satany
+                departureDate: null
             };
 
             employees.push(employee);
@@ -6443,6 +6511,132 @@
                 console.error("Erreur d'importation:", error);
             }
         }
+        document.getElementById('employeeStatus').addEventListener('change', function() {
+            const departureDateContainer = document.getElementById('departureDateContainer');
+            if (this.value === 'depart' || this.value === 'inactif') {
+                departureDateContainer.style.display = 'block';
+            } else {
+                departureDateContainer.style.display = 'none';
+            }
+        });
+        // Fonction vaovao tanteraka
+        async function calculateSTC() {
+            const employeeId = document.getElementById('stcEmployeeSelect').value;
+            const container = document.getElementById('stcResultsContainer');
+
+            if (!employeeId) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = '<div class="loading"></div><p>Calcul en cours...</p>';
+
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee || !employee.departureDate) {
+                container.innerHTML = '<p class="alert alert-error">Erreur: Date de départ non définie pour cet employé.</p>';
+                return;
+            }
+
+            const departureDate = new Date(employee.departureDate);
+            const lastPayMonth = getLastPaidMonth(employeeId); // Mila amboarina ity fonction ity
+            const startDateForCalc = getStartDateForCalculation(lastPayMonth, departureDate);
+
+            let totalDaysToPay = 0;
+            let totalAdvancesToDeduct = 0;
+            let detailsHTML = '';
+
+            // Kajiana isan'andro manomboka amin'ny andro farany nandoavana karama
+            for (let d = new Date(startDateForCalc); d <= departureDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                const monthStr = dateStr.slice(0, 7);
+                
+                // Kajiana ny andro niasana
+                const presence = countPresenceDays(employeeId, monthStr, dateStr); // Ovaina kely ny countPresenceDays
+                totalDaysToPay += presence;
+
+                // Kajiana ny trosa
+                const advanceOnDay = advances.filter(adv => adv.employeeId === employeeId && adv.date === dateStr)
+                                            .reduce((sum, adv) => sum + adv.amount, 0);
+                totalAdvancesToDeduct += advanceOnDay;
+
+                if (presence > 0 || advanceOnDay > 0) {
+                    detailsHTML += `<li>${dateStr}: Présence: ${presence} jour(s) | Avance: ${formatCurrency(advanceOnDay)}</li>`;
+                }
+            }
+
+            // Kajy farany
+            const dailySalary = employee.salary / 30; // Heverina ho 30 andro ny volana
+            const grossSalaryToPay = dailySalary * totalDaysToPay;
+            const netSalaryToPay = grossSalaryToPay - totalAdvancesToDeduct;
+
+            // Fampisehoana ny vokany
+            container.innerHTML = `
+                <h3>Détail du Solde pour ${employee.name}</h3>
+                <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString()}</strong> au <strong>${departureDate.toLocaleDateString()}</strong></p>
+                
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="stat-card">
+                        <div class="stat-content"><h3>${totalDaysToPay.toFixed(2)}</h3><p>Jours à Payer</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content"><h3>${formatCurrency(grossSalaryToPay)}</h3><p>Salaire Brut</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content"><h3>${formatCurrency(totalAdvancesToDeduct)}</h3><p>Avances à Déduire</p></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px; background-color: var(--md-sys-color-primary-container);">
+                    <h2 style="color: var(--md-sys-color-on-primary-container);">Montant Final à Payer: ${formatCurrency(netSalaryToPay)}</h2>
+                </div>
+
+                <h4>Détails journaliers:</h4>
+                <ul style="max-height: 150px; overflow-y: auto; padding: 10px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">${detailsHTML}</ul>
+
+                <button class="btn btn-success" style="margin-top: 24px;" onclick="finalizeSTC('${employee.id}', ${netSalaryToPay})">
+                    <span class="material-icons">check_circle</span>
+                    Valider et Payer le Solde
+                </button>
+            `;
+        }
+
+        // Fonction fanampiny ilaina
+        function populateSTCEmployeeSelect() {
+            const select = document.getElementById('stcEmployeeSelect');
+            const employeesToLeave = employees.filter(e => e.status === 'depart');
+            select.innerHTML = '<option value="">-- Choisir un employé --</option>' + 
+                            employeesToLeave.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        }
+
+        async function finalizeSTC(employeeId, amount) {
+            if (confirm(`Vous êtes sur le point de payer un solde de ${formatCurrency(amount)} à cet employé. Cette action est définitive. Continuer ?`)) {
+                // 1. Tehirizina ho toy ny karama manokana
+                const stcRecord = {
+                    id: `stc-${employeeId}-${Date.now()}`,
+                    employeeId: employeeId,
+                    month: 'SOLDE_DE_TOUT_COMPTE',
+                    amount: amount,
+                    date: new Date().toISOString()
+                };
+                payrolls.push(stcRecord);
+
+                // 2. Ovaina ho "Inactif" ny satan'ilay mpiasa
+                const employeeIndex = employees.findIndex(e => e.id === employeeId);
+                if (employeeIndex > -1) {
+                    employees[employeeIndex].status = 'inactif';
+                }
+
+                // 3. Tehirizina ny fanovana rehetra
+                await saveData();
+
+                // 4. Havaozina ny interface
+                showAlert('Solde de tout compte payé et finalisé avec succès!', 'success');
+                populateSTCEmployeeSelect(); // Esorina ao anaty lisitra ilay mpiasa
+                document.getElementById('stcResultsContainer').style.display = 'none';
+            }
+        }
+
     </script>
 </body>
 </html>
