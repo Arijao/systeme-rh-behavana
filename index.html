@@ -5308,60 +5308,13 @@
         // ===================================================
         //  importData (VERSION NOHATSARAINA SY AZO ANTOKA)
         // ===================================================
-        async function importData(event) {
+        function importData(event) {
             const file = event.target.files[0];
-            if (!file) {
-                return;
+            if (file) {
+                handleImportedFile(file); // Miantso ilay fonction iraisana
             }
-
-            try {
-                // Dingana 1: Mamaky ny votoatin'ny fichier amin'ny fomba maoderina
-                const fileContent = await file.text();
-                const data = JSON.parse(fileContent);
-
-                // Dingana 2: Fanamarinana ilay fichier (tsy miova)
-                if (!data.employees || !data.attendance || !data.dbType) {
-                    showAlert("Erreur: Le fichier de sauvegarde semble invalide ou corrompu.", 'error');
-                    return;
-                }
-
-                // Dingana 3: Famafisana avy amin'ny mpampiasa (tsy miova)
-                const confirmationMessage = `
-                    Vous êtes sur le point de restaurer une sauvegarde.
-                    ATTENTION: Toutes les données actuelles seront écrasées.
-                    
-                    Date de la sauvegarde: ${formatDate(data.exportDate || new Date())}
-                    Version: ${data.version || 'Inconnue'}
-                    
-                    Êtes-vous sûr de vouloir continuer ?
-                `;
-
-                if (confirm(confirmationMessage)) {
-                    // Dingana 4: Fandraisana ny angona (tsy miova)
-                    employees = data.employees || [];
-                    attendance = data.attendance || {};
-                    payrolls = data.payrolls || [];
-                    advances = data.advances || [];
-                    qrAttendance = data.qrAttendance || [];
-                    qrSettings = data.qrSettings || { size: 256, color: '#6750A4' };
-                    groups = data.groups || [];
-
-                    // Dingana 5: Fitehirizana sy famerenana (tsy miova)
-                    await saveData();
-                    
-                    showAlert('Données importées avec succès! La page va se rafraîchir.', 'success');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                }
-            } catch (error) {
-                // Mitantana ny erreur rehetra mety hitranga (famakiana, JSON.parse)
-                showAlert('Erreur lors de l\'importation: Fichier invalide ou corrompu.', 'error');
-                console.error("Erreur d'importation:", error);
-            } finally {
-                // Manadio foana ny input na nahomby na tsia
-                event.target.value = '';
-            }
+            // Diovina foana ny input mba hahafahana mampiditra rakitra mitovy anarana indray
+            event.target.value = '';
         }
 
 
@@ -5812,6 +5765,26 @@
             }, 350)); // Miandry 350ms
         }
 
+        window.addEventListener('load', () => {
+            if ("launchQueue" in window) {
+                launchQueue.setConsumer(async (launchParams) => {
+                    if (!launchParams.files || launchParams.files.length === 0) {
+                        return;
+                    }
+
+                    // Alaina ilay rakitra voalohany voazara
+                    const fileHandle = launchParams.files[0];
+                    const file = await fileHandle.getFile();
+                    
+                    // Ampiasaina ilay fonction importData efa anananao
+                    // Fa milaamboarina kely izy mba handray "file object"
+                    // fa tsy "event" intsony.
+                    
+                    // Antsoina ilay fonction vaovao (hamboarintsika eto ambany)
+                    handleImportedFile(file);
+                });
+            }
+        });
 
         document.getElementById('employeeSearch')?.addEventListener('input', () => displayEmployees());
 
@@ -6421,7 +6394,55 @@
                 });
             });
         }
+        async function handleImportedFile(file) {
+            if (!file) {
+                showAlert("Tsy nisy rakitra voafantina.", "warning");
+                return;
+            }
 
+            try {
+                const fileContent = await file.text();
+                const data = JSON.parse(fileContent);
+
+                if (!data.employees || !data.attendance || !data.dbType) {
+                    showAlert("Erreur: Le fichier de sauvegarde semble invalide ou corrompu.", 'error');
+                    return;
+                }
+
+                const confirmationMessage = `
+                    Vous êtes sur le point de restaurer une sauvegarde par partage.
+                    ATTENTION: Toutes les données actuelles seront écrasées.
+                    
+                    Date de la sauvegarde: ${formatDate(data.exportDate || new Date())}
+                    Version: ${data.version || 'Inconnue'}
+                    
+                    Êtes-vous sûr de vouloir continuer ?
+                `;
+
+                if (confirm(confirmationMessage)) {
+                    employees = data.employees || [];
+                    attendance = data.attendance || {};
+                    payrolls = data.payrolls || [];
+                    advances = data.advances || [];
+                    qrAttendance = data.qrAttendance || [];
+                    qrSettings = data.qrSettings || { size: 256, color: '#6750A4' };
+                    groups = data.groups || [];
+
+                    await saveData();
+                    
+                    showAlert('Données importées avec succès! La page va se rafraîchir.', 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert("Importation annulée par l'utilisateur.", "info");
+                }    
+                
+            } catch (error) {
+                showAlert('Erreur lors de l\'importation: Fichier invalide ou corrompu.', 'error');
+                console.error("Erreur d'importation:", error);
+            }
+        }
     </script>
 </body>
 </html>
