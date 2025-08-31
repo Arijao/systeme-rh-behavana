@@ -1912,7 +1912,7 @@
                 <div class="form-group">
                     <label>Statut de l'Employé</label>
                     <div class="select-dropdown">
-                        <select class="form-control" id="employeeStatus">
+                        <select class="form-control" id="editEmployeeStatus">
                             <option value="actif">Actif</option>
                             <option value="depart">Départ Programmé</option>
                             <option value="inactif">Inactif (A quitté)</option>
@@ -1921,7 +1921,7 @@
                 </div>
                 <div class="form-group" id="departureDateContainer" style="display: none;">
                     <label>Date de Départ</label>
-                    <input type="date" class="form-control" id="employeeDepartureDate">
+                    <input type="date" class="form-control" id="editEmployeeDepartureDate">
                 </div>
                 <button type="submit" class="btn">
                     <span class="material-icons">save</span>
@@ -2445,7 +2445,7 @@
 
             // ===================================================
             //  FANITSINA: Mampifandray ny formulaire fanovana
-            // ===================================================
+            // ==================================================
             document.getElementById('editEmployeeForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const employeeId = document.getElementById('editEmployeeId').value;
@@ -2454,6 +2454,10 @@
                 const newGender = document.getElementById('editEmployeeGender').value;
                 const newSalary = getCurrencyValue('editEmployeeSalary');
                 const newGroupId = document.getElementById('editEmployeeGroup').value;
+
+                // Alaina ny sanda avy amin'ireo sehatra voaitsy
+                const newStatus = document.getElementById('editEmployeeStatus').value;
+                const newDepartureDate = document.getElementById('editEmployeeDepartureDate').value || null;
 
                 if (!employeeId || !newName || !newPosition || newSalary === 0) {
                     showAlert("Veuillez remplir tous les champs correctement.", 'error');
@@ -2466,14 +2470,14 @@
                     return;
                 }
 
+                // Havaozina ny fampahalalana rehetra
                 employees[employeeIndex].name = newName;
                 employees[employeeIndex].position = newPosition;
                 employees[employeeIndex].gender = newGender;
                 employees[employeeIndex].salary = newSalary;
                 employees[employeeIndex].groupId = newGroupId || null;
-                employees[employeeIndex].status = document.getElementById('editEmployeeStatus').value;
-                employees[employeeIndex].departureDate = document.getElementById('editEmployeeDepartureDate').value || null;
-
+                employees[employeeIndex].status = newStatus;
+                employees[employeeIndex].departureDate = newDepartureDate;
 
                 await saveData();
                 closeModal('editEmployeeModal');
@@ -2482,6 +2486,7 @@
                 populateEmployeeSelects();
                 showAlert("Les informations de l'employé ont été mises à jour avec succès!", 'success');
             });
+
 
             // ===================================================
             //  FANAMPINY HO AN'NY SMART SEARCH (STATUT EMPLOYÉ)
@@ -5187,19 +5192,17 @@
         // =======================================================================
         //  VERSION FARANY INDRINDRA - Mampiasa ID vaovao tanteraka
         // =======================================================================
+        // IZAO NO TOKONY HO IZY
         document.getElementById('employeeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             try {
-                // 1. Fandraisana ny sanda avy amin'ireo sehatra manana ID vaovao (_add)
                 const name = capitalizeWords(document.getElementById('employeeName_add').value.trim());
                 const position = capitalizeWords(document.getElementById('employeePosition_add').value.trim());
                 const gender = document.getElementById('employeeGender_add').value;
-                // Ny getCurrencyValue dia mila ny ID marina koa
                 const salary = getCurrencyValue('employeeSalary_add');
                 const groupId = document.getElementById('employeeGroup_add').value;
 
-                // 2. Fanamarinana hentitra
                 if (!name || !position || !gender || salary <= 0) {
                     showAlert("Veuillez remplir tous les champs correctement.", 'error');
                     return;
@@ -5209,7 +5212,6 @@
                     return;
                 }
 
-                // 3. Famoronana ilay "objet" mpiasa vaovao
                 const newEmployee = {
                     id: Date.now().toString(),
                     name: name,
@@ -5218,20 +5220,17 @@
                     salary: salary,
                     groupId: groupId || null,
                     dateAdded: new Date().toISOString(),
-                    status: 'actif',
-                    departureDate: null
+                    status: 'actif', // Mpiasa vaovao dia 'actif' foana
+                    departureDate: null // Tsy manana daty fialana
                 };
 
-                // 4. Fanampiana sy Fitehirizana
                 employees.push(newEmployee);
                 await saveData();
 
-                // 5. Fanavaozana ny Interface
                 updateStats();
                 populateEmployeeSelects();
                 displayEmployees();
 
-                // 6. Famaranana
                 this.reset();
                 closeModal('addEmployeeModal');
                 showAlert('Employé ajouté avec succès!', 'success');
@@ -5241,7 +5240,6 @@
                 showAlert("Une erreur inattendue est survenue. Vérifiez la console.", 'error');
             }
         });
-
 
 
         document.getElementById('advanceForm').addEventListener('submit', async function(e) {
