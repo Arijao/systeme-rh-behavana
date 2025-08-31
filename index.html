@@ -6699,10 +6699,16 @@
 
         async function finalizeSTC(employeeId, amount) {
             if (confirm(`Vous êtes sur le point de payer un solde de ${formatCurrency(amount)} à cet employé. Cette action est définitive. Continuer ?`)) {
+                const employee = employees.find(e => e.id === employeeId);
+                if (!employee) {
+                    showAlert("Erreur: Employé non trouvé lors de la finalisation.", "error");
+                    return;
+                }
                 // 1. Tehirizina ho toy ny karama manokana
                 const stcRecord = {
                     id: `stc-${employeeId}-${Date.now()}`,
                     employeeId: employeeId,
+                    employeeName: employee.name, 
                     month: 'SOLDE_DE_TOUT_COMPTE',
                     amount: amount,
                     date: new Date().toISOString()
