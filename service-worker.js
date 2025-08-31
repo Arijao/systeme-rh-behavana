@@ -1,21 +1,20 @@
-// --- VERSION 3: Manitsy ny lalan'ny sary ho ao amin'ny faka (root) ---
-const CACHE_NAME = 'rh-behavana-cache-v3';
+// --- VERSION 5: Manala tanteraka ny maskable-icon ---
+const CACHE_NAME = 'rh-behavana-cache-v5';
 
 const urlsToCache = [
   // Ny pejy fototra
   '/systeme-rh-behavana/',
   '/systeme-rh-behavana/index.html',
   
-  // Ireo rakitra CSS
+  // Ireo rakitra CSS (averina eto indray satria tsy ireo no olana)
   '/systeme-rh-behavana/roboto.css',
   '/systeme-rh-behavana/icons.css',
   
-  // Ireo sary famantarana (ao amin'ny faka ankehitriny)
+  // Ireo sary famantarana (ireo tena misy ihany)
   '/systeme-rh-behavana/icon-192.png',
   '/systeme-rh-behavana/icon-512.png',
-  '/systeme-rh-behavana/maskable-icon.png',
 
-  // Ireo librairies ivelany (tsy miova mihitsy)
+  // Ireo librairies ivelany
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
@@ -25,35 +24,28 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
-// Dingana 1: Fametrahana (Installation )
+// Ny tohin'ny kaody (install, fetch, activate ) dia tsy miova
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache misokatra (v3)');
+        console.log('Cache misokatra (v5)');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Dingana 2: Fandraisana requete (Fetch)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Raha misy ao anaty cache dia io no averina
-        if (response) {
-          return response;
-        }
-        // Raha tsy misy dia alaina amin'ny aterineto
-        return fetch(event.request);
+        return response || fetch(event.request);
       })
   );
 });
 
-// Dingana 3: Fampiasana (Activation) - Manadio ny cache taloha
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME]; // Tehirizina fotsiny ny cache v3
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
