@@ -6519,20 +6519,6 @@
             }
         }
 
-        document.getElementById('editEmployeeStatus').addEventListener('change', function() {
-            // Antsoina ny container manana ny ID marina
-            const departureDateContainer = document.getElementById('editDepartureDateContainer');
-            
-            // Hamarino aloha raha hita ilay container
-            if (departureDateContainer) {
-                if (this.value === 'depart' || this.value === 'inactif') {
-                    departureDateContainer.style.display = 'block';
-                } else {
-                    departureDateContainer.style.display = 'none';
-                }
-            }
-        });
-
         // Fonction vaovao tanteraka
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6650,6 +6636,26 @@
                 document.getElementById('stcResultsContainer').style.display = 'none';
             }
         }
+        // =======================================================================
+        //  VERSION VOAHITSY - Mampiseho ny kalandrie rehefa miova ny sata
+        // =======================================================================
+        // Mampifandray ny hetsika amin'ilay SELECT marina ao anatin'ny MODAL FANovana
+        document.getElementById('editEmployeeStatus').addEventListener('change', function() {
+            // Alaina ilay DIV misy ilay kalandrie
+            const departureDateContainer = document.getElementById('editDepartureDateContainer');
+            
+            // Hamarino aloha raha hita ilay DIV
+            if (departureDateContainer) {
+                // Raha "Départ Programmé" na "Inactif" no voafidy, dia ASEHOY ilay kalandrie
+                if (this.value === 'depart' || this.value === 'inactif') {
+                    departureDateContainer.style.display = 'block';
+                } 
+                // Raha "Actif" no voafidy, dia AFENO ilay kalandrie
+                else {
+                    departureDateContainer.style.display = 'none';
+                }
+            }
+        });
 
     </script>
 </body>
