@@ -1919,7 +1919,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group" id="departureDateContainer" style="display: none;">
+                <div class="form-group" id="editDepartureDateContainer" style="display: none;">
                     <label>Date de Départ</label>
                     <input type="date" class="form-control" id="editEmployeeDepartureDate">
                 </div>
@@ -4452,12 +4452,11 @@
         }
 
         // Fonctions d'employés simplifiées
-        // IZAO NO TOKONY HO IZY (VERSION FENO)
         function editEmployee(id) {
             const employee = employees.find(emp => emp.id === id);
             if (!employee) return;
 
-            // Famenoana ireo sehatra efa nisy
+            // Famenoana ireo sehatra fototra
             document.getElementById('editEmployeeId').value = employee.id;
             document.getElementById('editEmployeeName').value = employee.name;
             document.getElementById('editEmployeePosition').value = employee.position;
@@ -4465,28 +4464,33 @@
             setCurrencyValue('editEmployeeSalary', employee.salary);
             document.getElementById('editEmployeeGroup').value = employee.groupId || "";
 
-            // --- IZAO NO FANAMPINY LEHIBE ---
-            // Famenoana ny sata sy ny daty fialana
+            // Fandraisana ireo element vaovao
             const statusSelect = document.getElementById('editEmployeeStatus');
             const departureDateInput = document.getElementById('editEmployeeDepartureDate');
-            const departureContainer = document.getElementById('editDepartureDateContainer');
+            const departureContainer = document.getElementById('editDepartureDateContainer'); // Mampiasa ny ID marina
 
-            // Apetraka ny sata ankehitriny (raha misy, raha tsy misy dia 'actif')
+            // Fanamarinana sao misy tsy hita ireo element
+            if (!statusSelect || !departureDateInput || !departureContainer) {
+                console.error("Erreur: Tsy hita ny sehatra status na date de départ ao amin'ny edit modal.");
+                openModal('editEmployeeModal'); // Sokafana ihany ny modal fa misy fampitandremana
+                return;
+            }
+
+            // Famenoana ny sata sy ny daty fialana
             statusSelect.value = employee.status || 'actif';
-            
-            // Apetraka ny daty fialana raha misy
             departureDateInput.value = employee.departureDate || '';
 
-            // Asehoy na afeno ny sehatry ny daty arakaraka ny sata
+            // Fampisehoana na fanafenana ny sehatry ny daty
             if (statusSelect.value === 'depart' || statusSelect.value === 'inactif') {
                 departureContainer.style.display = 'block';
             } else {
                 departureContainer.style.display = 'none';
             }
-            // --- FARAN'NY FANAMPINY ---
             
+            // Sokafana ny modal rehefa vita daholo ny zava-drehetra
             openModal('editEmployeeModal');
         }
+
 
 
         async function deleteEmployee(id) {
