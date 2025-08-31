@@ -5213,6 +5213,11 @@
             // --- DINGANA 1: Alaina ny ID an'ny vondrona voafidy ---
             const groupId = document.getElementById('employeeGroup').value;
 
+            // 2. Fanamarinana ny fampahalalana
+            if (!name || !position || !gender || salary <= 0) {
+                showAlert("Veuillez remplir tous les champs correctement.", 'error');
+                return;
+            }
             if (employees.some(emp => emp.name.toLowerCase() === name.toLowerCase())) {
                 showAlert('Un employé avec ce nom existe déjà!', 'error');
                 return;
@@ -5253,8 +5258,8 @@
             this.reset();
             showAlert('Employé ajouté avec succès!', 'success');
             closeModal('addEmployeeModal');
+            
         });
-
 
         document.getElementById('advanceForm').addEventListener('submit', async function(e) {
             e.preventDefault();
