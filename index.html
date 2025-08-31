@@ -6596,7 +6596,7 @@
 
 
         // =======================================================================
-        //  Solde de Tout Compte
+        //  VERSION  STC 
         // =======================================================================
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6612,43 +6612,46 @@
 
             const employee = employees.find(e => e.id === employeeId);
             if (!employee || !employee.departureDate) {
-                container.innerHTML = '<p class="alert alert-error">Erreur: Date de départ non définie pour cet employé.</p>';
+                container.innerHTML = '<p class="alert alert-error">Erreur: Date de départ non définie.</p>';
                 return;
             }
 
-            const departureDate = new Date(employee.departureDate + 'T23:59:59'); // Mba ho tafiditra ilay andro farany
+            const departureDate = new Date(employee.departureDate + 'T23:59:59');
             const lastPaidMonth = getLastPaidMonth(employeeId);
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
 
-            let totalDaysToPay = 0;
+            let totalGrossSalaryToPay = 0;
             let totalAdvancesToDeduct = 0;
+            let totalDaysToPay = 0;
             let detailsHTML = '';
 
-            // --- Boucle vaovao sy marina ---
-            // Mandalo ny volana rehetra ao anatin'ny fe-potoana
+            // --- Boucle vaovao: Mandalo ny volana rehetra ao anatin'ny fe-potoana ---
             for (let d = new Date(startDateForCalc); d <= departureDate; d.setMonth(d.getMonth() + 1)) {
                 const currentMonthStr = d.toISOString().slice(0, 7);
-                
-                // Kajiana ny andro niasana ho an'io volana io
+                const [year, month] = currentMonthStr.split('-').map(Number);
+                const daysInCurrentMonth = getDaysInMonth(year, month);
+
+                // 1. Kajiana ny andro niasana ho an'io volana io
                 const presenceInMonth = countPresenceDays(employeeId, currentMonthStr);
                 totalDaysToPay += presenceInMonth;
 
-                // Alaina ny trosa rehetra ho an'io volana io
+                // 2. Kajiana ny karama brut ho an'io volana io (mampiasa ny tena isan'ny andro)
+                const grossSalaryForMonth = (employee.salary / daysInCurrentMonth) * presenceInMonth;
+                totalGrossSalaryToPay += grossSalaryForMonth;
+
+                // 3. Alaina ny trosa rehetra ho an'io volana io
                 const advancesInMonth = advances
                     .filter(adv => adv.employeeId === employeeId && adv.date.startsWith(currentMonthStr))
                     .reduce((sum, adv) => sum + adv.amount, 0);
                 totalAdvancesToDeduct += advancesInMonth;
 
                 if (presenceInMonth > 0 || advancesInMonth > 0) {
-                    detailsHTML += `<li>Mois ${currentMonthStr}: Présence: ${presenceInMonth} jour(s) | Avances: ${formatCurrency(advancesInMonth)}</li>`;
+                    detailsHTML += `<li>Mois ${currentMonthStr}: Présence: ${presenceInMonth.toFixed(2)} j | Brut: ${formatCurrency(grossSalaryForMonth)} | Avances: ${formatCurrency(advancesInMonth)}</li>`;
                 }
             }
-            // --- FARAN'NY Boucle vaovao ---
+            // --- FARAN'NY Boucle ---
 
-            // Kajy farany
-            const dailySalary = employee.salary / 30;
-            const grossSalaryToPay = dailySalary * totalDaysToPay;
-            const netSalaryToPay = Math.max(0, grossSalaryToPay - totalAdvancesToDeduct);
+            const netSalaryToPay = Math.max(0, totalGrossSalaryToPay - totalAdvancesToDeduct);
 
             // Fampisehoana ny vokany
             container.innerHTML = `
@@ -6657,13 +6660,13 @@
                 
                 <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="stat-card">
-                        <div class="stat-content"><h3>${totalDaysToPay.toFixed(2)}</h3><p>Jours à Payer</p></div>
+                        <div class="stat-content"><h3>${totalDaysToPay.toFixed(2)}</h3><p>Total Jours à Payer</p></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-content"><h3>${formatCurrency(grossSalaryToPay)}</h3><p>Salaire Brut</p></div>
+                        <div class="stat-content"><h3>${formatCurrency(totalGrossSalaryToPay)}</h3><p>Total Salaire Brut</p></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-content"><h3>${formatCurrency(totalAdvancesToDeduct)}</h3><p>Avances à Déduire</p></div>
+                        <div class="stat-content"><h3>${formatCurrency(totalAdvancesToDeduct)}</h3><p>Total Avances</p></div>
                     </div>
                 </div>
 
@@ -6682,6 +6685,7 @@
                 </button>
             `;
         }
+
 
 
 
