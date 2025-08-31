@@ -4002,6 +4002,14 @@
                 case 'payments':
                     displayPayments();
                     break;
+                case 'stc':
+                    populateSTCEmployeeSelect(); // Ity no mameno ny lisitra
+                    // Diovina koa ny vokatry ny kajy teo aloha
+                    const stcContainer = document.getElementById('stcResultsContainer');
+                    if (stcContainer) {
+                        stcContainer.style.display = 'none';
+                    }
+                    break;
                 case 'reports':
                     updateReportStats();
                     break;
@@ -6510,14 +6518,21 @@
                 console.error("Erreur d'importation:", error);
             }
         }
-        document.getElementById('employeeStatus').addEventListener('change', function() {
-            const departureDateContainer = document.getElementById('departureDateContainer');
-            if (this.value === 'depart' || this.value === 'inactif') {
-                departureDateContainer.style.display = 'block';
-            } else {
-                departureDateContainer.style.display = 'none';
+
+        document.getElementById('editEmployeeStatus').addEventListener('change', function() {
+            // Antsoina ny container manana ny ID marina
+            const departureDateContainer = document.getElementById('editDepartureDateContainer');
+            
+            // Hamarino aloha raha hita ilay container
+            if (departureDateContainer) {
+                if (this.value === 'depart' || this.value === 'inactif') {
+                    departureDateContainer.style.display = 'block';
+                } else {
+                    departureDateContainer.style.display = 'none';
+                }
             }
         });
+
         // Fonction vaovao tanteraka
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
