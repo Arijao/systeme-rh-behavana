@@ -6545,6 +6545,50 @@
                 console.error("Erreur d'importation:", error);
             }
         }
+        // =======================================================================
+        //  FONCTION VAOVAO ILAINA - Maka ny volana farany nandoavana karama
+        // =======================================================================
+        /**
+         * Mitady ny volana farany nandoavana karama ho an'ny mpiasa iray.
+         * @param {string} employeeId - Ny ID an'ilay mpiasa.
+         * @returns {string|null} - Mamerina ny volana (oh: "2025-07") na null raha mbola tsy naloa.
+         */
+        function getLastPaidMonth(employeeId) {
+            // Sivana alaina daholo ny karama efa voaloan'ilay mpiasa
+            const employeePayments = payrolls.filter(p => p.employeeId === employeeId && p.month !== 'SOLDE_DE_TOUT_COMPTE');
+
+            // Raha tsy mbola nisy karama voaloa mihitsy
+            if (employeePayments.length === 0) {
+                return null;
+            }
+
+            // Alahatra avy amin'ny volana vao haingana indrindra mankany amin'ny ela indrindra
+            employeePayments.sort((a, b) => b.month.localeCompare(a.month));
+
+            // Averina ilay volana voalohany ao anaty lisitra (izay vao haingana indrindra)
+            return employeePayments[0].month;
+        }
+
+        /**
+         * Mamantatra ny daty tokony hanombohana ny kajy ny STC.
+         * @param {string|null} lastPayMonth - Ny volana farany naloa (oh: "2025-07").
+         * @param {Date} departureDate - Ny daty hialan'ilay mpiasa.
+         * @returns {Date} - Ny daty hanombohana ny kajy.
+         */
+        function getStartDateForCalculation(lastPayMonth, departureDate) {
+            // Raha mbola tsy naloa karama mihitsy ilay mpiasa
+            if (!lastPayMonth) {
+                // Kajiana manomboka amin'ny fiandohan'ny volana hialany
+                const startOfMonth = new Date(departureDate.getFullYear(), departureDate.getMonth(), 1);
+                return startOfMonth;
+            }
+
+            // Raha efa naloa karama izy
+            const [year, month] = lastPayMonth.split('-').map(Number);
+            // Ny daty hanombohana dia ny andro voalohan'ny volana MANARAKA an'ilay volana farany naloa
+            const startDate = new Date(year, month, 1); // Ny 'month' eto dia efa lasa volana manaraka satria ny index dia 0-11
+            return startDate;
+        }
 
         // Fonction vaovao tanteraka
         async function calculateSTC() {
