@@ -6575,27 +6575,28 @@
          * @param {Date} departureDate - Ny daty hialan'ilay mpiasa.
          * @returns {Date} - Ny daty hanombohana ny kajy.
          */
-        // IZAO NO TOKONY HO IZY
         function getStartDateForCalculation(lastPayMonth) {
-            // Raha mbola tsy naloa karama mihitsy ilay mpiasa, manomboka amin'ny andro voalohan'ity volana ity
+            // Raha mbola tsy naloa karama mihitsy ilay mpiasa
             if (!lastPayMonth) {
+                // Tsy maintsy fantarintsika ny daty nidirany. Raha tsy misy, dia alaina ny fiandohan'ity volana ity.
+                // Ity dia tokony hatsaraina any aoriana amin'ny fampidirana "date d'embauche".
                 const today = new Date();
                 return new Date(today.getFullYear(), today.getMonth(), 1);
             }
 
-            // Raha efa naloa karama izy
+            // Raha efa naloa karama izy (ohatra: '2025-07')
             const [year, month] = lastPayMonth.split('-').map(Number);
-            // Ny daty hanombohana dia ny andro voalohan'ny volana MANARAKA an'ilay volana farany naloa
-            // Ny 'month' eto dia lasa volana manaraka satria ny index an'ny volana dia 0-11 (Jan=0, Feb=1, sns.)
-            // Ohatra: raha '2025-08' (Aogositra, volana faha-8) no farany, dia [2025, 8] no azo.
-            // Ny new Date(2025, 8, 1) dia manome ny 1 Septambra 2025.
+            // Ny daty hanombohana dia ny andro voalohan'ny volana MANARAKA.
+            // Ohatra: raha '2025-07' no farany, dia ny 1 Aogositra 2025 no manomboka ny kajy.
+            // Ny new Date(year, month, 1) dia manome ny volana manaraka satria ny 'month' dia 0-11.
             const startDate = new Date(year, month, 1); 
             return startDate;
         }
 
 
+
         // =======================================================================
-        //  VERSION  calculateSTC - 
+        //  Solde de Tout Compte
         // =======================================================================
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6615,7 +6616,7 @@
                 return;
             }
 
-            const departureDate = new Date(employee.departureDate + 'T00:00:00'); // Mba ho azo antoka ny daty
+            const departureDate = new Date(employee.departureDate + 'T23:59:59'); // Mba ho tafiditra ilay andro farany
             const lastPaidMonth = getLastPaidMonth(employeeId);
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
 
@@ -6623,44 +6624,29 @@
             let totalAdvancesToDeduct = 0;
             let detailsHTML = '';
 
-            // --- FANITSIANA LEHIBE ETO: Ny fomba fiasan'ny boucle ---
-            // Kajiana isan'andro manomboka amin'ny andro voalohany tokony hokajiana ka hatramin'ny andro fialany
-            for (let d = new Date(startDateForCalc); d <= departureDate; d.setDate(d.getDate() + 1)) {
-                const dateStr = d.toISOString().split('T')[0];
-                const monthStr = dateStr.slice(0, 7);
+            // --- Boucle vaovao sy marina ---
+            // Mandalo ny volana rehetra ao anatin'ny fe-potoana
+            for (let d = new Date(startDateForCalc); d <= departureDate; d.setMonth(d.getMonth() + 1)) {
+                const currentMonthStr = d.toISOString().slice(0, 7);
                 
-                // Alaina ny firaketana fahatongavana ho an'io andro io
-                const dayAttendanceData = attendance[dateStr]?.[employeeId];
+                // Kajiana ny andro niasana ho an'io volana io
+                const presenceInMonth = countPresenceDays(employeeId, currentMonthStr);
+                totalDaysToPay += presenceInMonth;
 
-                let presenceToday = 0;
-                if (dayAttendanceData) {
-                    // Kajiana ny faharetan'ny asa ho an'io andro io
-                    const duration = calculateWorkDuration(dayAttendanceData.arrivee, dayAttendanceData.depart);
-                    const durationInHours = duration.totalMinutes / 60;
-                    
-                    if (durationInHours >= 4) {
-                        presenceToday = 1; // Andro feno
-                    } else if (durationInHours > 0) {
-                        presenceToday = 0.5; // Antsasaky ny andro
-                    }
-                }
-                totalDaysToPay += presenceToday;
-
-                // Alaina ny trosa ho an'io andro io
-                const advanceOnDay = advances
-                    .filter(adv => adv.employeeId === employeeId && adv.date === dateStr)
+                // Alaina ny trosa rehetra ho an'io volana io
+                const advancesInMonth = advances
+                    .filter(adv => adv.employeeId === employeeId && adv.date.startsWith(currentMonthStr))
                     .reduce((sum, adv) => sum + adv.amount, 0);
-                totalAdvancesToDeduct += advanceOnDay;
+                totalAdvancesToDeduct += advancesInMonth;
 
-                // Asehoy ao anaty antsipiriany raha misy hetsika
-                if (presenceToday > 0 || advanceOnDay > 0) {
-                    detailsHTML += `<li>${formatDate(dateStr, true)}: Présence: ${presenceToday} jour(s) | Avance: ${formatCurrency(advanceOnDay)}</li>`;
+                if (presenceInMonth > 0 || advancesInMonth > 0) {
+                    detailsHTML += `<li>Mois ${currentMonthStr}: Présence: ${presenceInMonth} jour(s) | Avances: ${formatCurrency(advancesInMonth)}</li>`;
                 }
             }
-            // --- FARAN'NY FANITSIANA ---
+            // --- FARAN'NY Boucle vaovao ---
 
             // Kajy farany
-            const dailySalary = employee.salary / 30; // Heverina ho 30 andro ny volana
+            const dailySalary = employee.salary / 30;
             const grossSalaryToPay = dailySalary * totalDaysToPay;
             const netSalaryToPay = Math.max(0, grossSalaryToPay - totalAdvancesToDeduct);
 
@@ -6685,7 +6671,7 @@
                     <h2 style="color: var(--md-sys-color-on-primary-container);">Montant Final à Payer: ${formatCurrency(netSalaryToPay)}</h2>
                 </div>
 
-                <h4>Détails journaliers:</h4>
+                <h4>Résumé mensuel:</h4>
                 <ul style="max-height: 150px; overflow-y: auto; padding: 10px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">
                     ${detailsHTML || "<li>Aucune activité enregistrée pour cette période.</li>"}
                 </ul>
@@ -6696,6 +6682,7 @@
                 </button>
             `;
         }
+
 
 
         // Fonction fanampiny ilaina
