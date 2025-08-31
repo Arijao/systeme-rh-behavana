@@ -5231,14 +5231,18 @@
                 salary,
                 groupId: groupId || null,                
                 dateAdded: new Date().toISOString(),
-                status: document.getElementById('employeeStatus').value,
-                departureDate: document.getElementById('employeeDepartureDate').value || null
+                status: 'actif',
+                departureDate: null
             };
 
             employees.push(employee);
             await saveData();
             updateStats();
             populateEmployeeSelects(); // Ity dia efa manavao ny lisitry ny mpiasa ao amin'ny select-n'ny paie, sns.
+
+            if (document.getElementById('employees').classList.contains('active')) {
+                displayEmployees();
+            }
             
             // --- DINGANA 3: Havaozina koa ny fampisehoana ny lisitry ny vondrona ---
             // Satria mety niova ny isan'ny mpiasa ao anaty vondrona iray
