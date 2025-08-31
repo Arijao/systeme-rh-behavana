@@ -1981,22 +1981,22 @@
                     <span class="material-icons">close</span>
                 </button>
             </div>
-            <form id="employeeForm"> 
+            <form id="employeeForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nom Complet</label>
-                        <input type="text" class="form-control" id="employeeName" required>
+                        <input type="text" class="form-control" id="employeeName_add" required>
                     </div>
                     <div class="form-group">
                         <label>Poste</label>
-                        <input type="text" class="form-control" id="employeePosition" required>
+                        <input type="text" class="form-control" id="employeePosition_add" required>
                     </div>
                     <div class="form-group">
                         <label>Groupe</label>
                         <div class="select-dropdown">
-                            <select class="form-control" id="employeeGroup">
+                            <select class="form-control" id="employeeGroup_add">
                                 <option value="">Aucun groupe</option>
-                                
+                                <!-- Ho fenoina amin'ny JavaScript -->
                             </select>
                         </div>
                     </div>
@@ -2005,7 +2005,7 @@
                     <div class="form-group">
                         <label>Genre</label>
                         <div class="select-dropdown">
-                            <select class="form-control" id="employeeGender" required>
+                            <select class="form-control" id="employeeGender_add" required>
                                 <option value="">Sélectionner</option>
                                 <option value="Homme">Homme</option>
                                 <option value="Femme">Femme</option>
@@ -2014,27 +2014,9 @@
                     </div>
                     <div class="form-group">
                         <label>Salaire Mensuel (Ar)</label>
-                        <input type="text" class="form-control currency-input" id="employeeSalary" required data-type="currency">
+                        <input type="text" class="form-control currency-input" id="employeeSalary_add" required data-type="currency">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Statut de l'Employé</label>
-                    <div class="select-dropdown">
-                        <select class="form-control" id="employeeStatus">
-                            <option value="actif">Actif</option>
-                            <option value="depart">Départ Programmé</option>
-                            <option value="inactif">Inactif (A quitté)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group" id="departureDateContainer" style="display: none;">
-                    <label>Date de Départ</label>
-                    <input type="date" class="form-control" id="employeeDepartureDate">
-                </div>
-                <!-- ========================================================== -->
-                <input type="hidden" id="employeeStatus" value="actif">
-                <input type="hidden" id="employeeDepartureDate" value="">
-                <!-- ========================================================== -->
                 <button type="submit" class="btn">
                     <span class="material-icons">add</span>
                     Ajouter Employé
@@ -5203,181 +5185,63 @@
         // FORM HANDLERS
         // ===============================
         // =======================================================================
-        //  VERSION FARANY SY NOHAMAFISINA - FANAMPIANA MPIASA VAOVAO
-        //  Ity no kaody tokony ho hita ao amin'ny rakitrao.
+        //  VERSION FARANY INDRINDRA - Mampiasa ID vaovao tanteraka
         // =======================================================================
+        document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-        // Miantso izany rehefa vonona ny DOM
-        document.addEventListener('DOMContentLoaded', function() {
-            const employeeForm = document.getElementById('employeeForm');
-            
-            // Jereo aloha raha misy ilay form
-            if (!employeeForm) {
-                console.error("OLANA: Tsy hita ny form misy ID 'employeeForm'");
-                return;
-            }
+            try {
+                // 1. Fandraisana ny sanda avy amin'ireo sehatra manana ID vaovao (_add)
+                const name = capitalizeWords(document.getElementById('employeeName_add').value.trim());
+                const position = capitalizeWords(document.getElementById('employeePosition_add').value.trim());
+                const gender = document.getElementById('employeeGender_add').value;
+                // Ny getCurrencyValue dia mila ny ID marina koa
+                const salary = getCurrencyValue('employeeSalary_add');
+                const groupId = document.getElementById('employeeGroup_add').value;
 
-            employeeForm.addEventListener('submit', async function(e) {
-                // 1. Ajanona ny fihetsika default an'ny formulaire mba tsy hampiverina ny pejy
-                e.preventDefault();
-
-                try {
-                    // 2. Fandraisana ny sandan'ireo sehatra rehetra ilaina avy amin'ny formulaire
-                    // Jereo aloha raha misy ireo element ireo
-                    const nameElement = document.getElementById('employeeName');
-                    const positionElement = document.getElementById('employeePosition');
-                    const genderElement = document.getElementById('employeeGender');
-                    const salaryElement = document.getElementById('employeeSalary');
-                    const groupElement = document.getElementById('employeeGroup');
-
-                    // Fanamarinana hoe misy avokoa ireo element ilaina
-                    if (!nameElement) {
-                        showAlert("OLANA: Tsy hita ny sehatra 'employeeName'", 'error');
-                        return;
-                    }
-                    if (!positionElement) {
-                        showAlert("OLANA: Tsy hita ny sehatra 'employeePosition'", 'error');
-                        return;
-                    }
-                    if (!genderElement) {
-                        showAlert("OLANA: Tsy hita ny sehatra 'employeeGender'", 'error');
-                        return;
-                    }
-                    if (!salaryElement) {
-                        showAlert("OLANA: Tsy hita ny sehatra 'employeeSalary'", 'error');
-                        return;
-                    }
-
-                    // Fandraisana ny sanda (miaraka amin'ny fanamarinana)
-                    const name = typeof capitalizeWords === 'function' 
-                        ? capitalizeWords(nameElement.value.trim()) 
-                        : nameElement.value.trim();
-                        
-                    const position = typeof capitalizeWords === 'function' 
-                        ? capitalizeWords(positionElement.value.trim()) 
-                        : positionElement.value.trim();
-                        
-                    const gender = genderElement.value;
-                    
-                    // Raha misy ny fonction getCurrencyValue
-                    const salary = typeof getCurrencyValue === 'function' 
-                        ? getCurrencyValue('employeeSalary') 
-                        : parseFloat(salaryElement.value) || 0;
-                        
-                    const groupId = groupElement ? groupElement.value : null;
-
-                    // 3. Fanamarinana hentitra ny fampahalalana alohan'ny handehanana lavidavitra
-                    //    Mijery raha feno daholo ny sehatra ilaina
-                    if (!name || !position || !gender || salary <= 0) {
-                        showAlert("Veuillez remplir tous les champs correctement (Nom, Poste, Genre, Salaire).", 'error');
-                        return; // Ajanona ny fonction raha misy banga
-                    }
-
-                    // Jereo raha misy ny array employees
-                    if (typeof employees === 'undefined') {
-                        console.error("OLANA: Tsy misy ny variable 'employees'");
-                        showAlert("Erreur: Liste des employés non trouvée", 'error');
-                        return;
-                    }
-
-                    //    Mijery raha efa misy mpiasa mitovy anarana
-                    if (employees.some(emp => emp.name.toLowerCase() === name.toLowerCase())) {
-                        showAlert('Un employé avec ce nom existe déjà. Veuillez utiliser un autre nom.', 'error');
-                        return; // Ajanona raha efa misy
-                    }
-
-                    // 4. Famoronana ilay "objet" mpiasa vaovao miaraka amin'ny sanda default
-                    const newEmployee = {
-                        id: Date.now().toString(),      // ID tokana mifototra amin'ny fotoana
-                        name: name,
-                        position: position,
-                        gender: gender,
-                        salary: salary,
-                        groupId: groupId || null,       // Raha tsy misy vondrona voafidy dia 'null'
-                        dateAdded: new Date().toISOString(), // Daty nampidirana azy
-                        status: 'actif',                // Ny mpiasa vaovao rehetra dia "actif" foana
-                        departureDate: null             // Tsy manana daty fialana izy amin'ny voalohany
-                    };
-
-                    // 5. Fanampiana ilay mpiasa vaovao ao anaty lisitra sy fitehirizana ao anaty base de données
-                    employees.push(newEmployee);
-                    
-                    // Jereo raha misy ny fonction saveData
-                    if (typeof saveData === 'function') {
-                        await saveData();
-                    } else {
-                        console.warn("FAMPANDRENESANA: Tsy misy ny fonction 'saveData'");
-                    }
-
-                    // 6. Fanavaozana ny interface mba hanehoana ny fanovana avy hatrany
-                    // Jereo raha misy ireo fonction ireo alohan'ny hantsohina
-                    if (typeof updateStats === 'function') {
-                        updateStats();                      // Havaozina ny statistika eo amin'ny dashboard
-                    }
-                    if (typeof populateEmployeeSelects === 'function') {
-                        populateEmployeeSelects();          // Havaozina ny lisitra fisafidianana mpiasa rehetra
-                    }
-                    
-                    // Havaozina ny fampisehoana ny lisitra raha toa ka eo amin'ireo pejy ireo ny mpampiasa
-                    const employeesSection = document.getElementById('employees');
-                    const groupsSection = document.getElementById('groups');
-                    
-                    if (employeesSection && employeesSection.classList.contains('active')) {
-                        if (typeof displayEmployees === 'function') {
-                            displayEmployees();
-                        }
-                    }
-                    if (groupsSection && groupsSection.classList.contains('active')) {
-                        if (typeof displayGroups === 'function') {
-                            displayGroups();
-                        }
-                    }
-
-                    // 7. Famaranana sy fampandrenesana ny mpampiasa
-                    this.reset(); // Diovina ny sehatra rehetra tao anaty formulaire
-                    
-                    // Jereo raha misy ny fonction closeModal
-                    if (typeof closeModal === 'function') {
-                        closeModal('addEmployeeModal'); // Akatona ny varavarankely (modal)
-                    }
-                    
-                    // Jereo raha misy ny fonction showAlert
-                    if (typeof showAlert === 'function') {
-                        showAlert('Employé ajouté avec succès!', 'success'); // Asehoy ny hafatra fahombiazana
-                    } else {
-                        alert('Employé ajouté avec succès!'); // Fallback raha tsy misy showAlert
-                    }
-
-                } catch (error) {
-                    // Fandraisana an-tanana raha misy olana tsy ampoizina
-                    console.error("Erreur critique lors de l'ajout de l'employé:", error);
-                    
-                    if (typeof showAlert === 'function') {
-                        showAlert("Une erreur inattendue est survenue. Veuillez vérifier la console pour plus de détails.", 'error');
-                    } else {
-                        alert("Une erreur inattendue est survenue.");
-                    }
+                // 2. Fanamarinana hentitra
+                if (!name || !position || !gender || salary <= 0) {
+                    showAlert("Veuillez remplir tous les champs correctement.", 'error');
+                    return;
                 }
-            });
+                if (employees.some(emp => emp.name.toLowerCase() === name.toLowerCase())) {
+                    showAlert('Un employé avec ce nom existe déjà.', 'error');
+                    return;
+                }
+
+                // 3. Famoronana ilay "objet" mpiasa vaovao
+                const newEmployee = {
+                    id: Date.now().toString(),
+                    name: name,
+                    position: position,
+                    gender: gender,
+                    salary: salary,
+                    groupId: groupId || null,
+                    dateAdded: new Date().toISOString(),
+                    status: 'actif',
+                    departureDate: null
+                };
+
+                // 4. Fanampiana sy Fitehirizana
+                employees.push(newEmployee);
+                await saveData();
+
+                // 5. Fanavaozana ny Interface
+                updateStats();
+                populateEmployeeSelects();
+                displayEmployees();
+
+                // 6. Famaranana
+                this.reset();
+                closeModal('addEmployeeModal');
+                showAlert('Employé ajouté avec succès!', 'success');
+
+            } catch (error) {
+                console.error("Erreur critique lors de l'ajout de l'employé:", error);
+                showAlert("Une erreur inattendue est survenue. Vérifiez la console.", 'error');
+            }
         });
 
-        // Fonction fanampiny ho an'ny debugging
-        function checkRequiredElements() {
-            const requiredIds = [
-                'employeeForm',
-                'employeeName', 
-                'employeePosition',
-                'employeeGender',
-                'employeeSalary',
-                'employeeGroup'
-            ];
-            
-            console.log("=== FANAMARINANA NY ELEMENTS ===");
-            requiredIds.forEach(id => {
-                const element = document.getElementById(id);
-                console.log(`${id}: ${element ? '✓ Hita' : '✗ Tsy hita'}`);
-            });
-        }
 
 
         document.getElementById('advanceForm').addEventListener('submit', async function(e) {
