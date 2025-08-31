@@ -4452,19 +4452,42 @@
         }
 
         // Fonctions d'employés simplifiées
+        // IZAO NO TOKONY HO IZY (VERSION FENO)
         function editEmployee(id) {
             const employee = employees.find(emp => emp.id === id);
             if (!employee) return;
 
+            // Famenoana ireo sehatra efa nisy
             document.getElementById('editEmployeeId').value = employee.id;
             document.getElementById('editEmployeeName').value = employee.name;
             document.getElementById('editEmployeePosition').value = employee.position;
             document.getElementById('editEmployeeGender').value = employee.gender;
             setCurrencyValue('editEmployeeSalary', employee.salary);
             document.getElementById('editEmployeeGroup').value = employee.groupId || "";
+
+            // --- IZAO NO FANAMPINY LEHIBE ---
+            // Famenoana ny sata sy ny daty fialana
+            const statusSelect = document.getElementById('editEmployeeStatus');
+            const departureDateInput = document.getElementById('editEmployeeDepartureDate');
+            const departureContainer = document.getElementById('editDepartureDateContainer');
+
+            // Apetraka ny sata ankehitriny (raha misy, raha tsy misy dia 'actif')
+            statusSelect.value = employee.status || 'actif';
+            
+            // Apetraka ny daty fialana raha misy
+            departureDateInput.value = employee.departureDate || '';
+
+            // Asehoy na afeno ny sehatry ny daty arakaraka ny sata
+            if (statusSelect.value === 'depart' || statusSelect.value === 'inactif') {
+                departureContainer.style.display = 'block';
+            } else {
+                departureContainer.style.display = 'none';
+            }
+            // --- FARAN'NY FANAMPINY ---
             
             openModal('editEmployeeModal');
         }
+
 
         async function deleteEmployee(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet employé?')) {
