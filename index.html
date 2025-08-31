@@ -1981,7 +1981,7 @@
                     <span class="material-icons">close</span>
                 </button>
             </div>
-            <form id="employeeForm"> <!-- ITY NO FORMULAIRE NAFINDRAKAO TEZINA -->
+            <form id="employeeForm"> 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nom Complet</label>
@@ -1996,7 +1996,7 @@
                         <div class="select-dropdown">
                             <select class="form-control" id="employeeGroup">
                                 <option value="">Aucun groupe</option>
-                                <!-- Ho fenoina amin'ny JavaScript -->
+                                
                             </select>
                         </div>
                     </div>
@@ -2031,6 +2031,10 @@
                     <label>Date de Départ</label>
                     <input type="date" class="form-control" id="employeeDepartureDate">
                 </div>
+                <!-- ========================================================== -->
+                <input type="hidden" id="employeeStatus" value="actif">
+                <input type="hidden" id="employeeDepartureDate" value="">
+                <!-- ========================================================== -->
                 <button type="submit" class="btn">
                     <span class="material-icons">add</span>
                     Ajouter Employé
@@ -5227,8 +5231,8 @@
                 salary,
                 groupId: groupId || null,                
                 dateAdded: new Date().toISOString(),
-                status: 'actif', // Rehefa mpiasa vaovao dia "Actif" foana ny satany
-                departureDate: null
+                status: document.getElementById('employeeStatus').value,
+                departureDate: document.getElementById('employeeDepartureDate').value || null
             };
 
             employees.push(employee);
