@@ -6873,12 +6873,9 @@
         });
 
                 // =======================================================================
-        //  calculateSalaryEstimation (VERSION DEBUGGING)
+        //  calculateSalaryEstimation (VERSION FARANY - MISY BRUT SY NET)
         // =======================================================================
         function calculateSalaryEstimation() {
-            console.clear(); // Fafana ny console taloha mba ho madio
-            console.log("🚀 LANCEMENT DE L'ESTIMATION...");
-
             const startDateStr = document.getElementById('estimationStartDate').value;
             const endDateStr = document.getElementById('estimationEndDate').value;
             const groupFilter = document.getElementById('estimationGroupFilter').value;
@@ -6891,79 +6888,61 @@
 
             const startDate = new Date(startDateStr + 'T00:00:00Z');
             const endDate = new Date(endDateStr + 'T23:59:59Z');
-            
-            console.log(`Période sélectionnée:`, { start: startDate.toISOString(), end: endDate.toISOString() });
+
+            if (endDate < startDate) {
+                showAlert("La date de fin ne peut pas être antérieure à la date de début.", 'error');
+                return;
+            }
 
             container.style.display = 'block';
             container.innerHTML = '<div class="loading"></div><p>Calcul de l\'estimation en cours...</p>';
 
-            // Ity no miantoka fa ny mpiasa rehetra tsy "inactif" dia tafiditra
             let employeesToEstimate = employees.filter(e => e.status !== 'inactif');
-
             if (groupFilter !== 'all') {
                 employeesToEstimate = employeesToEstimate.filter(emp => emp.groupId === groupFilter);
             }
-            
-            console.log(`${employeesToEstimate.length} employé(s) à estimer.`);
 
             let totalEstimatedGrossSalary = 0;
+            let totalAdvancesInPeriod = 0; // <-- VARIABLA VAOVAO HO AN'NY TROSA
             let totalDaysCount = 0;
             let totalPastDays = 0;
             let totalFutureDays = 0;
 
+            // Famakiana ny andro tsirairay
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 const dateStr = d.toISOString().slice(0, 10);
                 const today = new Date();
                 today.setUTCHours(0, 0, 0, 0);
 
                 const daysInCurrentMonth = getDaysInMonth(d.getUTCFullYear(), d.getUTCMonth() + 1);
-                
-                // --- DEBUGGING POINT 1 ---
-                console.log(`\n--- Traitement du jour: ${dateStr} (Mois avec ${daysInCurrentMonth} jours) ---`);
 
                 employeesToEstimate.forEach(employee => {
                     const dailySalary = employee.salary / daysInCurrentMonth;
                     let dayValue = 0;
 
-                    if (d < today) {
+                    if (d < today) { // Andro efa lasa
                         const dayAttendanceData = attendance[dateStr];
-                        
-                        // --- DEBUGGING POINT 2 ---
-                        if (!dayAttendanceData) {
-                            // Tsy manao na inona na inona, fa mety ilaina ny mahita an'ity
-                            // console.log(`   - Pas de données de présence pour ${dateStr}.`);
-                        } else {
+                        if (dayAttendanceData && dayAttendanceData[employee.id]) {
                             const presenceData = dayAttendanceData[employee.id];
-                            if (presenceData) {
-                                // --- DEBUGGING POINT 3 ---
-                                console.log(`   ✅ Présence trouvée pour ${employee.name} le ${dateStr}:`, presenceData);
-                                
-                                const dayOfWeek = d.getUTCDay();
-                                if (dayOfWeek === 0) {
+                            const dayOfWeek = d.getUTCDay();
+                            if (dayOfWeek === 0) { dayValue = 1; }
+                            else {
+                                if (typeof presenceData === 'object' && presenceData.arrivee) {
+                                    if (presenceData.depart) {
+                                        const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
+                                        dayValue = (duration.totalMinutes / 60 >= 4) ? 1 : 0.5;
+                                    } else { dayValue = 0.5; }
+                                } else if (presenceData === true || presenceData === 'journee') {
                                     dayValue = 1;
-                                } else {
-                                    if (typeof presenceData === 'object' && presenceData.arrivee) {
-                                        if (presenceData.depart) {
-                                            const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
-                                            dayValue = (duration.totalMinutes / 60 >= 4) ? 1 : 0.5;
-                                        } else {
-                                            dayValue = 0.5;
-                                        }
-                                    } else if (presenceData === true || presenceData === 'journee') {
-                                        dayValue = 1;
-                                    } else if (presenceData === 'demi') {
-                                        dayValue = 0.5;
-                                    }
+                                } else if (presenceData === 'demi') {
+                                    dayValue = 0.5;
                                 }
-                                console.log(`      -> Valeur du jour calculée: ${dayValue}`);
                             }
                         }
                         totalPastDays += dayValue;
-                    } else {
+                    } else { // Andro anio na ho avy
                         const dayOfWeek = d.getUTCDay();
-                        if (dayOfWeek !== 6) { // Asabotsy = 6
-                            dayValue = 1;
-                        }
+                        if (dayOfWeek !== 6) { dayValue = 1; }
                         totalFutureDays += dayValue;
                     }
 
@@ -6972,30 +6951,43 @@
                 });
             }
 
-            console.log("\n--- FIN DU CALCUL ---");
-            console.log(`Total Jours Passés (réels): ${totalPastDays}`);
-            console.log(`Total Jours Futurs (estimés): ${totalFutureDays}`);
-            console.log(`Total Jours-Homme: ${totalDaysCount}`);
-            console.log(`Salaire Brut Total Estimé: ${totalEstimatedGrossSalary}`);
+            // --- KAJY VAOVAO: Alaina ny totalin'ny trosa rehetra ao anatin'ilay fe-potoana ---
+            employeesToEstimate.forEach(employee => {
+                const employeeAdvances = advances.filter(adv => {
+                    const advDate = new Date(adv.date + 'T00:00:00Z');
+                    return adv.employeeId === employee.id && advDate >= startDate && advDate <= endDate;
+                });
+                const totalEmployeeAdvances = employeeAdvances.reduce((sum, adv) => sum + adv.amount, 0);
+                totalAdvancesInPeriod += totalEmployeeAdvances;
+            });
+            
+            const totalEstimatedNetSalary = totalEstimatedGrossSalary - totalAdvancesInPeriod;
 
-            // Fampisehoana ny valiny
+            // --- Fampisehoana ny valiny miaraka amin'ny NET ---
             container.innerHTML = `
                 <h3>Résultats de l'Estimation</h3>
                 <p>Pour la période du <strong>${startDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${endDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
                 
-                <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="stat-card" style="background-color: var(--md-sys-color-primary-container);">
-                        <div class="stat-icon"><span class="material-icons">payments</span></div>
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-icon"><span class="material-icons">receipt_long</span></div>
                         <div class="stat-content">
-                            <h3 style="color: var(--md-sys-color-on-primary-container);">${formatCurrency(totalEstimatedGrossSalary)}</h3>
-                            <p>Total Salaire Brut Estimé</p>
+                            <h3>${formatCurrency(totalEstimatedGrossSalary)}</h3>
+                            <p>Total Salaire BRUT Estimé</p>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon"><span class="material-icons">summarize</span></div>
+                        <div class="stat-icon" style="background-color: var(--md-sys-color-error);"><span class="material-icons">trending_down</span></div>
                         <div class="stat-content">
-                            <h3>${totalDaysCount.toFixed(2)} jours</h3>
-                            <p>Total Jours-Homme Estimés</p>
+                            <h3>${formatCurrency(totalAdvancesInPeriod)}</h3>
+                            <p>Total Avances sur Période</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="background-color: var(--md-sys-color-primary-container);">
+                        <div class="stat-icon"><span class="material-icons">payments</span></div>
+                        <div class="stat-content">
+                            <h3 style="color: var(--md-sys-color-on-primary-container);">${formatCurrency(totalEstimatedNetSalary)}</h3>
+                            <p>Total Salaire NET Estimé</p>
                         </div>
                     </div>
                 </div>
@@ -7005,10 +6997,12 @@
                     <ul>
                         <li><strong>Jours passés (réels):</strong> ${totalPastDays.toFixed(2)} jours</li>
                         <li><strong>Jours futurs (estimés):</strong> ${totalFutureDays.toFixed(2)} jours</li>
+                        <li><strong>Total Jours-Homme Estimés:</strong> ${totalDaysCount.toFixed(2)} jours</li>
                     </ul>
                 </div>
             `;
         }
+
 
 
 
