@@ -6587,7 +6587,8 @@
             // Mampiasa UTC mba tsy hisy diso ny daty
             const departureDate = new Date(employee.departureDate + 'T23:59:59Z');
             const lastPaidMonth = getLastPaidMonth(employeeId);
-            const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
+            const startDateForCalc = getStartDateForCalculation(lastPaidMonth, employeeId);
+
 
             if (departureDate < startDateForCalc) {
                 container.innerHTML = `<p class="alert alert-warning">Cet employé a déjà été payé pour toute sa période de travail. Aucun calcul n'est nécessaire.</p>`;
@@ -6673,17 +6674,29 @@
             return employeePayments[0].month;
         }
 
-        function getStartDateForCalculation(lastPayMonth) {
-            if (!lastPayMonth) {
-                const today = new Date();
-                // Mampiasa UTC mba tsy hisy diso
-                return new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+        function getStartDateForCalculation(lastPayMonth, employeeId) {
+            // Raha efa nisy karama voaloa
+            if (lastPayMonth) {
+                const [year, month] = lastPayMonth.split('-').map(Number);
+                // Manomboka amin'ny andro voalohan'ny volana manaraka
+                return new Date(Date.UTC(year, month, 1)); 
+            } 
+            
+            else {
+                const employee = employees.find(emp => emp.id === employeeId);
+                // Raha manana daty nidirana ilay mpiasa
+                if (employee && employee.dateAdded) {
+                    // Manomboka amin'ny daty nidirany
+                    return new Date(employee.dateAdded);
+                } 
+                // Raha sendra tsy misy (ho an'ny angona taloha be), dia alaina ny fiandohan'ny volana ankehitriny
+                else {
+                    const today = new Date();
+                    return new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+                }
             }
-            const [year, month] = lastPayMonth.split('-').map(Number);
-            // Mampiasa UTC. Ny volana dia 0-11, ka ny volana faha-8 (Aogositra) dia 7.
-            // Ny volana manaraka dia lasa volana faha-9 (Septambra)
-            return new Date(Date.UTC(year, month - 1 + 1, 1));
         }
+
 
         // Fonction fanampiny ilaina
         function populateSTCEmployeeSelect() {
