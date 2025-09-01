@@ -153,6 +153,12 @@
             margin-bottom: 24px;
             gap: 4px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none; 
         }
 
         .nav-tab {
@@ -168,6 +174,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
             white-space: nowrap;
             min-width: 120px;
         }
