@@ -6995,70 +6995,131 @@
         }
 
 
-        // =======================================================================
-        //  countEstimatedPresence (VERSION VAOVAO - MANITSY NY KAJY NY ANDRO LASA)
-        // =======================================================================
-        function countEstimatedPresence(employeeId, startDate, endDate) {
+        function countEstimatedPresence(employeeId, startDateFR, endDateFR) {
+            console.log(`\n=== ESTIMATION POUR EMPLOYÉ ${employeeId} ===`);
+            console.log(`Dates FR: ${startDateFR} à ${endDateFR}`);
+            
+            // Convertir les dates françaises en format ISO
+            const startDate = frenchDateToISO(startDateFR);
+            const endDate = frenchDateToISO(endDateFR);
+            
+            console.log(`Dates ISO: ${startDate} à ${endDate}`);
+            
+            // Vérifications
+            if (typeof attendance === 'undefined') {
+                console.error("❌ Variable 'attendance' non définie");
+                return { estimatedDays: 0, pastDays: 0, futureDays: 0 };
+            }
+            
+            if (!startDate || !endDate) {
+                console.error("❌ Erreur de conversion des dates");
+                return { estimatedDays: 0, pastDays: 0, futureDays: 0 };
+            }
+            
             let pastDays = 0;
             let futureDays = 0;
             const today = new Date();
             today.setUTCHours(0, 0, 0, 0);
-
-            // Famakiana ny andro rehetra ao anatin'ny fe-potoana
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dateStr = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-
-                // Raha daty efa lasa
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.error("❌ Dates invalides après conversion");
+                return { estimatedDays: 0, pastDays: 0, futureDays: 0 };
+            }
+            
+            console.log(`Période convertie: ${start.toDateString()} à ${end.toDateString()}`);
+            console.log(`Aujourd'hui: ${today.toDateString()}`);
+            
+            // Parcourir tous les jours dans la période
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().slice(0, 10); // Format ISO pour les clés
+                const dateStrFR = isoDateToFrench(dateStr); // Format FR pour l'affichage
+                const dayOfWeek = d.getUTCDay();
+                const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+                
+                console.log(`\n--- ${dateStrFR} (${dayNames[dayOfWeek]}) ---`);
+                
+                // Si c'est une date passée
                 if (d < today) {
-                    // --- FANITSIANA LEHIBE ETO ---
-                    // Alaina mivantana ny angona ho an'io andro io
-                    const dayAttendanceData = attendance[dateStr];
+                    console.log("📅 Date passée - vérification des données réelles");
+                    
+                    // Vérifier avec les deux formats possibles dans attendance
+                    let dayAttendanceData = attendance[dateStr] || attendance[dateStrFR];
+                    
                     if (dayAttendanceData) {
+                        console.log(`✅ Données trouvées pour ${dateStr} ou ${dateStrFR}`);
                         const presenceData = dayAttendanceData[employeeId];
+                        
                         if (presenceData) {
-                            // Ampiasaina ny lojika mitovy amin'ny countPresenceDays
-                            const currentDate = new Date(dateStr + 'T00:00:00Z');
-                            const dayOfWeek = currentDate.getUTCDay();
-                            const isSunday = (dayOfWeek === 0);
-
-                            if (isSunday) {
+                            console.log(`👤 Données employé:`, presenceData);
+                            
+                            if (dayOfWeek === 0) { // Dimanche
                                 pastDays += 1;
+                                console.log("🗓️ Dimanche: +1 jour automatique");
                             } else {
+                                let dayValue = 0;
+                                
                                 if (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee) {
                                     if (presenceData.depart) {
                                         const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
+                                        console.log(`⏰ Durée: ${Math.round(duration.totalMinutes / 60 * 100) / 100}h`);
+                                        
                                         if (duration.totalMinutes / 60 >= 4) {
-                                            pastDays += 1;
+                                            dayValue = 1;
+                                            console.log("✅ Journée complète (>=4h)");
                                         } else if (duration.totalMinutes > 0) {
-                                            pastDays += 0.5;
+                                            dayValue = 0.5;
+                                            console.log("🔄 Demi-journée (<4h)");
                                         }
                                     } else {
-                                        pastDays += 0.5;
+                                        dayValue = 0.5;
+                                        console.log("🔄 Arrivée sans départ - demi-journée");
                                     }
                                 } else if (presenceData === true || presenceData === 'journee') {
-                                    pastDays += 1;
+                                    dayValue = 1;
+                                    console.log("✅ Marqué journée complète");
                                 } else if (presenceData === 'demi') {
-                                    pastDays += 0.5;
+                                    dayValue = 0.5;
+                                    console.log("🔄 Marqué demi-journée");
                                 }
+                                
+                                pastDays += dayValue;
+                                console.log(`➕ Ajouté: ${dayValue} jour(s) - Total: ${pastDays}`);
                             }
+                        } else {
+                            console.log(`❌ Pas de données pour l'employé ${employeeId}`);
                         }
+                    } else {
+                        console.log(`❌ Pas de données d'attendance pour ${dateStr} ni ${dateStrFR}`);
                     }
-                } 
-                // Raha daty anio na ho avy
+                }
+                // Si c'est aujourd'hui ou une date future
                 else {
-                    const dayOfWeek = d.getUTCDay();
-                    // Raha tsy Alahady (0) na Asabotsy (6), dia heverina ho tonga
-                    if (dayOfWeek !== 0) { // Ovaina mba ho isaina koa ny Asabotsy raha ilaina
+                    console.log("🔮 Date future - estimation automatique");
+                    
+                    if (dayOfWeek !== 0) { // Pas dimanche
                         futureDays += 1;
+                        console.log(`➕ Jour ouvrable futur: +1 jour - Total futurs: ${futureDays}`);
+                    } else {
+                        console.log("🗓️ Dimanche futur - non compté dans l'estimation");
                     }
                 }
             }
 
-            return {
+            const result = {
                 estimatedDays: pastDays + futureDays,
                 pastDays: pastDays,
                 futureDays: futureDays
             };
+            
+            console.log(`\n🎯 RÉSULTAT FINAL:`);
+            console.log(`   Jours passés (réels): ${pastDays}`);
+            console.log(`   Jours futurs (estimés): ${futureDays}`);
+            console.log(`   TOTAL ESTIMÉ: ${result.estimatedDays} jours`);
+            
+            return result;
         }
 
 
