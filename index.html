@@ -6564,7 +6564,7 @@
         }
         
                 // =======================================================================
-        //  calculateSTC (VERSION FARANY - MANITSY NY Fampisehoana ny Daty)
+        //  calculateSTC (VERSION MIARA-MIASA AMIN'NY getStartDateForCalculation VAOVAO)
         // =======================================================================
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6587,13 +6587,8 @@
             const departureDate = new Date(employee.departureDate + 'T23:59:59Z');
             const lastPaidMonth = getLastPaidMonth(employeeId);
             
-            // Ity no daty anombohan'ny kajy anatiny
+            // Ity andalana ity izao dia mandray ny daty marina (na daty nidirana, na 1er du mois suivant)
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth, employeeId);
-
-            // --- FANITSIANA LEHIBE ETO: DATY HO AN'NY Fampisehoana ---
-            // Ity no daty tena aseho eo amin'ny efijery
-            const displayStartDate = getDisplayStartDate(lastPaidMonth, employeeId);
-            // --- FARAN'NY FANITSIANA ---
 
             if (departureDate < startDateForCalc) {
                 container.innerHTML = `<p class="alert alert-warning">Cet employé a déjà été payé pour toute sa période de travail. Aucun calcul n'est nécessaire.</p>`;
@@ -6606,12 +6601,13 @@
             let detailsHTML = '';
 
             let currentYear = startDateForCalc.getUTCFullYear();
-            let currentMonth = startDateForCalc.getUTCMonth();
+            let currentMonth = startDateForCalc.getUTCMonth(); // 0-11
 
             const endYear = departureDate.getUTCFullYear();
             const endMonth = departureDate.getUTCMonth();
 
             while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+                
                 const monthForCalc = currentMonth + 1;
                 const currentMonthStr = `${currentYear}-${monthForCalc.toString().padStart(2, '0')}`;
                 const daysInCurrentMonth = getDaysInMonth(currentYear, monthForCalc);
@@ -6640,10 +6636,10 @@
 
             const netSalaryToPay = Math.max(0, totalGrossSalaryToPay - totalAdvancesToDeduct);
 
-            // --- FANITSIANA LEHIBE ETO: Ampiasaina ilay `displayStartDate` ---
+            // Fampisehoana ny vokany
             container.innerHTML = `
                 <h3>Détail du Solde pour ${employee.name}</h3>
-                <p>Période de calcul: du <strong>${displayStartDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${new Date(employee.departureDate + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
+                <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${new Date(employee.departureDate + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
                 
                 <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="stat-card">
@@ -6677,6 +6673,7 @@
 
 
 
+
         // Ireo fonctions mpanampy ireo dia ilaina mba handehanan'ny etsy ambony
         function getLastPaidMonth(employeeId) {
             const employeePayments = payrolls.filter(p => p.employeeId === employeeId && p.month !== 'SOLDE_DE_TOUT_COMPTE');
@@ -6686,32 +6683,38 @@
         }
 
                 // =======================================================================
-        //  getStartDateForCalculation (VERSION FARANY INDRINDRA - Mampiasa ny daty nidirana)
+        //  getStartDateForCalculation (VERSION FARANY INDRINDRA - UTC 100%)
         // =======================================================================
         function getStartDateForCalculation(lastPayMonth, employeeId) {
             // Raha efa nisy karama voaloa (ohatra: Jolay 2025)
             if (lastPayMonth) {
                 const [year, month] = lastPayMonth.split('-').map(Number);
-                // Ny kajy dia manomboka amin'ny andro voalohan'ny volana MANARAKA (1 Aogositra 2025)
+                // Manomboka amin'ny andro voalohan'ny volana MANARAKA (1 Aogositra 2025)
+                // Ny volana dia 0-11, ka ny volana faha-8 (Aogositra) dia 7.
+                // Ny volana manaraka dia lasa volana faha-9 (Septambra)
                 return new Date(Date.UTC(year, month, 1)); 
             } 
             
-            // --- FANITSIANA LEHIBE ETO ---
             // Raha mbola TSY nisy karama voaloa mihitsy
             else {
                 const employee = employees.find(emp => emp.id === employeeId);
                 // Raha manana daty nidirana ilay mpiasa
                 if (employee && employee.dateAdded) {
-                    // Ny kajy dia manomboka amin'ny TENA DATY NIDIRANY
-                    return new Date(employee.dateAdded);
+                    // --- FANITSIANA LEHIBE ETO ---
+                    // Avadika ho objet Date aloha ilay dateAdded
+                    const dateAdded = new Date(employee.dateAdded);
+                    // Avy eo, ampiasaina ny taona, volana, ary andro avy aminy mba hamoronana daty UTC vaovao
+                    // Izay miantoka fa tsy misy fiantraikan'ny timezone
+                    return new Date(Date.UTC(dateAdded.getUTCFullYear(), dateAdded.getUTCMonth(), dateAdded.getUTCDate()));
                 } 
-                // Raha sendra tsy misy (ho an'ny angona taloha be), dia alaina ny fiandohan'ny volana ankehitriny
+                // Raha sendra tsy misy (ho an'ny angona taloha be)
                 else {
                     const today = new Date();
                     return new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
                 }
             }
         }
+
 
                 // =======================================================================
         //  FONCTION VAOVAO: Maka ny daty tena tokony hiseho
