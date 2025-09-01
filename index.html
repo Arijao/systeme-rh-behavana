@@ -4159,8 +4159,6 @@
         }
 
 
-
-
         // ===================================================
         //  UTILITY FUNCTION: DEBOUNCE
         //  Mampiato ny fandehanan'ny asa iray mandra-pisian'ny fiatoana kely
@@ -4176,7 +4174,7 @@
         }
 
                 // =======================================================================
-        //  displayAttendance (VERSION NOHATSARAINA - MISY VONDROM-PIASA)
+        //  displayAttendance (VERSION SAFIDY: CHECKBOX na HEURES)
         // =======================================================================
         function displayAttendance() {
             const container = document.getElementById('attendanceList');
@@ -4185,7 +4183,7 @@
 
             if (!selectedDate) {
                 container.innerHTML = '<p style="text-align: center; padding: 20px;">Veuillez sélectionner une date pour commencer.</p>';
-                document.getElementById('attendancePagination').innerHTML = ''; 
+                document.getElementById('attendancePagination').innerHTML = '';
                 return;
             }
 
@@ -4193,8 +4191,11 @@
                 attendance[selectedDate] = {};
             }
 
-            let activeEmployees = employees.filter(e => e.status !== 'inactif' || !e.status);
-
+            let activeEmployees = employees.filter(e => e.status !== 'inactif');
+            const groupFilter = document.getElementById('attendanceGroupFilter')?.value;
+            if (groupFilter && groupFilter !== 'all') {
+                activeEmployees = activeEmployees.filter(emp => emp.groupId === groupFilter);
+            }
             const filteredEmployees = activeEmployees.filter(emp =>
                 emp.name.toLowerCase().includes(searchTerm) ||
                 emp.position.toLowerCase().includes(searchTerm)
@@ -4202,7 +4203,6 @@
 
             const totalItems = filteredEmployees.length;
             const totalPages = Math.ceil(totalItems / attendanceItemsPerPage);
-
             if (attendanceCurrentPage > totalPages) {
                 attendanceCurrentPage = totalPages > 0 ? totalPages : 1;
             }
@@ -4211,53 +4211,62 @@
             const paginatedEmployees = filteredEmployees.slice(startIndex, endIndex);
 
             if (paginatedEmployees.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 20px;">Aucun employé trouvé pour la date et les filtres sélectionnés.</p>`;
+                container.innerHTML = `<p style="text-align: center; padding: 20px;">Aucun employé trouvé pour les filtres sélectionnés.</p>`;
             } else {
-            
                 container.innerHTML = paginatedEmployees.map(employee => {
                     const presenceData = attendance[selectedDate]?.[employee.id];
-                    let presenceHTML = '';
+                    const isPresent = !!presenceData;
+                    
+                    // Fanamarinana ny karazana angona efa voatahiry
+                    const isSimplePresence = (typeof presenceData === 'boolean' || typeof presenceData === 'string');
+                    const isDetailedPresence = (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee);
 
-                    if (presenceData) {
-                        const arrivalTime = presenceData.arrivee || 'N/A';
-                        const departureTime = presenceData.depart || '...';
-                        const method = presenceData.method || 'MANUAL';
-                        const methodColor = method === 'QR' ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-secondary)';
-                        const methodIcon = method === 'QR' ? 'qr_code_scanner' : 'edit';
-
-                        presenceHTML = `
-                            <div style="text-align: right;">
-                                <div style="font-size: 14px; margin-bottom: 8px;">
-                                    <span>Arrivée: <b>${arrivalTime}</b></span> | <span>Départ: <b>${departureTime}</b></span>
-                                    <span style="color: ${methodColor}; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin-left: 8px;">
-                                        <span class="material-icons" style="font-size: 14px;">${methodIcon}</span> ${method}
-                                    </span>
-                                </div>
-                                ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
-                                <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
-                            </div>
-                        `;
-                    } else {
-                        presenceHTML = `<button class="btn btn-success" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'arrivee', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">login</span> Arrivée</button>`;
-                    }
-
-                    // --- FANITSIANA LEHIBE ETO ---
-                    // 1. Alaina ny vondrona misy ilay mpiasa
                     const group = groups.find(g => g.id === employee.groupId);
                     const groupName = group ? group.name : "<i>Sans groupe</i>";
 
-                    // 2. Ampidirina ao anatin'ny HTML ilay anaran'ny vondrona
                     return `
                         <div class="attendance-item">
                             <div class="attendance-status">
-                                <div class="status-indicator ${presenceData ? 'present' : ''}"></div>
+                                <div class="status-indicator ${isPresent ? 'present' : ''}"></div>
                                 <div>
                                     <h4 class="employee-name">${employee.name}</h4>
                                     <p class="employee-position">${employee.position}</p>
                                     <p style="font-size: 12px; color: var(--md-sys-color-secondary);"><strong>Groupe:</strong> ${groupName}</p>
                                 </div>
                             </div>
-                            <div>${presenceHTML}</div>
+                            
+                            <div style="width: 50%; text-align: right;">
+                                <!-- Safidy: Checkbox na Heures -->
+                                <div style="margin-bottom: 8px; font-size: 12px;">
+                                    <label style="margin-right: 16px;">
+                                        <input type="radio" name="att-type-${employee.id}" value="simple" onchange="toggleAttendanceType('${employee.id}', 'simple')" ${isSimplePresence || !isPresent ? 'checked' : ''}> Simple
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="att-type-${employee.id}" value="detailed" onchange="toggleAttendanceType('${employee.id}', 'detailed')" ${isDetailedPresence ? 'checked' : ''}> Détaillé
+                                    </label>
+                                </div>
+
+                                <!-- Fizarana ho an'ny Checkbox -->
+                                <div id="simple-att-${employee.id}" style="display: ${isSimplePresence || !isPresent ? 'flex' : 'none'}; align-items: center; justify-content: flex-end; gap: 8px;">
+                                    <label for="att-check-${employee.id}" style="cursor: pointer; font-weight: 500; color: ${isPresent ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)'};">
+                                        ${isPresent ? 'Présent (Journée)' : 'Absent'}
+                                    </label>
+                                    <input type="checkbox" class="checkbox" id="att-check-${employee.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendanceCheckbox('${employee.id}', '${selectedDate}', this.checked)">
+                                </div>
+
+                                <!-- Fizarana ho an'ny Heures -->
+                                <div id="detailed-att-${employee.id}" style="display: ${isDetailedPresence ? 'block' : 'none'};">
+                                    ${isDetailedPresence ? `
+                                        <div style="font-size: 14px; margin-bottom: 8px;">
+                                            <span>Arrivée: <b>${presenceData.arrivee}</b></span> | <span>Départ: <b>${presenceData.depart || '...'}</b></span>
+                                        </div>
+                                        ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
+                                        <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
+                                    ` : `
+                                        <button class="btn btn-success" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'arrivee', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">login</span> Arrivée</button>
+                                    `}
+                                </div>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -4274,6 +4283,22 @@
                     displayAttendance(); 
                 }
             );
+        }
+
+                // =======================================================================
+        //  FONCTION VAOVAO: Manova ny karazana fampidirana présence
+        // =======================================================================
+        function toggleAttendanceType(employeeId, type) {
+            const simpleDiv = document.getElementById(`simple-att-${employeeId}`);
+            const detailedDiv = document.getElementById(`detailed-att-${employeeId}`);
+
+            if (type === 'simple') {
+                simpleDiv.style.display = 'flex';
+                detailedDiv.style.display = 'none';
+            } else {
+                simpleDiv.style.display = 'none';
+                detailedDiv.style.display = 'block';
+            }
         }
 
 
@@ -4419,6 +4444,7 @@
         }
 
 
+                // --- Fanitsiana ny recordTime ---
         async function recordTime(employeeId, type, date) {
             const now = new Date();
             const currentTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -4427,13 +4453,13 @@
                 attendance[date] = {};
             }
 
+            // Fafana aloha ny mety ho angona "simple" (true) taloha
+            if (typeof attendance[date][employeeId] !== 'object') {
+                delete attendance[date][employeeId];
+            }
+
             if (type === 'arrivee') {
-                attendance[date][employeeId] = {
-                    status: 'journee', // Mbola heverina ho tontolo andro aloha
-                    arrivee: currentTime,
-                    depart: null,
-                    method: 'MANUAL'
-                };
+                attendance[date][employeeId] = { arrivee: currentTime, depart: null, method: 'MANUAL' };
                 showAlert(`${employees.find(e=>e.id===employeeId).name} marqué arrivé à ${currentTime}`, 'success');
             } else if (type === 'depart' && attendance[date][employeeId]) {
                 attendance[date][employeeId].depart = currentTime;
@@ -4441,24 +4467,16 @@
             }
 
             await saveAttendanceData();
-            displayAttendance(); // Mba havaozina ny fampisehoana
+            displayAttendance();
             updateStats();
         }
 
+        // --- Fanitsiana ny clearAttendance ---
         async function clearAttendance(employeeId, date) {
             if (confirm("Voulez-vous vraiment annuler la présence de cet employé pour aujourd'hui ?")) {
                 if (attendance[date] && attendance[date][employeeId]) {
                     delete attendance[date][employeeId];
                 }
-                
-                // Fafana koa ny ao amin'ny QR raha misy
-                const qrIndex = qrAttendance.findIndex(att => att.employeeId === employeeId && att.date === date);
-                if (qrIndex > -1) {
-                    const recordToDelete = qrAttendance[qrIndex];
-                    qrAttendance.splice(qrIndex, 1);
-                    await dbManager.delete('qr_attendance', recordToDelete.id);
-                }
-
                 await saveAttendanceData();
                 displayAttendance();
                 updateStats();
@@ -4466,6 +4484,39 @@
             }
         }
 
+
+                // =======================================================================
+        //  FONCTION VAOVAO: Manavao ny présence avy amin'ny Checkbox
+        // =======================================================================
+        async function updateAttendanceCheckbox(employeeId, date, isChecked) {
+            if (!attendance[date]) {
+                attendance[date] = {};
+            }
+
+            // Raha voatsindry ilay checkbox
+            if (isChecked) {
+                // Fafana aloha ny mety ho angona "détaillé" (misy ora) taloha
+                if (typeof attendance[date][employeeId] === 'object') {
+                    delete attendance[date][employeeId];
+                }
+                // Apetraka ho "true" ny sandany, izay midika hoe "journée entière"
+                attendance[date][employeeId] = true; 
+            } 
+            // Raha nesorina ny "check"
+            else {
+                // Fafana ny firaketana ho an'io mpiasa io amin'io daty io
+                delete attendance[date][employeeId];
+            }
+
+            // Tehirizina avy hatrany ny fanovana mba tsy ho very
+            await saveAttendanceData();
+            
+            // Havaozina ny fampisehoana mba hiova ny loko sy ny soratra
+            displayAttendance();
+            
+            // Havaozina ny statistika ankapobeny
+            updateStats();
+        }
 
 
         async function updateAttendance(employeeId, isPresent, date) {
