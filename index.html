@@ -6872,9 +6872,9 @@
             }
         });
 
-        /**
-         * Fonction lehibe antsoina rehefa manindry ny bokotra "Lancer l'Estimation".
-         */
+                // =======================================================================
+        //  calculateSalaryEstimation (VERSION FARANY - MANITSY NY KAJY KARAMA)
+        // =======================================================================
         function calculateSalaryEstimation() {
             const startDateStr = document.getElementById('estimationStartDate').value;
             const endDateStr = document.getElementById('estimationEndDate').value;
@@ -6897,7 +6897,6 @@
             container.style.display = 'block';
             container.innerHTML = '<div class="loading"></div><p>Calcul de l\'estimation en cours...</p>';
 
-            // Sivana ny mpiasa araka ny vondrona voafidy
             let employeesToEstimate = employees.filter(e => e.status === 'actif');
             if (groupFilter !== 'all') {
                 employeesToEstimate = employeesToEstimate.filter(emp => emp.groupId === groupFilter);
@@ -6908,16 +6907,60 @@
             let totalPastDays = 0;
             let totalFutureDays = 0;
 
-            // Famakiana ny mpiasa tsirairay
-            employeesToEstimate.forEach(employee => {
-                const { estimatedDays, pastDays, futureDays } = countEstimatedPresence(employee.id, startDate, endDate);
-                const dailySalary = employee.salary / 30; // Heverina ho 30 andro foana ny volana mba ho tsotra
-                
-                totalEstimatedGrossSalary += dailySalary * estimatedDays;
-                totalDaysCount += estimatedDays;
-                totalPastDays += pastDays;
-                totalFutureDays += futureDays;
-            });
+            // --- FANITSIANA LEHIBE NY Fomba Fikajiana ---
+            // Tsy isaky ny mpiasa intsony no kajiana fa isan'andro
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().slice(0, 10);
+                const today = new Date();
+                today.setUTCHours(0, 0, 0, 0);
+
+                // Alaina ny isan'ny andro ao anatin'ny volana misy an'io daty io
+                const daysInCurrentMonth = getDaysInMonth(d.getUTCFullYear(), d.getUTCMonth() + 1);
+
+                // Famakiana ny mpiasa rehetra ho an'io andro io
+                employeesToEstimate.forEach(employee => {
+                    const dailySalary = employee.salary / daysInCurrentMonth;
+                    let dayValue = 0;
+
+                    // Raha daty efa lasa
+                    if (d < today) {
+                        const dayAttendanceData = attendance[dateStr];
+                        if (dayAttendanceData && dayAttendanceData[employee.id]) {
+                            const presenceData = dayAttendanceData[employee.id];
+                            const dayOfWeek = d.getUTCDay();
+                            if (dayOfWeek === 0) { // Alahady
+                                dayValue = 1;
+                            } else {
+                                if (typeof presenceData === 'object' && presenceData.arrivee) {
+                                    if (presenceData.depart) {
+                                        const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
+                                        dayValue = (duration.totalMinutes / 60 >= 4) ? 1 : 0.5;
+                                    } else {
+                                        dayValue = 0.5;
+                                    }
+                                } else if (presenceData === true || presenceData === 'journee') {
+                                    dayValue = 1;
+                                } else if (presenceData === 'demi') {
+                                    dayValue = 0.5;
+                                }
+                            }
+                        }
+                        totalPastDays += dayValue;
+                    } 
+                    // Raha daty anio na ho avy
+                    else {
+                        const dayOfWeek = d.getUTCDay();
+                        if (dayOfWeek !== 6) { // Heverina fa miasa ny Alahady fa tsy ny Asabotsy
+                            dayValue = 1;
+                        }
+                        totalFutureDays += dayValue;
+                    }
+
+                    totalEstimatedGrossSalary += dailySalary * dayValue;
+                    totalDaysCount += dayValue;
+                });
+            }
+            // --- FARAN'NY FANITSIANA ---
 
             // Fampisehoana ny valiny
             container.innerHTML = `
@@ -6945,11 +6988,12 @@
                     <h4>Détails des jours comptabilisés:</h4>
                     <ul>
                         <li><strong>Jours passés (réels):</strong> ${totalPastDays.toFixed(2)} jours</li>
-                        <li><strong>Jours futurs (estimés):</strong> ${totalFutureDays} jours</li>
+                        <li><strong>Jours futurs (estimés):</strong> ${totalFutureDays.toFixed(2)} jours</li>
                     </ul>
                 </div>
             `;
         }
+
 
         // =======================================================================
         //  countEstimatedPresence (VERSION VAOVAO - MANITSY NY KAJY NY ANDRO LASA)
