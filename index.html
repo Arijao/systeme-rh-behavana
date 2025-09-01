@@ -1137,6 +1137,11 @@
                 <span class="material-icons">analytics</span>
                 Rapports
             </button>
+            <button class="nav-tab" onclick="showSection('estimation')">
+                <span class="material-icons">request_quote</span>
+                Estimation
+            </button>
+
         </div>
 
         <!-- Dashboard Section -->
@@ -1770,6 +1775,47 @@
             </div>
 
         </div>
+                <!-- ======================================================================= -->
+        <!--            SECTION : ESTIMATION DES SALAIRES                      -->
+        <!-- ======================================================================= -->
+        <div id="estimation" class="section">
+            <div class="card">
+                <h2><span class="material-icons">request_quote</span>Estimation des Salaires</h2>
+                <p style="margin-top: -12px; margin-bottom: 20px; color: var(--md-sys-color-on-surface-variant);">
+                    Calculez une estimation du coût salarial total pour une période future.
+                </p>
+
+                <!-- Sehatra fisafidianana -->
+                <div class="form-row" style="align-items: flex-end; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label for="estimationStartDate">Date de Début</label>
+                        <input type="date" class="form-control" id="estimationStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="estimationEndDate">Date de Fin</label>
+                        <input type="date" class="form-control" id="estimationEndDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="estimationGroupFilter">Filtrer par Groupe</label>
+                        <select class="form-control" id="estimationGroupFilter">
+                            <option value="all">Tous les Groupes</option>
+                            <!-- Ho fenoina amin'ny JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="calculateSalaryEstimation()">
+                    <span class="material-icons">calculate</span>
+                    Lancer l'Estimation
+                </button>
+
+                <!-- Fizarana fampisehoana ny valiny -->
+                <div id="estimationResultsContainer" style="margin-top: 24px; display: none;">
+                    <!-- Ho fenoina amin'ny JavaScript -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Settings Panel -->
@@ -4012,6 +4058,19 @@
                     break;
                 case 'reports':
                     updateReportStats();
+                    break;
+                case 'estimation':
+                    // Fenoina ny lisitry ny vondrona ao amin'ny sivana
+                    populateGroupSelects(); 
+                    // Apetraka ny daty default (ohatra: anio ka hatramin'ny faran'ny volana)
+                    const today = new Date();
+                    const startDateInput = document.getElementById('estimationStartDate');
+                    const endDateInput = document.getElementById('estimationEndDate');
+                    if(startDateInput && endDateInput) {
+                        startDateInput.value = today.toISOString().slice(0, 10);
+                        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        endDateInput.value = endOfMonth.toISOString().slice(0, 10);
+                    }
                     break;
                 // Azo ampiana 'default' raha ilaina
                 // default:
@@ -6811,6 +6870,138 @@
                 }
             }
         });
+
+        /**
+         * Fonction lehibe antsoina rehefa manindry ny bokotra "Lancer l'Estimation".
+         */
+        function calculateSalaryEstimation() {
+            const startDateStr = document.getElementById('estimationStartDate').value;
+            const endDateStr = document.getElementById('estimationEndDate').value;
+            const groupFilter = document.getElementById('estimationGroupFilter').value;
+            const container = document.getElementById('estimationResultsContainer');
+
+            if (!startDateStr || !endDateStr) {
+                showAlert("Veuillez sélectionner une date de début et de fin.", 'error');
+                return;
+            }
+
+            const startDate = new Date(startDateStr + 'T00:00:00Z');
+            const endDate = new Date(endDateStr + 'T23:59:59Z');
+
+            if (endDate < startDate) {
+                showAlert("La date de fin ne peut pas être antérieure à la date de début.", 'error');
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = '<div class="loading"></div><p>Calcul de l\'estimation en cours...</p>';
+
+            // Sivana ny mpiasa araka ny vondrona voafidy
+            let employeesToEstimate = employees.filter(e => e.status === 'actif');
+            if (groupFilter !== 'all') {
+                employeesToEstimate = employeesToEstimate.filter(emp => emp.groupId === groupFilter);
+            }
+
+            let totalEstimatedGrossSalary = 0;
+            let totalDaysCount = 0;
+            let totalPastDays = 0;
+            let totalFutureDays = 0;
+
+            // Famakiana ny mpiasa tsirairay
+            employeesToEstimate.forEach(employee => {
+                const { estimatedDays, pastDays, futureDays } = countEstimatedPresence(employee.id, startDate, endDate);
+                const dailySalary = employee.salary / 30; // Heverina ho 30 andro foana ny volana mba ho tsotra
+                
+                totalEstimatedGrossSalary += dailySalary * estimatedDays;
+                totalDaysCount += estimatedDays;
+                totalPastDays += pastDays;
+                totalFutureDays += futureDays;
+            });
+
+            // Fampisehoana ny valiny
+            container.innerHTML = `
+                <h3>Résultats de l'Estimation</h3>
+                <p>Pour la période du <strong>${startDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${endDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
+                
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="stat-card" style="background-color: var(--md-sys-color-primary-container);">
+                        <div class="stat-icon"><span class="material-icons">payments</span></div>
+                        <div class="stat-content">
+                            <h3 style="color: var(--md-sys-color-on-primary-container);">${formatCurrency(totalEstimatedGrossSalary)}</h3>
+                            <p>Total Salaire Brut Estimé</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><span class="material-icons">summarize</span></div>
+                        <div class="stat-content">
+                            <h3>${totalDaysCount.toFixed(2)} jours</h3>
+                            <p>Total Jours-Homme Estimés</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 16px; padding: 12px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">
+                    <h4>Détails des jours comptabilisés:</h4>
+                    <ul>
+                        <li><strong>Jours passés (réels):</strong> ${totalPastDays.toFixed(2)} jours</li>
+                        <li><strong>Jours futurs (estimés):</strong> ${totalFutureDays} jours</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        /**
+         * Mikajy ny andro niasana (tena izy + tombana) ho an'ny mpiasa iray.
+         * @param {string} employeeId - Ny ID an'ilay mpiasa.
+         * @param {Date} startDate - Daty anombohana.
+         * @param {Date} endDate - Daty amaranana.
+         * @returns {{estimatedDays: number, pastDays: number, futureDays: number}}
+         */
+        function countEstimatedPresence(employeeId, startDate, endDate) {
+            let pastDays = 0;
+            let futureDays = 0;
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0); // Atao amin'ny fiandohan'ny andro
+
+            // Famakiana ny andro rehetra ao anatin'ny fe-potoana
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+                const monthStr = dateStr.slice(0, 7); // "YYYY-MM"
+
+                // Raha daty efa lasa
+                if (d < today) {
+                    // Ampiasaina ilay function efa misy mba haka ny tena andro niasana
+                    const dayPresence = countPresenceDays(employeeId, monthStr);
+                    // Ity dia kajy tsotsotra, mila hatsaraina raha ilaina
+                    // Eto isika dia mihevitra fa ny countPresenceDays dia mamerina ny totalin'ny volana
+                    // Ka mila fomba hafa isika:
+                    const dayData = attendance[dateStr]?.[employeeId];
+                    if (dayData) {
+                        if (typeof dayData === 'object' && dayData.arrivee) {
+                            pastDays += (dayData.depart) ? 1 : 0.5;
+                        } else if (dayData === true || dayData === 'journee') {
+                            pastDays += 1;
+                        } else if (dayData === 'demi') {
+                            pastDays += 0.5;
+                        }
+                    }
+                } 
+                // Raha daty anio na ho avy
+                else {
+                    const dayOfWeek = d.getUTCDay();
+                    // Raha tsy Alahady (0) na Asabotsy (6), dia heverina ho tonga
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        futureDays += 1;
+                    }
+                }
+            }
+
+            return {
+                estimatedDays: pastDays + futureDays,
+                pastDays: pastDays,
+                futureDays: futureDays
+            };
+        }
 
     </script>
 </body>
