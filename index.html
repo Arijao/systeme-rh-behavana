@@ -4175,6 +4175,9 @@
             };
         }
 
+                // =======================================================================
+        //  displayAttendance (VERSION NOHATSARAINA - MISY VONDROM-PIASA)
+        // =======================================================================
         function displayAttendance() {
             const container = document.getElementById('attendanceList');
             const selectedDate = document.getElementById('attendanceDate').value;
@@ -4186,7 +4189,6 @@
                 return;
             }
 
-            // Raha mbola tsy misy firaketana ho an'io daty io, dia amboarina ny "objet" banga
             if (!attendance[selectedDate]) {
                 attendance[selectedDate] = {};
             }
@@ -4231,16 +4233,20 @@
                                         <span class="material-icons" style="font-size: 14px;">${methodIcon}</span> ${method}
                                     </span>
                                 </div>
-                                <!-- Asehoy ny bokotra "Départ" raha mbola tsy nanao izy -->
                                 ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
                                 <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
                             </div>
                         `;
                     } else {
-                        // Raha mbola tsy nanao pointage
                         presenceHTML = `<button class="btn btn-success" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'arrivee', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">login</span> Arrivée</button>`;
                     }
 
+                    // --- FANITSIANA LEHIBE ETO ---
+                    // 1. Alaina ny vondrona misy ilay mpiasa
+                    const group = groups.find(g => g.id === employee.groupId);
+                    const groupName = group ? group.name : "<i>Sans groupe</i>";
+
+                    // 2. Ampidirina ao anatin'ny HTML ilay anaran'ny vondrona
                     return `
                         <div class="attendance-item">
                             <div class="attendance-status">
@@ -4248,6 +4254,7 @@
                                 <div>
                                     <h4 class="employee-name">${employee.name}</h4>
                                     <p class="employee-position">${employee.position}</p>
+                                    <p style="font-size: 12px; color: var(--md-sys-color-secondary);"><strong>Groupe:</strong> ${groupName}</p>
                                 </div>
                             </div>
                             <div>${presenceHTML}</div>
@@ -4268,6 +4275,7 @@
                 }
             );
         }
+
 
         function displayAdvances() {
             const container = document.getElementById('advancesList');
