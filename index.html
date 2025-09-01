@@ -6258,7 +6258,8 @@
                 'editEmployeeGroup',      // Ho an'ny fanovana mpiasa
                 'employeeGroupFilter',    // Ho an'ny sivana ao amin'ny lisitry ny mpiasa
                 'payrollGroupFilter',     // Ho an'ny sivana ao amin'ny karama
-                'advanceGroupFilter'      // Ho an'ny sivana ao amin'ny trosa
+                'advanceGroupFilter',
+                'estimationGroupFilter'      // Ho an'ny sivana ao amin'ny trosa
             ];
             
             // Amboarina ny HTML ho an'ny options (tsy miova)
@@ -6950,39 +6951,52 @@
             `;
         }
 
-        /**
-         * Mikajy ny andro niasana (tena izy + tombana) ho an'ny mpiasa iray.
-         * @param {string} employeeId - Ny ID an'ilay mpiasa.
-         * @param {Date} startDate - Daty anombohana.
-         * @param {Date} endDate - Daty amaranana.
-         * @returns {{estimatedDays: number, pastDays: number, futureDays: number}}
-         */
+        // =======================================================================
+        //  countEstimatedPresence (VERSION VAOVAO - MANITSY NY KAJY NY ANDRO LASA)
+        // =======================================================================
         function countEstimatedPresence(employeeId, startDate, endDate) {
             let pastDays = 0;
             let futureDays = 0;
             const today = new Date();
-            today.setUTCHours(0, 0, 0, 0); // Atao amin'ny fiandohan'ny andro
+            today.setUTCHours(0, 0, 0, 0);
 
             // Famakiana ny andro rehetra ao anatin'ny fe-potoana
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 const dateStr = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-                const monthStr = dateStr.slice(0, 7); // "YYYY-MM"
 
                 // Raha daty efa lasa
                 if (d < today) {
-                    // Ampiasaina ilay function efa misy mba haka ny tena andro niasana
-                    const dayPresence = countPresenceDays(employeeId, monthStr);
-                    // Ity dia kajy tsotsotra, mila hatsaraina raha ilaina
-                    // Eto isika dia mihevitra fa ny countPresenceDays dia mamerina ny totalin'ny volana
-                    // Ka mila fomba hafa isika:
-                    const dayData = attendance[dateStr]?.[employeeId];
-                    if (dayData) {
-                        if (typeof dayData === 'object' && dayData.arrivee) {
-                            pastDays += (dayData.depart) ? 1 : 0.5;
-                        } else if (dayData === true || dayData === 'journee') {
-                            pastDays += 1;
-                        } else if (dayData === 'demi') {
-                            pastDays += 0.5;
+                    // --- FANITSIANA LEHIBE ETO ---
+                    // Alaina mivantana ny angona ho an'io andro io
+                    const dayAttendanceData = attendance[dateStr];
+                    if (dayAttendanceData) {
+                        const presenceData = dayAttendanceData[employeeId];
+                        if (presenceData) {
+                            // Ampiasaina ny lojika mitovy amin'ny countPresenceDays
+                            const currentDate = new Date(dateStr + 'T00:00:00Z');
+                            const dayOfWeek = currentDate.getUTCDay();
+                            const isSunday = (dayOfWeek === 0);
+
+                            if (isSunday) {
+                                pastDays += 1;
+                            } else {
+                                if (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee) {
+                                    if (presenceData.depart) {
+                                        const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
+                                        if (duration.totalMinutes / 60 >= 4) {
+                                            pastDays += 1;
+                                        } else if (duration.totalMinutes > 0) {
+                                            pastDays += 0.5;
+                                        }
+                                    } else {
+                                        pastDays += 0.5;
+                                    }
+                                } else if (presenceData === true || presenceData === 'journee') {
+                                    pastDays += 1;
+                                } else if (presenceData === 'demi') {
+                                    pastDays += 0.5;
+                                }
+                            }
                         }
                     }
                 } 
@@ -6990,7 +7004,7 @@
                 else {
                     const dayOfWeek = d.getUTCDay();
                     // Raha tsy Alahady (0) na Asabotsy (6), dia heverina ho tonga
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    if (dayOfWeek !== 0) { // Ovaina mba ho isaina koa ny Asabotsy raha ilaina
                         futureDays += 1;
                     }
                 }
@@ -7002,6 +7016,7 @@
                 futureDays: futureDays
             };
         }
+
 
     </script>
 </body>
