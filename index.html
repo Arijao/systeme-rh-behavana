@@ -4981,70 +4981,62 @@
             return new Date(year, month, 0).getDate();
         }
 
-        // ===================================================
-        //  countPresenceDays (VERSION NOHATSARAINA)
-        //  Mahazaka ny angona taloha sy vaovao
-        // ===================================================
-        // ===================================================
-        //  countPresenceDays (VERSION FARANY - STABLE SY UNIVERSAL - VOAHITSY)
-        //  Mahazaka ny angona rehetra (taloha sy vaovao)
-        // ===================================================
-                // ===================================================
-        //  countPresenceDays (VERSION FARANY - MISY NY KAJY ALAHADY)
-        //  Ity no version manisa ny Alahady ho andro feno foana.
-        // ===================================================
+        // =======================================================================
+        //  countPresenceDays (VERSION FARANY INDRINDRA - Azo Antoka)
+        //  - Mamaha ny olan'ny "timezone" (Septambra, sns.)
+        //  - Mahazaka ny angona taloha (boolean, string) sy vaovao (objet misy ora)
+        //  - Manisa ny Alahady ho andro feno foana
+        // =======================================================================
         function countPresenceDays(employeeId, month) {
             let totalDaysWorked = 0;
-            const MINIMUM_HOURS_FOR_FULL_DAY = 4; // Ora farafahakeliny ho an'ny andro feno
+            const MINIMUM_HOURS_FOR_FULL_DAY = 4;
 
-            // Famakiana ny andro rehetra ao anatin'ny volana voafidy
+            // Famakiana ny andro rehetra ao anatin'ny firaketana
             Object.keys(attendance).forEach(dateStr => {
+                
+                // 1. Fanamarinana raha ao anatin'ny volana kajiana ilay daty
+                //    Ohatra: "2025-09-01".startsWith("2025-09") -> Marina
                 if (dateStr.startsWith(month)) {
                     const dayData = attendance[dateStr];
-                    if (!dayData) return; // Raha tsy misy angona ho an'io andro io
+                    if (!dayData) return;
 
                     const presenceData = dayData[employeeId];
 
-                    // Raha misy firaketana ho an'io mpiasa io...
+                    // 2. Fanamarinana raha nisy fahatongavana ho an'ilay mpiasa
                     if (presenceData) {
                         
-                        // --- FANITSIANA VAOVAO: Fanamarinana raha Alahady ---
-                        const dayOfWeek = new Date(dateStr).getDay(); // 0 = Alahady, 1 = Alatsinainy, ...
+                        // 3. Fanamarinana manokana ho an'ny Alahady (mampiasa UTC mba tsy hisy diso)
+                        const currentDate = new Date(dateStr + 'T00:00:00');
+                        const dayOfWeek = currentDate.getUTCDay(); // 0 = Alahady
                         const isSunday = (dayOfWeek === 0);
 
-                        // Raha Alahady ary nisy fahatongavana, dia andro feno avy hatrany
                         if (isSunday) {
-                            totalDaysWorked += 1;
-                            return; // Miala eto ary manohy amin'ny daty manaraka
+                            totalDaysWorked += 1; // Raha Alahady dia andro feno avy hatrany
+                            return; // Ary ajanona ny kajy ho an'io andro io
                         }
-                        // --- FARAN'NY FANITSIANA ---
-                        // --- FANDRAISANA AN-TANANA NY KARAZANA ANGONA REHETRA (ho an'ny andro tsy Alahady) ---
 
-                        // 1. Karazana VAOVAO (objet misy ora fahatongavana)
+                        // 4. Raha TSY ALAHADY, dia eto no mandeha ny kajy mahazatra
+                        //    Ity fizarana ity no miantoka fa voavaky ny angona taloha
+
+                        // ==> RAHA ANGONA VAOVAO (objet misy ora)
                         if (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee) {
-                            
                             if (presenceData.depart) {
-                                // Raha feno ny ora roa, dia kajiana ny faharetany
                                 const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
                                 const durationInHours = duration.totalMinutes / 60;
-
                                 if (durationInHours >= MINIMUM_HOURS_FOR_FULL_DAY) {
-                                    totalDaysWorked += 1; // Andro feno
+                                    totalDaysWorked += 1;
                                 } else if (durationInHours > 0) {
-                                    totalDaysWorked += 0.5; // Antsasaky ny andro
+                                    totalDaysWorked += 0.5;
                                 }
-                            } 
-                            else {
-                                totalDaysWorked += 0.5; // Heverina ho antsasaky ny andro raha tsy misy départ
+                            } else {
+                                totalDaysWorked += 0.5;
                             }
                         } 
-                        
-                        // 2. Karazana TALOHA (boolean: true)
+                        // ==> RAHA ANGONA TALOHA (boolean: "true")
                         else if (presenceData === true) {
-                            totalDaysWorked += 1; // Heverina ho andro feno avy hatrany
+                            totalDaysWorked += 1; // Heverina ho andro feno
                         } 
-                        
-                        // 3. Karazana TALOHA (string: 'journee' na 'demi')
+                        // ==> RAHA ANGONA TALOHA (string: "journee" na "demi")
                         else if (typeof presenceData === 'string') {
                             if (presenceData === 'journee') {
                                 totalDaysWorked += 1;
@@ -5058,6 +5050,7 @@
 
             return totalDaysWorked;
         }
+
 
 
 
