@@ -6571,8 +6571,8 @@
         // =======================================================================
         //  VERSION  STC 
         // =======================================================================
-        // =======================================================================
-        //  calculateSTC (VERSION FARANY - MIKAJY NY PERIODE MARINA)
+                // =======================================================================
+        //  calculateSTC (VERSION FARANY - MANITSY NY KAJY VOLANA MARO)
         // =======================================================================
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6592,16 +6592,10 @@
                 return;
             }
 
-            // Daty fialana
             const departureDate = new Date(employee.departureDate + 'T23:59:59');
-            
-            // Alaina ny volana farany nandoavana karama
             const lastPaidMonth = getLastPaidMonth(employeeId);
-            
-            // Faritana ny daty hanombohana ny kajy
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
 
-            // Fanamarinana sao ny daty fialana dia alohan'ny daty anombohana
             if (departureDate < startDateForCalc) {
                 container.innerHTML = `<p class="alert alert-warning">Cet employé a déjà été payé pour toute sa période de travail. Aucun calcul n'est nécessaire.</p>`;
                 return;
@@ -6612,10 +6606,11 @@
             let totalDaysToPay = 0;
             let detailsHTML = '';
 
-            // --- Famakiana ny volana rehetra ao anatin'ny fe-potoana ---
-            // Manomboka amin'ny daty voalohany, ary mifarana amin'ny daty fialana
-            for (let d = new Date(startDateForCalc); d <= departureDate; d.setMonth(d.getMonth() + 1)) {
-                const currentMonthStr = d.toISOString().slice(0, 7);
+            // --- FANITSIANA LEHIBE NY Fomba Famakiana ny Volana ---
+            // Ity no miantoka fa ny volana rehetra dia voakajy tsara
+            let currentLoopDate = new Date(startDateForCalc);
+            while (currentLoopDate <= departureDate) {
+                const currentMonthStr = currentLoopDate.toISOString().slice(0, 7);
                 const [year, month] = currentMonthStr.split('-').map(Number);
                 const daysInCurrentMonth = getDaysInMonth(year, month);
 
@@ -6636,8 +6631,11 @@
                 if (presenceInMonth > 0 || advancesInMonth > 0) {
                     detailsHTML += `<li>Mois ${currentMonthStr}: Présence: ${presenceInMonth.toFixed(2)} j | Brut: ${formatCurrency(grossSalaryForMonth)} | Avances: ${formatCurrency(advancesInMonth)}</li>`;
                 }
+                
+                // Mampandroso ny daty amin'ny volana manaraka
+                currentLoopDate.setMonth(currentLoopDate.getMonth() + 1);
             }
-            // --- FARAN'NY Famakiana ---
+            // --- FARAN'NY FANITSIANA ---
 
             const netSalaryToPay = Math.max(0, totalGrossSalaryToPay - totalAdvancesToDeduct);
 
@@ -6673,6 +6671,7 @@
                 </button>
             `;
         }
+
 
         // Ireo fonctions mpanampy ireo dia ilaina mba handehanan'ny etsy ambony
         function getLastPaidMonth(employeeId) {
