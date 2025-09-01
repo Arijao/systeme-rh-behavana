@@ -6556,58 +6556,12 @@
                 console.error("Erreur d'importation:", error);
             }
         }
-        // =======================================================================
-        //  FONCTION VAOVAO ILAINA - Maka ny volana farany nandoavana karama
-        // =======================================================================
-        /**
-         * Mitady ny volana farany nandoavana karama ho an'ny mpiasa iray.
-         * @param {string} employeeId - Ny ID an'ilay mpiasa.
-         * @returns {string|null} - Mamerina ny volana (oh: "2025-07") na null raha mbola tsy naloa.
-         */
-        function getLastPaidMonth(employeeId) {
-            // Sivana alaina daholo ny karama efa voaloan'ilay mpiasa
-            const employeePayments = payrolls.filter(p => p.employeeId === employeeId && p.month !== 'SOLDE_DE_TOUT_COMPTE');
-
-            // Raha tsy mbola nisy karama voaloa mihitsy
-            if (employeePayments.length === 0) {
-                return null;
-            }
-
-            // Alahatra avy amin'ny volana vao haingana indrindra mankany amin'ny ela indrindra
-            employeePayments.sort((a, b) => b.month.localeCompare(a.month));
-
-            // Averina ilay volana voalohany ao anaty lisitra (izay vao haingana indrindra)
-            return employeePayments[0].month;
-        }
-
-        /**
-         * Mamantatra ny daty tokony hanombohana ny kajy ny STC.
-         * @param {string|null} lastPayMonth - Ny volana farany naloa (oh: "2025-07").
-         * @param {Date} departureDate - Ny daty hialan'ilay mpiasa.
-         * @returns {Date} - Ny daty hanombohana ny kajy.
-         */
-        function getStartDateForCalculation(lastPayMonth) {
-            // Raha mbola tsy naloa karama mihitsy ilay mpiasa
-            if (!lastPayMonth) {
-                // Tsy maintsy fantarintsika ny daty nidirany. Raha tsy misy, dia alaina ny fiandohan'ity volana ity.
-                // Ity dia tokony hatsaraina any aoriana amin'ny fampidirana "date d'embauche".
-                const today = new Date();
-                return new Date(today.getFullYear(), today.getMonth(), 1);
-            }
-
-            // Raha efa naloa karama izy (ohatra: '2025-07')
-            const [year, month] = lastPayMonth.split('-').map(Number);
-            // Ny daty hanombohana dia ny andro voalohan'ny volana MANARAKA.
-            // Ohatra: raha '2025-07' no farany, dia ny 1 Aogositra 2025 no manomboka ny kajy.
-            // Ny new Date(year, month, 1) dia manome ny volana manaraka satria ny 'month' dia 0-11.
-            const startDate = new Date(year, month, 1); 
-            return startDate;
-        }
-
-
-
+        
         // =======================================================================
         //  VERSION  STC 
+        // =======================================================================
+        // =======================================================================
+        //  calculateSTC (VERSION FARANY - MIKAJY NY PERIODE MARINA)
         // =======================================================================
         async function calculateSTC() {
             const employeeId = document.getElementById('stcEmployeeSelect').value;
@@ -6623,20 +6577,32 @@
 
             const employee = employees.find(e => e.id === employeeId);
             if (!employee || !employee.departureDate) {
-                container.innerHTML = '<p class="alert alert-error">Erreur: Date de départ non définie.</p>';
+                container.innerHTML = '<p class="alert alert-error">Erreur: Date de départ non définie pour cet employé.</p>';
                 return;
             }
 
+            // Daty fialana
             const departureDate = new Date(employee.departureDate + 'T23:59:59');
+            
+            // Alaina ny volana farany nandoavana karama
             const lastPaidMonth = getLastPaidMonth(employeeId);
+            
+            // Faritana ny daty hanombohana ny kajy
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
+
+            // Fanamarinana sao ny daty fialana dia alohan'ny daty anombohana
+            if (departureDate < startDateForCalc) {
+                container.innerHTML = `<p class="alert alert-warning">Cet employé a déjà été payé pour toute sa période de travail. Aucun calcul n'est nécessaire.</p>`;
+                return;
+            }
 
             let totalGrossSalaryToPay = 0;
             let totalAdvancesToDeduct = 0;
             let totalDaysToPay = 0;
             let detailsHTML = '';
 
-            // --- Boucle vaovao: Mandalo ny volana rehetra ao anatin'ny fe-potoana ---
+            // --- Famakiana ny volana rehetra ao anatin'ny fe-potoana ---
+            // Manomboka amin'ny daty voalohany, ary mifarana amin'ny daty fialana
             for (let d = new Date(startDateForCalc); d <= departureDate; d.setMonth(d.getMonth() + 1)) {
                 const currentMonthStr = d.toISOString().slice(0, 7);
                 const [year, month] = currentMonthStr.split('-').map(Number);
@@ -6646,7 +6612,7 @@
                 const presenceInMonth = countPresenceDays(employeeId, currentMonthStr);
                 totalDaysToPay += presenceInMonth;
 
-                // 2. Kajiana ny karama brut ho an'io volana io (mampiasa ny tena isan'ny andro)
+                // 2. Kajiana ny karama brut ho an'io volana io
                 const grossSalaryForMonth = (employee.salary / daysInCurrentMonth) * presenceInMonth;
                 totalGrossSalaryToPay += grossSalaryForMonth;
 
@@ -6660,11 +6626,11 @@
                     detailsHTML += `<li>Mois ${currentMonthStr}: Présence: ${presenceInMonth.toFixed(2)} j | Brut: ${formatCurrency(grossSalaryForMonth)} | Avances: ${formatCurrency(advancesInMonth)}</li>`;
                 }
             }
-            // --- FARAN'NY Boucle ---
+            // --- FARAN'NY Famakiana ---
 
             const netSalaryToPay = Math.max(0, totalGrossSalaryToPay - totalAdvancesToDeduct);
 
-            // Fampisehoana ny vokany
+            // Fampisehoana ny vokany (tsy miova)
             container.innerHTML = `
                 <h3>Détail du Solde pour ${employee.name}</h3>
                 <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString('fr-FR')}</strong> au <strong>${departureDate.toLocaleDateString('fr-FR')}</strong></p>
@@ -6697,8 +6663,22 @@
             `;
         }
 
+        // Ireo fonctions mpanampy ireo dia ilaina mba handehanan'ny etsy ambony
+        function getLastPaidMonth(employeeId) {
+            const employeePayments = payrolls.filter(p => p.employeeId === employeeId && p.month !== 'SOLDE_DE_TOUT_COMPTE');
+            if (employeePayments.length === 0) return null;
+            employeePayments.sort((a, b) => b.month.localeCompare(a.month));
+            return employeePayments[0].month;
+        }
 
-
+        function getStartDateForCalculation(lastPayMonth) {
+            if (!lastPayMonth) {
+                const today = new Date();
+                return new Date(today.getFullYear(), today.getMonth(), 1);
+            }
+            const [year, month] = lastPayMonth.split('-').map(Number);
+            return new Date(year, month, 1);
+        }
 
         // Fonction fanampiny ilaina
         function populateSTCEmployeeSelect() {
@@ -6708,14 +6688,20 @@
                             employeesToLeave.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
         }
 
+        // =======================================================================
+        //  finalizeSTC (VERSION NOHATSARAINA - TSY MAMAFY INTSONY)
+        //  Izy ity dia manova ny satan'ny mpiasa ho "inactif"
+        // =======================================================================
         async function finalizeSTC(employeeId, amount) {
-            if (confirm(`Vous êtes sur le point de payer un solde de ${formatCurrency(amount)} à cet employé. Cette action est définitive. Continuer ?`)) {
-                const employee = employees.find(e => e.id === employeeId);
-                if (!employee) {
-                    showAlert("Erreur: Employé non trouvé lors de la finalisation.", "error");
-                    return;
-                }
-                // 1. Tehirizina ho toy ny karama manokana
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) {
+                showAlert("Erreur: Employé non trouvé lors de la finalisation.", "error");
+                return;
+            }
+
+            if (confirm(`Vous êtes sur le point de payer un solde de ${formatCurrency(amount)} à ${employee.name}. Cette action marquera l'employé comme "Inactif" et est définitive. Continuer ?`)) {
+                
+                // 1. Tehirizina ho toy ny karama manokana (tsy miova)
                 const stcRecord = {
                     id: `stc-${employeeId}-${Date.now()}`,
                     employeeId: employeeId,
@@ -6726,21 +6712,27 @@
                 };
                 payrolls.push(stcRecord);
 
-                // 2. Ovaina ho "Inactif" ny satan'ilay mpiasa
+                // 2. FANovana LEHIBE: Ovaina ho "inactif" ny satan'ilay mpiasa
                 const employeeIndex = employees.findIndex(e => e.id === employeeId);
                 if (employeeIndex > -1) {
                     employees[employeeIndex].status = 'inactif';
+                    // Azonao atao koa ny manampy daty fialana ofisialy raha ilaina
+                    employees[employeeIndex].departureDate = new Date().toISOString().split('T')[0];
                 }
 
-                // 3. Tehirizina ny fanovana rehetra
+                // 3. Tehirizina ny fanovana rehetra (tsy miova)
                 await saveData();
 
-                // 4. Havaozina ny interface
-                showAlert('Solde de tout compte payé et finalisé avec succès!', 'success');
+                // 4. Havaozina ny interface (tsy miova)
+                showAlert('Solde de tout compte payé et finalisé avec succès! L\'employé est maintenant inactif.', 'success');
                 populateSTCEmployeeSelect(); // Esorina ao anaty lisitra ilay mpiasa
                 document.getElementById('stcResultsContainer').style.display = 'none';
+                
+                // Havaozina ny lisitry ny mpiasa mba tsy hisehoany intsony
+                displayEmployees();
             }
         }
+
         // =======================================================================
         //  VERSION VOAHITSY - Mampiseho ny kalandrie rehefa miova ny sata
         // =======================================================================
