@@ -1460,6 +1460,14 @@
                                 <input type="text" class="search-input" id="attendanceEmployeeSearch" placeholder="Taper un nom..." oninput="filterAttendanceEmployees()">
                             </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="attendanceGroupFilter">Filtrer par Groupe</label>
+                            <select class="form-control" id="attendanceGroupFilter" onchange="displayAttendance()">
+                                <option value="all">Tous les Groupes</option>
+                                <!-- Ho fenoina ho azy amin'ny JavaScript -->
+                            </select>
+                        </div>
 
                         <!-- Fizarana Safidy Isan'ny Singa -->
                         <div class="form-group items-per-page-group">
@@ -4180,16 +4188,19 @@
         }
 
                 // =======================================================================
-        //  displayAttendance (VERSION SAFIDY: CHECKBOX na HEURES)
+        //  displayAttendance (VERSION FARANY - MISY SIVANA VONDROM-PIASA)
         // =======================================================================
         function displayAttendance() {
             const container = document.getElementById('attendanceList');
             const selectedDate = document.getElementById('attendanceDate').value;
             const searchTerm = document.getElementById('attendanceEmployeeSearch').value.toLowerCase();
+            
+            // --- DINGANA VAOVAO: Alaina ny sandan'ny sivana vondrona ---
+            const groupFilter = document.getElementById('attendanceGroupFilter').value;
 
             if (!selectedDate) {
                 container.innerHTML = '<p style="text-align: center; padding: 20px;">Veuillez sélectionner une date pour commencer.</p>';
-                document.getElementById('attendancePagination').innerHTML = '';
+                document.getElementById('attendancePagination').innerHTML = ''; 
                 return;
             }
 
@@ -4198,10 +4209,12 @@
             }
 
             let activeEmployees = employees.filter(e => e.status !== 'inactif');
-            const groupFilter = document.getElementById('attendanceGroupFilter')?.value;
+
+            // --- DINGANA VAOVAO: Ampiharina ny sivana vondrona ---
             if (groupFilter && groupFilter !== 'all') {
                 activeEmployees = activeEmployees.filter(emp => emp.groupId === groupFilter);
             }
+
             const filteredEmployees = activeEmployees.filter(emp =>
                 emp.name.toLowerCase().includes(searchTerm) ||
                 emp.position.toLowerCase().includes(searchTerm)
@@ -4209,6 +4222,7 @@
 
             const totalItems = filteredEmployees.length;
             const totalPages = Math.ceil(totalItems / attendanceItemsPerPage);
+
             if (attendanceCurrentPage > totalPages) {
                 attendanceCurrentPage = totalPages > 0 ? totalPages : 1;
             }
@@ -4222,11 +4236,8 @@
                 container.innerHTML = paginatedEmployees.map(employee => {
                     const presenceData = attendance[selectedDate]?.[employee.id];
                     const isPresent = !!presenceData;
-                    
-                    // Fanamarinana ny karazana angona efa voatahiry
                     const isSimplePresence = (typeof presenceData === 'boolean' || typeof presenceData === 'string');
                     const isDetailedPresence = (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee);
-
                     const group = groups.find(g => g.id === employee.groupId);
                     const groupName = group ? group.name : "<i>Sans groupe</i>";
 
@@ -4240,9 +4251,7 @@
                                     <p style="font-size: 12px; color: var(--md-sys-color-secondary);"><strong>Groupe:</strong> ${groupName}</p>
                                 </div>
                             </div>
-                            
                             <div style="width: 50%; text-align: right;">
-                                <!-- Safidy: Checkbox na Heures -->
                                 <div style="margin-bottom: 8px; font-size: 12px;">
                                     <label style="margin-right: 16px;">
                                         <input type="radio" name="att-type-${employee.id}" value="simple" onchange="toggleAttendanceType('${employee.id}', 'simple')" ${isSimplePresence || !isPresent ? 'checked' : ''}> Simple
@@ -4251,16 +4260,12 @@
                                         <input type="radio" name="att-type-${employee.id}" value="detailed" onchange="toggleAttendanceType('${employee.id}', 'detailed')" ${isDetailedPresence ? 'checked' : ''}> Détaillé
                                     </label>
                                 </div>
-
-                                <!-- Fizarana ho an'ny Checkbox -->
                                 <div id="simple-att-${employee.id}" style="display: ${isSimplePresence || !isPresent ? 'flex' : 'none'}; align-items: center; justify-content: flex-end; gap: 8px;">
                                     <label for="att-check-${employee.id}" style="cursor: pointer; font-weight: 500; color: ${isPresent ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)'};">
                                         ${isPresent ? 'Présent (Journée)' : 'Absent'}
                                     </label>
                                     <input type="checkbox" class="checkbox" id="att-check-${employee.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendanceCheckbox('${employee.id}', '${selectedDate}', this.checked)">
                                 </div>
-
-                                <!-- Fizarana ho an'ny Heures -->
                                 <div id="detailed-att-${employee.id}" style="display: ${isDetailedPresence ? 'block' : 'none'};">
                                     ${isDetailedPresence ? `
                                         <div style="font-size: 14px; margin-bottom: 8px;">
@@ -4290,6 +4295,7 @@
                 }
             );
         }
+
 
                 // =======================================================================
         //  FONCTION VAOVAO: Manova ny karazana fampidirana présence
@@ -6324,7 +6330,8 @@
                 'employeeGroupFilter',    // Ho an'ny sivana ao amin'ny lisitry ny mpiasa
                 'payrollGroupFilter',     // Ho an'ny sivana ao amin'ny karama
                 'advanceGroupFilter',
-                'estimationGroupFilter'      // Ho an'ny sivana ao amin'ny trosa
+                'estimationGroupFilter',
+                'attendanceGroupFilter'      // Ho an'ny sivana ao amin'ny trosa
             ];
             
             // Amboarina ny HTML ho an'ny options (tsy miova)
