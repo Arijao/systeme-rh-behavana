@@ -4989,6 +4989,10 @@
         //  countPresenceDays (VERSION FARANY - STABLE SY UNIVERSAL - VOAHITSY)
         //  Mahazaka ny angona rehetra (taloha sy vaovao)
         // ===================================================
+                // ===================================================
+        //  countPresenceDays (VERSION FARANY - MISY NY KAJY ALAHADY)
+        //  Ity no version manisa ny Alahady ho andro feno foana.
+        // ===================================================
         function countPresenceDays(employeeId, month) {
             let totalDaysWorked = 0;
             const MINIMUM_HOURS_FOR_FULL_DAY = 4; // Ora farafahakeliny ho an'ny andro feno
@@ -5004,13 +5008,21 @@
                     // Raha misy firaketana ho an'io mpiasa io...
                     if (presenceData) {
                         
-                        // --- FANDRAISANA AN-TANANA NY KARAZANA ANGONA REHETRA ---
+                        // --- FANITSIANA VAOVAO: Fanamarinana raha Alahady ---
+                        const dayOfWeek = new Date(dateStr).getDay(); // 0 = Alahady, 1 = Alatsinainy, ...
+                        const isSunday = (dayOfWeek === 0);
+
+                        // Raha Alahady ary nisy fahatongavana, dia andro feno avy hatrany
+                        if (isSunday) {
+                            totalDaysWorked += 1;
+                            return; // Miala eto ary manohy amin'ny daty manaraka
+                        }
+                        // --- FARAN'NY FANITSIANA ---
+                        // --- FANDRAISANA AN-TANANA NY KARAZANA ANGONA REHETRA (ho an'ny andro tsy Alahady) ---
 
                         // 1. Karazana VAOVAO (objet misy ora fahatongavana)
-                        //    FANITSIANA LEHIBE ETO: Hamarinina aloha ny fisian'ny 'arrivee'
                         if (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee) {
                             
-                            // Rehefa azo antoka fa misy ny 'arrivee', dia jerena indray ny 'depart'
                             if (presenceData.depart) {
                                 // Raha feno ny ora roa, dia kajiana ny faharetany
                                 const duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
@@ -5022,9 +5034,8 @@
                                     totalDaysWorked += 0.5; // Antsasaky ny andro
                                 }
                             } 
-                            // Raha 'arrivee' fotsiny no misy fa tsy misy 'depart'
                             else {
-                                totalDaysWorked += 0.5; // Heverina ho antsasaky ny andro
+                                totalDaysWorked += 0.5; // Heverina ho antsasaky ny andro raha tsy misy départ
                             }
                         } 
                         
