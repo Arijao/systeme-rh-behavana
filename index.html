@@ -4981,7 +4981,7 @@
             return new Date(year, month, 0).getDate();
         }
 
-        // =======================================================================
+                // =======================================================================
         //  countPresenceDays (VERSION FARANY INDRINDRA - Azo Antoka)
         //  - Mamaha ny olan'ny "timezone" (Septambra, sns.)
         //  - Mahazaka ny angona taloha (boolean, string) sy vaovao (objet misy ora)
@@ -5006,8 +5006,9 @@
                     if (presenceData) {
                         
                         // 3. Fanamarinana manokana ho an'ny Alahady (mampiasa UTC mba tsy hisy diso)
-                        const currentDate = new Date(dateStr + 'T00:00:00');
-                        const dayOfWeek = currentDate.getUTCDay(); // 0 = Alahady
+                        // Tsy maintsy ampiana 'T00:00:00' mba ho raisiny ho daty marina
+                        const currentDate = new Date(dateStr + 'T00:00:00Z'); // Ampiana 'Z' mba hilazana fa UTC
+                        const dayOfWeek = currentDate.getUTCDay(); // Mampiasa getUTCDay()
                         const isSunday = (dayOfWeek === 0);
 
                         if (isSunday) {
@@ -5050,6 +5051,7 @@
 
             return totalDaysWorked;
         }
+
 
 
 
@@ -6561,9 +6563,6 @@
             }
         }
         
-        // =======================================================================
-        //  VERSION  STC 
-        // =======================================================================
                 // =======================================================================
         //  calculateSTC (VERSION FARANY - MANITSY NY KAJY VOLANA MARO)
         // =======================================================================
@@ -6585,7 +6584,8 @@
                 return;
             }
 
-            const departureDate = new Date(employee.departureDate + 'T23:59:59');
+            // Mampiasa UTC mba tsy hisy diso ny daty
+            const departureDate = new Date(employee.departureDate + 'T23:59:59Z');
             const lastPaidMonth = getLastPaidMonth(employeeId);
             const startDateForCalc = getStartDateForCalculation(lastPaidMonth);
 
@@ -6599,23 +6599,22 @@
             let totalDaysToPay = 0;
             let detailsHTML = '';
 
-            // --- FANITSIANA LEHIBE NY Fomba Famakiana ny Volana ---
-            // Ity no miantoka fa ny volana rehetra dia voakajy tsara
+            // Ity fomba fiasa ity dia efa marina, mampiasa 'while' loop
             let currentLoopDate = new Date(startDateForCalc);
             while (currentLoopDate <= departureDate) {
-                const currentMonthStr = currentLoopDate.toISOString().slice(0, 7);
-                const [year, month] = currentMonthStr.split('-').map(Number);
-                const daysInCurrentMonth = getDaysInMonth(year, month);
+                // Alaina ny volana amin'ny endrika YYYY-MM
+                const year = currentLoopDate.getUTCFullYear();
+                const month = (currentLoopDate.getUTCMonth() + 1).toString().padStart(2, '0');
+                const currentMonthStr = `${year}-${month}`;
 
-                // 1. Kajiana ny andro niasana ho an'io volana io
+                const daysInCurrentMonth = getDaysInMonth(year, parseInt(month));
+
                 const presenceInMonth = countPresenceDays(employeeId, currentMonthStr);
                 totalDaysToPay += presenceInMonth;
 
-                // 2. Kajiana ny karama brut ho an'io volana io
                 const grossSalaryForMonth = (employee.salary / daysInCurrentMonth) * presenceInMonth;
                 totalGrossSalaryToPay += grossSalaryForMonth;
 
-                // 3. Alaina ny trosa rehetra ho an'io volana io
                 const advancesInMonth = advances
                     .filter(adv => adv.employeeId === employeeId && adv.date.startsWith(currentMonthStr))
                     .reduce((sum, adv) => sum + adv.amount, 0);
@@ -6626,16 +6625,15 @@
                 }
                 
                 // Mampandroso ny daty amin'ny volana manaraka
-                currentLoopDate.setMonth(currentLoopDate.getMonth() + 1);
+                currentLoopDate.setUTCMonth(currentLoopDate.getUTCMonth() + 1);
             }
-            // --- FARAN'NY FANITSIANA ---
 
             const netSalaryToPay = Math.max(0, totalGrossSalaryToPay - totalAdvancesToDeduct);
 
             // Fampisehoana ny vokany (tsy miova)
             container.innerHTML = `
                 <h3>Détail du Solde pour ${employee.name}</h3>
-                <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString('fr-FR')}</strong> au <strong>${departureDate.toLocaleDateString('fr-FR')}</strong></p>
+                <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${new Date(employee.departureDate + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
                 
                 <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="stat-card">
@@ -6666,6 +6664,7 @@
         }
 
 
+
         // Ireo fonctions mpanampy ireo dia ilaina mba handehanan'ny etsy ambony
         function getLastPaidMonth(employeeId) {
             const employeePayments = payrolls.filter(p => p.employeeId === employeeId && p.month !== 'SOLDE_DE_TOUT_COMPTE');
@@ -6677,10 +6676,13 @@
         function getStartDateForCalculation(lastPayMonth) {
             if (!lastPayMonth) {
                 const today = new Date();
-                return new Date(today.getFullYear(), today.getMonth(), 1);
+                // Mampiasa UTC mba tsy hisy diso
+                return new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
             }
             const [year, month] = lastPayMonth.split('-').map(Number);
-            return new Date(year, month, 1);
+            // Mampiasa UTC. Ny volana dia 0-11, ka ny volana faha-8 (Aogositra) dia 7.
+            // Ny volana manaraka dia lasa volana faha-9 (Septambra)
+            return new Date(Date.UTC(year, month - 1 + 1, 1));
         }
 
         // Fonction fanampiny ilaina
