@@ -4008,28 +4008,42 @@
         // FONCTIONS EXISTANTES (partielles pour l'exemple)
         // ===============================
         
-        // Navigation
-        function showSection(sectionId) {
+                // =======================================================================
+        //  showSection (VERSION FARANY INDRINDRA - TSY MILA MANOVA HTML)
+        // =======================================================================
+        function showSection(sectionId, event = null) { // Ampiana 'event = null'
             // 1. Afenina daholo aloha ny fizarana rehetra
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
             
             // 2. Asehoy fotsiny ilay fizarana voatsindry
-            document.getElementById(sectionId).classList.add('active');
+            const sectionToShow = document.getElementById(sectionId);
+            if (sectionToShow) {
+                sectionToShow.classList.add('active');
+            }
             
             // 3. Ovaina ny endriky ny bokotra fitetezana (nav-tab)
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            // Ny `event.currentTarget` dia azo antoka kokoa noho ny `event.target` raha misy `<span>` ao anaty bokotra
-            event.currentTarget.classList.add('active');
+
+            // --- FANITSIANA LEHIBE ETO ---
+            if (event && event.currentTarget) {
+                // Raha avy amin'ny clic, dia ampiasaina ny event
+                event.currentTarget.classList.add('active');
+            } else {
+                // Raha avy amin'ny code (toy ny import), dia tadiavina ilay bokotra
+                const tabToActivate = document.querySelector(`.nav-tab[onclick*="showSection('${sectionId}')"]`);
+                if (tabToActivate) {
+                    tabToActivate.classList.add('active');
+                }
+            }
+            // --- FARAN'NY FANITSIANA ---
             
             // 4. Antsoina ny fonction mifanaraka amin'ny fizarana aseho
-            //    mba hamenoana azy amin'ny angona vaovao.
             switch (sectionId) {
                 case 'dashboard':
-                    // Rehefa miverina eo amin'ny dashboard, dia havaozina ny statistika sy ny grafika
                     updateStats();
                     displayDashboardCharts();
                     break;
@@ -4040,7 +4054,7 @@
                     displayGroups();
                     break;
                 case 'employee-stats':
-                    // Tsy misy atao amin'ny voalohany, miandry ny fikarohana
+                    // Tsy misy atao
                     break;
                 case 'attendance':
                     displayAttendance();
@@ -4055,7 +4069,6 @@
                     displayAdvances();
                     break;
                 case 'payroll':
-                    // Azo avela banga na asiana hafatra famporisihana
                     document.getElementById('payrollResults').innerHTML = '<p style="text-align: center; padding: 20px;">Veuillez sélectionner un mois et cliquer sur "Calculer Paie".</p>';
                     document.getElementById('payrollSummary').style.display = 'none';
                     break;
@@ -4063,8 +4076,7 @@
                     displayPayments();
                     break;
                 case 'stc':
-                    populateSTCEmployeeSelect(); // Ity no mameno ny lisitra
-                    // Diovina koa ny vokatry ny kajy teo aloha
+                    populateSTCEmployeeSelect();
                     const stcContainer = document.getElementById('stcResultsContainer');
                     if (stcContainer) {
                         stcContainer.style.display = 'none';
@@ -4074,9 +4086,7 @@
                     updateReportStats();
                     break;
                 case 'estimation':
-                    // Fenoina ny lisitry ny vondrona ao amin'ny sivana
-                    populateGroupSelects(); 
-                    // Apetraka ny daty default (ohatra: anio ka hatramin'ny faran'ny volana)
+                    populateGroupSelects();
                     const today = new Date();
                     const startDateInput = document.getElementById('estimationStartDate');
                     const endDateInput = document.getElementById('estimationEndDate');
@@ -4086,11 +4096,9 @@
                         endDateInput.value = endOfMonth.toISOString().slice(0, 10);
                     }
                     break;
-                // Azo ampiana 'default' raha ilaina
-                // default:
-                //     console.log(`Navigué vers la section: ${sectionId}`);
             }
         }
+
 
 
         // Fonctions simplifiées (garder la logique de l'original)
