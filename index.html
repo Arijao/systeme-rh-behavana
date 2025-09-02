@@ -6638,11 +6638,11 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-            const version = 'v1.1.0'; // Ovay ity isaky ny misy fanovana lehibe
-            navigator.serviceWorker.register(`/systeme-rh-behavana/service-worker.js?v=${version}`)
+            
+            navigator.serviceWorker.register(`service-worker.js`)
 
                 .then(registration => {
-                console.log('ServiceWorker voasoratra anarana: ', registration);
+                    console.log('ServiceWorker voasoratra anarana: ', registration);
                 })
                 .catch(error => {
                 console.log('Fisoratana anarana ServiceWorker nisy olana: ', error);

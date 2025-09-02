@@ -1,20 +1,22 @@
-// --- VERSION 5: Manala tanteraka ny maskable-icon ---
-const CACHE_NAME = 'rh-behavana-cache-v5';
+// service-worker.js
 
-const urlsToCache = [
-  // Ny pejy fototra
-  '/systeme-rh-behavana/',
-  '/systeme-rh-behavana/index.html',
-  
-  // Ireo rakitra CSS (averina eto indray satria tsy ireo no olana)
-  '/systeme-rh-behavana/roboto.css',
-  '/systeme-rh-behavana/icons.css',
-  
-  // Ireo sary famantarana (ireo tena misy ihany)
-  '/systeme-rh-behavana/icon-192.png',
-  '/systeme-rh-behavana/icon-512.png',
+// 1. Famaritana ny anaran'ny cache sy ny version.
+// Ovay ity isaky ny misy fanovana lehibe amin'ny rakitra.
+const CACHE_NAME = 'behavana-rh-cache-v1.2';
 
-  // Ireo librairies ivelany
+// 2. Lisitry ny rakitra fototra ilaina mba handehanan'ny fampiharana "offline".
+const URLS_TO_CACHE = [
+  '/', // Ny pejy fandraisana
+  'index.html',
+  'manifest.json',
+  'icons.css', // <-- Ataovy azo antoka fa marina ity anarana ity
+  'roboto.css', // <-- Ataovy azo antoka fa marina ity anarana ity
+  'icon-192.png',
+  'icon-512.png',
+  'icons.json',
+  'jsQR.min.js',
+  
+  // Ireo script avy any ivelany (CDN)
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
@@ -24,38 +26,48 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
-// Ny tohin'ny kaody (install, fetch, activate ) dia tsy miova
+// 3. Dingana "Install": Mitahiry ireo rakitra ao anaty cache
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(CACHE_NAME )
       .then(cache => {
-        console.log('Cache misokatra (v5)');
-        return cache.addAll(urlsToCache);
+        console.log('Cache nosokafana. Manomboka mitahiry rakitra...');
+        return cache.addAll(URLS_TO_CACHE);
+      })
+      .catch(error => {
+        console.error('Tsy nahomby ny fitehirizana rakitra tao anaty cache:', error);
       })
   );
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
-  );
-});
-
+// 4. Dingana "Activate": Mamafa ireo cache taloha
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Fafana ny cache taloha:', cacheName);
+          if (cacheName !== CACHE_NAME) {
+            console.log('Mamafa cache taloha:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
+  );
+});
+
+// 5. Dingana "Fetch": Manome ny valiny rehefa misy fangatahana
+// Ity no mamela ny fiasana "offline"
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Raha hita ao anaty cache ilay fangatahana, dia io no averina avy hatrany
+        if (response) {
+          return response;
+        }
+        // Raha tsy hita, dia andramana alaina any anaty internet
+        return fetch(event.request);
+      })
   );
 });
