@@ -6630,11 +6630,8 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-            // --- IZAO NO VAOVAO ---
-            // Manampy "version" isika mba hanerena ny navigateur haka ny vaovao
             const version = 'v1.1.0'; // Ovay ity isaky ny misy fanovana lehibe
             navigator.serviceWorker.register(`/systeme-rh-behavana/service-worker.js?v=${version}`)
-            // --- FARAN'NY FANAMPINY ---
 
                 .then(registration => {
                 console.log('ServiceWorker voasoratra anarana: ', registration);
@@ -6645,6 +6642,9 @@
             });
         }
 
+                // =======================================================================
+        //  handleImportedFile (VERSION FARANY - TSY Mampiasa location.reload())
+        // =======================================================================
         async function handleImportedFile(file) {
             if (!file) {
                 showAlert("Tsy nisy rakitra voafantina.", "warning");
@@ -6661,7 +6661,7 @@
                 }
 
                 const confirmationMessage = `
-                    Vous êtes sur le point de restaurer une sauvegarde par partage.
+                    Vous êtes sur le point de restaurer une sauvegarde.
                     ATTENTION: Toutes les données actuelles seront écrasées.
                     
                     Date de la sauvegarde: ${formatDate(data.exportDate || new Date())}
@@ -6671,20 +6671,42 @@
                 `;
 
                 if (confirm(confirmationMessage)) {
+                    // 1. Ampidirina ao anaty variables ireo angona vaovao
                     employees = data.employees || [];
                     attendance = data.attendance || {};
                     payrolls = data.payrolls || [];
                     advances = data.advances || [];
                     qrAttendance = data.qrAttendance || [];
-                    qrSettings = data.qrSettings || { size: 256, color: '#6750A4' };
                     groups = data.groups || [];
+                    
+                    // Ampidirina koa ny paramètres raha misy
+                    if (data.settings) {
+                        currentTheme = data.settings.theme || 'light';
+                        qrSettings = data.settings.qrSettings || { size: 256, color: '#6750A4' };
+                    }
 
+                    // 2. Tehirizina ao amin'ny IndexedDB ireo angona vaovao ireo
                     await saveData();
                     
-                    showAlert('Données importées avec succès! La page va se rafraîchir.', 'success');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                    // 3. Fafana ilay baiko "reload" ary soloina amin'ny fanavaozana ny interface
+                    showAlert('Données importées avec succès! L\'interface va être mise à jour.', 'success');
+                    
+                    // Antsoina ireo function rehetra ilaina mba hamenoana indray ny pejy
+                    // toy ny hoe vao nosokafana ilay izy.
+                    updateStats();
+                    setCurrentDate();
+                    setCurrentMonth();
+                    populateEmployeeSelects();
+                    populateGroupSelects();
+                    initializeTheme();
+                    displayDashboardCharts();
+                    runSmartChecks();
+                    
+                    // Averina any amin'ny fizarana voalohany (Tableau de Bord)
+                    showSection('dashboard');
+                    // Ataovy "active" ilay bokotra mifanaraka aminy
+                    document.querySelector('.nav-tab[onclick="showSection(\'dashboard\')"]').classList.add('active');
+
                 } else {
                     showAlert("Importation annulée par l'utilisateur.", "info");
                 }    
@@ -6694,6 +6716,7 @@
                 console.error("Erreur d'importation:", error);
             }
         }
+
         
                 // =======================================================================
         //  calculateSTC (VERSION MIARA-MIASA AMIN'NY getStartDateForCalculation VAOVAO)
