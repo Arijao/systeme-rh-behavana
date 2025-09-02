@@ -2,7 +2,10 @@
   "name": "Système RH BEHAVANA",
   "short_name": "RH Behavana",
   "description": "Gestion complète du personnel et de la paie avec QR Code.",
-  "start_url": "/systeme-rh-behavana/",
+  "lang": "fr-FR",
+  
+  "start_url": "/systeme-rh-behavana/index.html",
+  "scope": "/systeme-rh-behavana/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#6750A4",

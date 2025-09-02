@@ -1,22 +1,22 @@
 // service-worker.js
 
-// 1. Famaritana ny anaran'ny cache sy ny version.
-// Ovay ity isaky ny misy fanovana lehibe amin'ny rakitra.
-const CACHE_NAME = 'behavana-rh-cache-v1.2';
+// 1. Ovay ny anaran'ny cache mba hanerena fanavaozana
+const CACHE_NAME = 'behavana-rh-cache-v1.5'; // <-- Version vaovao
 
-// 2. Lisitry ny rakitra fototra ilaina mba handehanan'ny fampiharana "offline".
+// 2. Lisitry ny rakitra miaraka amin'ny lalana marina ho an'ny GitHub Pages
 const URLS_TO_CACHE = [
-  '/', // Ny pejy fandraisana
-  'index.html',
-  'manifest.json',
-  'icons.css', // <-- Ataovy azo antoka fa marina ity anarana ity
-  'roboto.css', // <-- Ataovy azo antoka fa marina ity anarana ity
-  'icon-192.png',
-  'icon-512.png',
-  'icons.json',
-  'jsQR.min.js',
-  
-  // Ireo script avy any ivelany (CDN)
+  // --- FANITSIANA LEHIBE ETO ---
+  // Ampiana '/systeme-rh-behavana/' daholo ny rakitra eo an-toerana
+  '/systeme-rh-behavana/',
+  '/systeme-rh-behavana/index.html',
+  '/systeme-rh-behavana/manifest.json',
+  '/systeme-rh-behavana/icons.css',
+  '/systeme-rh-behavana/roboto.css',
+  '/systeme-rh-behavana/icon-192.png',
+  '/systeme-rh-behavana/icon-512.png',
+  '/systeme-rh-behavana/jsQR.min.js',
+
+  // Ireo script avy any ivelany (CDN) dia tsy ovaina satria adiresy feno
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
@@ -57,7 +57,6 @@ self.addEventListener('activate', event => {
 });
 
 // 5. Dingana "Fetch": Manome ny valiny rehefa misy fangatahana
-// Ity no mamela ny fiasana "offline"
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
