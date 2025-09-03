@@ -1641,6 +1641,21 @@
                         <input type="month" class="form-control" id="payrollMonth" value="">
                     </div>
 
+                    <!-- =================================================== -->
+                    <!--         FANAMPIANA VAOVAO HO AN'NY ACOMPTE          -->
+                    <!-- =================================================== -->
+                    <div class="form-group" style="margin-top: 16px; padding: 12px; background-color: rgba(103, 80, 164, 0.08); border-radius: 8px;">
+                        <label for="includeAdvanceCheckbox" style="display: flex; align-items: center; cursor: pointer; font-weight: 500;">
+                            <input type="checkbox" id="includeAdvanceCheckbox" class="checkbox" style="width: 20px; height: 20px; margin-right: 12px;" onchange="toggleAdvanceDaysInput()">
+                            Inclure un acompte pour le mois suivant
+                        </label>
+                        <div id="advanceDaysContainer" class="form-group" style="display: none; margin-top: 12px; margin-bottom: 0;">
+                            <label for="advanceDaysInput">Nombre de jours d'acompte</label>
+                            <input type="number" id="advanceDaysInput" class="form-control" value="0" min="0" style="max-width: 150px;">
+                        </div>
+                    </div>
+                    <!-- =================================================== -->
+
                 </div>
 
                 <button class="btn" onclick="calculatePayroll()">
@@ -4791,6 +4806,10 @@
             const selectedMonth = document.getElementById('payrollMonth').value;
             const selectedEmployeeId = document.getElementById('payrollEmployeeSelect').value;
             const selectedGroupId = document.getElementById('payrollGroupFilter').value;
+            // ===================================================
+            const includeAdvance = document.getElementById('includeAdvanceCheckbox').checked;
+            const advanceDays = parseInt(document.getElementById('advanceDaysInput').value) || 0;
+            // ===================================================
 
             if (!selectedMonth) {
                 showAlert('Veuillez sélectionner un mois', 'error');
@@ -4828,34 +4847,43 @@
             const payrollHTML = [];
 
             // --- KAJY ISAKY NY MPIASA (Fizarana nohamafisina) ---
+            // =======================================================================
+            //  KAODY VAOVAO HASOLO ILAY TALOHA
+            // =======================================================================
             for (let emp of employeesToProcess) {
-                // 1. Fanamarinana ny karama fototra
-                const baseSalary = parseFloat(emp.salary || 0);
-
-                // 2. Kajy ny andro niasana
+                // 1. Kajy ny karama ho an'ny volana voafidy (tsy miova)
                 const presenceDays = countPresenceDays(emp.id, selectedMonth);
-                
-                // 3. Kajy ny karama mifanaraka amin'ny andro niasana (Salaire Brut)
-                const proportionalSalary = (baseSalary / daysInMonth) * presenceDays;
-
-                // 4. Fanalana ny trosa (Avances)
+                const proportionalSalary = (emp.salary / daysInMonth) * presenceDays;
                 const totalAdvances = advances
                     .filter(a => a.employeeId === emp.id && a.date.startsWith(selectedMonth))
                     .reduce((sum, a) => sum + parseFloat(a.amount || 0), 0);
+                const netSalaryForMonth = Math.max(0, proportionalSalary - totalAdvances);
 
-                // 5. Kajy ny karama Net FARANY
-                //    Math.max(0, ...) dia miantoka fa tsy hisy karama négatif
-                const netSalary = Math.max(0, proportionalSalary - totalAdvances);
+                // 2. Kajy ny Acompte (raha voatsindry ilay safidy)
+                let advanceAmountForNextMonth = 0;
+                if (includeAdvance && advanceDays > 0) {
+                    // Kajiana ny karama isan'andro amin'ny volana manaraka
+                    const [year, month] = selectedMonth.split('-').map(Number);
+                    const nextMonthDate = new Date(year, month, 1); // Volana manaraka (ny JS dia manitsy ho azy ny taona raha ilaina)
+                    const nextMonthYear = nextMonthDate.getFullYear();
+                    const nextMonthMonth = nextMonthDate.getMonth() + 1;
+                    const daysInNextMonth = getDaysInMonth(nextMonthYear, nextMonthMonth);
+                    
+                    advanceAmountForNextMonth = (emp.salary / daysInNextMonth) * advanceDays;
+                }
+
+                // 3. Kajy ny totaly farany horaisina
+                const finalNetToPay = netSalaryForMonth + advanceAmountForNextMonth;
 
                 const existingPayment = existingPayrollsForMonth.find(p => p.employeeId === emp.id);
                 const isPaid = !!existingPayment;
 
-                if (!isPaid && netSalary > 0) {
-                    totalNetToPay += netSalary;
+                if (!isPaid && finalNetToPay > 0) {
+                    totalNetToPay += finalNetToPay;
                     unpaidEmployeesData.push({ id: emp.id, name: emp.name });
                 }
 
-                // --- Fampisehoana ny antsipiriany mazava kokoa ---
+                // 4. Fampisehoana ny antsipiriany (misy fanovana)
                 payrollHTML.push(`
                     <div class="payroll-item ${isPaid ? 'paid' : ''}" id="payroll-item-${emp.id}" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border: 1px solid var(--md-sys-color-outline-variant); border-left-width: 6px;">
                         <div>
@@ -4868,15 +4896,17 @@
                                     </div>
                                     <small>Montant payé: <b class="amount" style="color: var(--md-sys-color-success);">${formatCurrency(existingPayment.amount)}</b></small>
                                 ` : `
-                                    <div class="employee-status absent">
-                                        <span class="material-icons">hourglass_empty</span> Non payé
-                                    </div>
                                     <div style="font-size: 0.9em; margin-top: 5px;">
-                                        <span title="Jours de présence / Jours dans le mois">Présences: <b>${presenceDays} / ${daysInMonth} j</b></span> | 
-                                        <span title="Salaire brut calculé" style="color: var(--md-sys-color-primary);">Brut: <b>${formatCurrency(proportionalSalary)}</b></span> | 
-                                        <span title="Total des avances déduites" style="color: var(--md-sys-color-error);">Avances: <b>-${formatCurrency(totalAdvances)}</b></span>
+                                        <span title="Détail du salaire pour ${selectedMonth}">Salaire ${selectedMonth}: <b>${formatCurrency(netSalaryForMonth)}</b></span>
+                                        
+                                        <!-- Ity no andalana vaovao mampiseho ny acompte -->
+                                        ${ includeAdvance && advanceAmountForNextMonth > 0 ? `
+                                            
+            <span title="Acompte pour le mois suivant" style="color: var(--md-sys-color-primary);">+ Acompte (${advanceDays}j): <b>${formatCurrency(advanceAmountForNextMonth)}</b></span>
+                                        ` : '' }
+                                        
                                         <hr style="margin: 4px 0; border-color: var(--md-sys-color-outline-variant);">
-                                        <strong title="Salaire net final à payer">Net à payer: ${formatCurrency(netSalary)}</strong>
+                                        <strong title="Salaire net final à payer">Net Total à Payer: ${formatCurrency(finalNetToPay)}</strong>
                                     </div>
                                 `}
                             </div>
@@ -4886,8 +4916,8 @@
                                 <button class="btn-icon" onclick="deleteExistingPayroll('${existingPayment.id}')" title="Supprimer le paiement">
                                     <span class="material-icons" style="color: var(--md-sys-color-error);">delete</span>
                                 </button>
-                            ` : (netSalary > 0 ? `
-                                <button class="btn btn-success" onclick="savePayroll('${emp.id}', '${selectedMonth}', ${netSalary})">
+                            ` : (finalNetToPay > 0 ? `
+                                <button class="btn btn-success" onclick="savePayroll('${emp.id}', '${selectedMonth}', ${finalNetToPay}, ${advanceAmountForNextMonth})">
                                     <span class="material-icons">save</span> Payer
                                 </button>
                             ` : '<small>Aucun paiement requis</small>')}
@@ -4895,6 +4925,8 @@
                     </div>
                 `);
             }
+            // =======================================================================
+
 
             // Ny tohin'ny fonction (fampisehoana famintinana) dia tsy miova
             summaryContainer.style.display = 'block';
@@ -4912,15 +4944,11 @@
             container.innerHTML = payrollHTML.join('');
         }
 
-
-
-
         // Sauvegarde d'une nouvelle paie (évite doublons)
-        // ===================================================
-        // ===================================================
-        //  savePayroll (VERSION MISY FANITSIHANA NY ANARANA)
-        // ===================================================
-        async function savePayroll(employeeId, month, amount) {
+        // =======================================================================
+        //  DINGANA 4: Soloina manontolo ity fiasa ity
+        // =======================================================================
+        async function savePayroll(employeeId, month, totalAmount, advanceAmount = 0) {
             const existing = payrolls.find(p => p.employeeId === employeeId && p.month === month);
             if (existing) {
                 showAlert("Cet employé a déjà été payé pour ce mois", "error");
@@ -4928,40 +4956,58 @@
             }
 
             const emp = employees.find(e => e.id === employeeId);
+            if (!emp) return;
+
+            // 1. Fandraiketana ny karaman'ny volana ankehitriny
             const payrollRecord = {
                 id: Date.now().toString(),
                 employeeId: employeeId,
-                employeeName: emp ? emp.name : "Inconnu",
-                position: emp ? emp.position : "",
+                employeeName: emp.name,
+                position: emp.position,
                 month: month,
-                amount: parseFloat(amount),
+                amount: parseFloat(totalAmount), // Raketina ny totalin'ny vola nomena
                 date: new Date().toISOString()
             };
-
             payrolls.push(payrollRecord);
             await dbManager.add('payrolls', payrollRecord);
-            showAlert("Paie enregistrée avec succès", "success");
 
-            // --- Fizarana Fanavaozana ny Famintinana ---
+            // 2. Fandraiketana ny Acompte ho "Avance" ho an'ny volana manaraka (raha misy)
+            if (advanceAmount > 0) {
+                const [year, monthNum] = month.split('-').map(Number);
+                const nextMonthDate = new Date(year, monthNum, 1);
+                const nextMonthString = `${nextMonthDate.getFullYear()}-${(nextMonthDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                
+                const advanceRecord = {
+                    id: `adv-${Date.now().toString()}`,
+                    employeeId: employeeId,
+                    employeeName: emp.name,
+                    amount: advanceAmount,
+                    date: `${nextMonthString}-01`, // Apetraka amin'ny andro voalohan'ny volana manaraka
+                    reason: `Acompte payé avec le salaire de ${month}`,
+                    dateCreated: new Date().toISOString()
+                };
+                advances.push(advanceRecord);
+                await dbManager.add('advances', advanceRecord);
+            }
+
+            showAlert("Paie enregistrée avec succès!", "success");
+
+            // Ny tohin'ny kaody manavao ny interface dia tsy miova
             const remainingToPayEl = document.getElementById('remainingToPay');
-            
-            // FANITSIANA ETO: Alaina ilay anarana ao amin'ny lisitry ny tsy voaloa
             const unpaidNameEl = document.getElementById(`unpaid-name-${employeeId}`);
 
             if (remainingToPayEl) {
                 let currentRemainingAmount = parseFloat(remainingToPayEl.dataset.amount || 0);
-                currentRemainingAmount -= parseFloat(amount);
+                currentRemainingAmount -= parseFloat(totalAmount);
                 remainingToPayEl.textContent = formatCurrency(currentRemainingAmount);
                 remainingToPayEl.dataset.amount = currentRemainingAmount;
             }
 
-            // FANITSIANA ETO: Raha hita ilay anarana, dia asiana tsipika
             if (unpaidNameEl) {
                 unpaidNameEl.style.textDecoration = 'line-through';
                 unpaidNameEl.style.opacity = '0.6';
             }
 
-            // --- Fizarana Fanavaozana ny Andalana ao amin'ny Interface (tsy miova) ---
             const payrollItem = document.getElementById(`payroll-item-${employeeId}`);
             if (payrollItem) {
                 payrollItem.classList.add('paid');
@@ -4988,8 +5034,7 @@
 
             updateStats();
         }
-
-
+        // =======================================================================
 
         // Modifier une paie existante
         async function updatePayroll(payrollId) {
@@ -7173,6 +7218,21 @@
                 pastDays: pastDays,
                 futureDays: futureDays
             };
+        }
+        // =======================================================================
+        //  FONCTION VAOVAO: Mifehy ny fisehoan'ny sehatra fampidirana andro
+        // =======================================================================
+        function toggleAdvanceDaysInput() {
+            const checkbox = document.getElementById('includeAdvanceCheckbox');
+            const container = document.getElementById('advanceDaysContainer');
+            const input = document.getElementById('advanceDaysInput');
+
+            if (checkbox.checked) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+                input.value = 0; // Averina ho 0 foana rehefa tsy voatsindry
+            }
         }
 
 
