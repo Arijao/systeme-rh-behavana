@@ -1664,18 +1664,22 @@
                 </button>
 
                 <!-- =================================================== -->
-                <!--           DIV VAOVAO HO AN'NY FAMINTINANA            -->
+                <!--      FIZARANA FAMINTINANA NOHATSARAINA (HTML)       -->
                 <!-- =================================================== -->
                 <div id="payrollSummary" style="margin-top: 24px; padding: 16px; background-color: var(--md-sys-color-surface-variant); border-radius: 12px; display: none;">
-                    <h3 style="color: var(--md-sys-color-primary); margin-top: 0; margin-bottom: 16px;">Résumé du Paiement</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <h3 style="color: var(--md-sys-color-primary); margin-top: 0; margin-bottom: 16px;">Résumé de la Paie pour la Période</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                         <div>
-                            <p style="margin: 0; font-size: 0.8em; color: var(--md-sys-color-on-surface-variant);">Total Net à Payer (Initial)</p>
-                            <strong id="totalToPay" style="color: var(--md-sys-color-error); font-size: 1.1em;">0 Ar</strong>
+                            <p style="margin: 0; font-size: 0.9em; color: var(--md-sys-color-on-surface-variant);">Total Brut Calculé</p>
+                            <strong id="summaryTotalGross" style="color: var(--md-sys-color-primary); font-size: 1.2em;">0 Ar</strong>
                         </div>
                         <div>
-                            <p style="margin: 0; font-size: 0.8em; color: var(--md-sys-color-on-surface-variant);">Reste à Payer</p>
-                            <strong id="remainingToPay" style="color: var(--md-sys-color-success); font-size: 1.2em;">0 Ar</strong>
+                            <p style="margin: 0; font-size: 0.9em; color: var(--md-sys-color-on-surface-variant);">Total Avances Déduites</p>
+                            <strong id="summaryTotalAdvances" style="color: var(--md-sys-color-error); font-size: 1.2em;">0 Ar</strong>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 0.9em; color: var(--md-sys-color-on-surface-variant);">Total Net à Payer</p>
+                            <strong id="summaryTotalNet" style="color: var(--md-sys-color-success); font-size: 1.3em; font-weight: 700;">0 Ar</strong>
                         </div>
                     </div>
                     <div style="margin-top: 16px;">
@@ -1685,6 +1689,8 @@
                         </div>
                     </div>
                 </div>
+                <!-- =================================================== -->
+
 
                 <div id="payrollResults"></div>
             </div>
@@ -4817,11 +4823,16 @@
                 return;
             }
 
-            // Fizarana Famintinana
+            // ===================================================
+            //      FAMINTINANA
+            // ===================================================
             const summaryContainer = document.getElementById('payrollSummary');
-            const totalToPayEl = document.getElementById('totalToPay');
-            const remainingToPayEl = document.getElementById('remainingToPay');
+            const summaryGrossEl = document.getElementById('summaryTotalGross');
+            const summaryAdvancesEl = document.getElementById('summaryTotalAdvances');
+            const summaryNetEl = document.getElementById('summaryTotalNet');
             const unpaidListEl = document.getElementById('unpaidEmployeesList');
+            // ===================================================
+
 
             let totalNetToPay = 0;
             let unpaidEmployeesData = [];
@@ -4925,15 +4936,26 @@
                     </div>
                 `);
             }
-            // =======================================================================
+            // ===================================================
+            //      KAODY VAOVAO HASOLO ILAY TEBOKA FAHA-5
+            // ===================================================
+            // Kajiana ny totalin'ny trosa ho an'ny famintinana
+            let totalAdvancesForSummary = 0;
+            employeesToProcess.forEach(emp => {
+                const advancesInMonth = advances
+                    .filter(a => a.employeeId === emp.id && a.date.startsWith(selectedMonth))
+                    .reduce((sum, a) => sum + parseFloat(a.amount || 0), 0);
+                totalAdvancesForSummary += advancesInMonth;
+            });
 
+            // Ny totalin'ny karama brut dia ny totaly net ampiana ny trosa efa nesorina
+            const totalGrossForSummary = totalNetToPay + totalAdvancesForSummary;
 
-            // Ny tohin'ny fonction (fampisehoana famintinana) dia tsy miova
             summaryContainer.style.display = 'block';
-            totalToPayEl.textContent = formatCurrency(totalNetToPay);
-            remainingToPayEl.textContent = formatCurrency(totalNetToPay);
-            totalToPayEl.dataset.amount = totalNetToPay;
-            remainingToPayEl.dataset.amount = totalNetToPay;
+            summaryGrossEl.textContent = formatCurrency(totalGrossForSummary);
+            summaryAdvancesEl.textContent = formatCurrency(totalAdvancesForSummary);
+            summaryNetEl.textContent = formatCurrency(totalNetToPay);
+            summaryNetEl.dataset.amount = totalNetToPay; // Tehirizina foana ity mba hiasan'ny fanalana vola rehefa mandoa
 
             if (unpaidEmployeesData.length > 0) {
                 unpaidListEl.innerHTML = unpaidEmployeesData.map(emp => `<div id="unpaid-name-${emp.id}">- ${emp.name}</div>`).join('');
@@ -4942,6 +4964,8 @@
             }
 
             container.innerHTML = payrollHTML.join('');
+            // ===================================================
+
         }
 
         // Sauvegarde d'une nouvelle paie (évite doublons)
