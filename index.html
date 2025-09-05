@@ -6576,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY INDRINDRA: Manitsy ny "mise en page" mba tsy hisy andalana mitsambikina.
+         * VERSION FARANY: Mampiasa ny function formatCurrency() efa misy.
          */
         function exportAdvances(format) {
             // 1. Fakan-tsivana (tsy miova)
@@ -6624,12 +6624,7 @@
 
             if (format === 'pdf') {
                 const { jsPDF } = window.jspdf;
-                // =======================================================================
-                //                      FANITSIANA LEHIBE: ORIENTATION
-                // =======================================================================
-                // Ovaina ho "landscape" (mitsivalana) ny taratasy mba hanana toerana malalaka kokoa
                 const doc = new jsPDF({ orientation: 'landscape' });
-                // =======================================================================
                 
                 doc.setFontSize(18);
                 doc.setFont("helvetica", "bold");
@@ -6642,18 +6637,17 @@
                 const tableData = [];
                 let totalAdvances = 0;
                 
-                const numberFormatter = new Intl.NumberFormat('fr-FR', {
-                    style: 'decimal',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                    useGrouping: true
-                });
-
                 dataToExport.forEach(adv => {
                     const employee = employees.find(e => e.id === adv.employeeId);
                     const group = groups.find(g => g.id === employee?.groupId);
                     const amount = adv.amount || 0;
-                    const formattedAmount = numberFormatter.format(amount);
+                    
+                    // =======================================================================
+                    //           FANITSARANA LEHIBE: Mampiasa ny formatCurrency()
+                    // =======================================================================
+                    // Esorina ny " Ar" amin'ny farany mba ho isa madio no ao anaty tabilao
+                    const formattedAmount = formatCurrency(amount).replace(' Ar', '').trim();
+                    // =======================================================================
 
                     tableData.push({
                         date: formatDate(adv.date, false),
@@ -6683,25 +6677,26 @@
                     startY: 30,
                     theme: 'grid',
                     headStyles: { fillColor: [103, 80, 164], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-                    styles: { fontSize: 8.5, cellPadding: 2.5 }, // Ahena kely ny haben'ny soratra mba hiditra tsara
-                    // =======================================================================
-                    //                      FANITSIANA NY SAKAN'NY TSANGANANA
-                    // =======================================================================
+                    styles: { fontSize: 8.5, cellPadding: 2.5 },
                     columnStyles: { 
-                        date: { cellWidth: 25 },       // Omena toerana malalaka kokoa ny daty
-                        group: { cellWidth: 45 },      // Omena toerana malalaka kokoa ny vondrona
-                        name: { cellWidth: 70 },       // Omena toerana malalaka kokoa ny anarana
+                        date: { cellWidth: 25 },
+                        group: { cellWidth: 45 },
+                        name: { cellWidth: 70 },
                         amount: { halign: 'right', cellWidth: 30 },
-                        signature: { cellWidth: 60 }   // Toerana malalaka ho an'ny sonia
+                        signature: { cellWidth: 60 }
                     },
-                    // =======================================================================
                 });
 
                 const finalY = doc.lastAutoTable.finalY + 10;
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                const formattedTotal = numberFormatter.format(totalAdvances || 0);
-                doc.text(`Total des Avances à Payer: ${formattedTotal} Ar`, 14, finalY);
+                
+                // =======================================================================
+                //           FANITSARANA LEHIBE: Mampiasa ny formatCurrency()
+                // =======================================================================
+                const formattedTotal = formatCurrency(totalAdvances || 0);
+                doc.text(`Total des Avances à Payer: ${formattedTotal}`, 14, finalY);
+                // =======================================================================
 
                 doc.save(`liste-avances-a-signer-${monthFilter || 'tous'}.pdf`);
                 showAlert('La liste PDF finale a été générée avec succès!', 'success');
