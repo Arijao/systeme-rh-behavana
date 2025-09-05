@@ -6576,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY INDRINDRA: Manolo an-keriny ny "non-breaking space" ho "espace" tsotra.
+         * VERSION FARANY INDRINDRA: Nalehibeazina ny haavon'ny andalana ho an'ny sonia.
          */
         function exportAdvances(format) {
             // 1. Fakan-tsivana (tsy miova)
@@ -6642,15 +6642,8 @@
                     const group = groups.find(g => g.id === employee?.groupId);
                     const amount = adv.amount || 0;
                     
-                    // =======================================================================
-                    //           VAHAOLANA FARANY: Fanoloana ny karazana "espace"
-                    // =======================================================================
-                    let formattedAmount = formatCurrency(amount);
-                    // 1. Esorina ny " Ar"
-                    formattedAmount = formattedAmount.replace(' Ar', '').trim();
-                    // 2. Soloina "espace" tsotra ilay "non-breaking space" (\u00A0)
+                    let formattedAmount = formatCurrency(amount).replace(' Ar', '').trim();
                     formattedAmount = formattedAmount.replace(/\s/g, ' ');
-                    // =======================================================================
 
                     tableData.push({
                         date: formatDate(adv.date, false),
@@ -6671,12 +6664,6 @@
                         { header: 'Montant (Ar)', dataKey: 'amount' },
                         { header: 'Signature', dataKey: 'signature' },
                     ],
-                    didDrawCell: (data) => {
-                        if (data.column.dataKey === 'signature' && data.cell.section === 'body') {
-                            doc.setDrawColor(200, 200, 200);
-                            doc.line(data.cell.x + 2, data.cell.y + data.cell.height - 5, data.cell.x + data.cell.width - 2, data.cell.y + data.cell.height - 5);
-                        }
-                    },
                     startY: 30,
                     theme: 'grid',
                     headStyles: { fillColor: [103, 80, 164], textColor: 255, fontStyle: 'bold', fontSize: 9 },
@@ -6688,15 +6675,21 @@
                         amount: { halign: 'right', cellWidth: 30 },
                         signature: { cellWidth: 60 }
                     },
+                    // =======================================================================
+                    //                      FANITSIANA LEHIBE ETO
+                    // =======================================================================
+                    // Ity no manome haavo farafahakeliny ho an'ny andalana tsirairay
+                    // Ny sanda 12 dia efa manome toerana malalaka tsara. Azonao ampitomboina (ohatra: 15) raha ilaina.
+                    minCellHeight: 12 
+                    // =======================================================================
                 });
 
                 const finalY = doc.lastAutoTable.finalY + 10;
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
                 
-                // Ampiharina koa eto ilay fanitsiana
                 let formattedTotal = formatCurrency(totalAdvances || 0);
-                formattedTotal = formattedTotal.replace(/\s/g, ' '); // Soloina "espace" tsotra daholo
+                formattedTotal = formattedTotal.replace(/\s/g, ' ');
 
                 doc.text(`Total des Avances à Payer: ${formattedTotal}`, 14, finalY);
 
