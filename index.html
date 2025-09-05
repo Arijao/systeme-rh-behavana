@@ -6576,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY INDRINDRA SY VOASEDRA: Fiarovana amin'ny sanda undefined rehetra.
+         * VERSION FARANY INDRINDRA: Mampiditra ny Date, Groupe, ary manitsy ny endriky ny vola.
          */
         function exportAdvances(format) {
             // 1. Fakan-tsivana (tsy miova)
@@ -6641,84 +6641,70 @@
                     const employee = employees.find(e => e.id === adv.employeeId);
                     const group = groups.find(g => g.id === employee?.groupId);
                     const amount = adv.amount || 0;
+                    
+                    // =======================================================================
+                    //                      FANITSARANA NY ENDRIKY NY VOLA
+                    // =======================================================================
+                    // Mampiasa Intl.NumberFormat mba hahazoana "20 000" fa tsy "20/000" na "20,000"
+                    const formattedAmount = new Intl.NumberFormat('fr-FR').format(amount);
+                    // =======================================================================
+
                     tableData.push({
-                        group: group ? group.name : 'Sans Groupe',
+                        date: formatDate(adv.date, false), // <-- AMPY VAOVAO
+                        group: group ? group.name : 'Sans Groupe', // <-- AMPY VAOVAO
                         name: employee ? employee.name : 'N/A',
-                        amount: amount.toLocaleString('fr-FR'),
+                        amount: formattedAmount,
                         signature: ''
                     });
                     totalAdvances += amount;
                 });
 
                 doc.autoTable({
-                    rowPageBreak: 'avoid',
                     body: tableData,
+                    // =======================================================================
+                    //                      FANITSARANA NY TSANGANANA
+                    // =======================================================================
                     columns: [
+                        { header: 'Date', dataKey: 'date' },
+                        { header: 'Groupe', dataKey: 'group' },
                         { header: 'Nom de l\'Employé', dataKey: 'name' },
                         { header: 'Montant (Ar)', dataKey: 'amount' },
                         { header: 'Signature', dataKey: 'signature' },
                     ],
-                    willDrawCell: (data) => {
-                        // =======================================================================
-                        //                          FANITSARANA FARANY ETO
-                        // =======================================================================
-                        try {
-                            const currentRowData = data.table.body[data.row.index];
-                            // Fanamarinana raha misy tokoa ny angona
-                            if (!currentRowData || !currentRowData.raw) return;
-
-                            const previousRowData = data.table.body[data.row.index - 1];
-                            
-                            // Fanamarinana raha miova ny vondrona
-                            if (data.row.index === 0 || currentRowData.raw.group !== previousRowData?.raw?.group) {
-                                doc.setFontSize(11);
-                                doc.setFont('helvetica', 'bold');
-                                doc.setTextColor(103, 80, 164);
-                                
-                                // Fiarovana amin'ny sanda undefined
-                                const groupName = currentRowData.raw.group || 'Sans Groupe';
-                                const yPos = data.row.y || 0; // Raha undefined ny y, dia 0 no raisina
-                                const xPos = data.settings.margin.left || 10; // Sanda default ho an'ny x
-
-                                // Fiarovana farany alohan'ny hanoratana
-                                if (yPos > 0) {
-                                doc.text(groupName, xPos, yPos - 2);
-                                }
-                            }
-                        } catch (e) {
-                            // Ity dia misoroka ny fianjeran'ny programa raha misy erreur tsy ampoizina
-                            console.error("Erreur tao anatin'ny willDrawCell:", e);
-                        }
-                        // =======================================================================
-                    },
+                    // =======================================================================
                     didDrawCell: (data) => {
                         if (data.column.dataKey === 'signature' && data.cell.section === 'body') {
                             doc.setDrawColor(200, 200, 200);
                             doc.line(data.cell.x + 2, data.cell.y + data.cell.height - 5, data.cell.x + data.cell.width - 2, data.cell.y + data.cell.height - 5);
                         }
                     },
-                    startY: 40,
+                    startY: 35,
                     theme: 'grid',
                     headStyles: { fillColor: [103, 80, 164], textColor: 255, fontStyle: 'bold' },
+                    // =======================================================================
+                    //                      FANITSARANA NY SAKAN'NY TSANGANANA
+                    // =======================================================================
                     columnStyles: { 
-                        amount: { halign: 'right', cellWidth: 30 },
-                        signature: { cellWidth: 60 }
+                        date: { cellWidth: 20 },
+                        group: { cellWidth: 30 },
+                        name: { cellWidth: 'auto' }, // Maka ny toerana sisa
+                        amount: { halign: 'right', cellWidth: 25 },
+                        signature: { cellWidth: 40 }
                     },
-                    margin: { top: 40 }
+                    // =======================================================================
                 });
 
                 const finalY = doc.lastAutoTable.finalY + 12;
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(0, 0, 0);
-                const formattedTotal = (totalAdvances || 0).toLocaleString('fr-FR');
+                const formattedTotal = new Intl.NumberFormat('fr-FR').format(totalAdvances || 0);
                 doc.text(`Total des Avances à Payer: ${formattedTotal} Ar`, 14, finalY);
 
                 doc.save(`liste-avances-a-signer-${monthFilter || 'tous'}.pdf`);
-                showAlert('La liste PDF groupée par équipe a été générée!', 'success');
+                showAlert('La liste PDF finale a été générée avec succès!', 'success');
 
             } else if (format === 'xlsx') {
-                // ... ny kaody Excel dia tsy miova ...
+                // Ny kaody Excel dia tsy miova fa efa marina
                 const headers = ["Date", "Nom de l'Employé", "Groupe", "Montant (Ar)", "Motif", "Statut"];
                 const sheetData = [headers];
                 let totalAdvances = 0;
