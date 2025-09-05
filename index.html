@@ -6576,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY: Mandahatra ny lisitra isaky ny vondrona (groupé par groupe).
+         * VERSION FARANY NOHAMAFISINA: Misy fiarovana amin'ny erreur "Invalid arguments".
          */
         function exportAdvances(format) {
             // 1. Alaina indray ny sivana rehetra (tsy miova)
@@ -6608,36 +6608,23 @@
                 return;
             }
 
-            // =======================================================================
-            //          FANALAHARANA VAOVAO: ISAKY NY VONDROM-PIASA ALOHA
-            // =======================================================================
             dataToExport.sort((a, b) => {
                 const employeeA = employees.find(e => e.id === a.employeeId);
                 const employeeB = employees.find(e => e.id === b.employeeId);
-
                 const groupA = groups.find(g => g.id === employeeA?.groupId);
                 const groupB = groups.find(g => g.id === employeeB?.groupId);
-
-                const groupNameA = groupA ? groupA.name : 'zzz_Sans Groupe'; // 'zzz' mba ho any amin'ny farany foana
+                const groupNameA = groupA ? groupA.name : 'zzz_Sans Groupe';
                 const groupNameB = groupB ? groupB.name : 'zzz_Sans Groupe';
-
-                // 1. Ampitahaina aloha ny anaran'ny vondrona
                 if (groupNameA < groupNameB) return -1;
                 if (groupNameA > groupNameB) return 1;
-
-                // 2. Raha mitovy ny vondrona, dia ampitahaina ny anaran'ny mpiasa
                 const nameA = employeeA?.name || '';
                 const nameB = employeeB?.name || '';
                 return nameA.localeCompare(nameB);
             });
-            // =======================================================================
 
             const filename = `export-avances-${new Date().toISOString().split('T')[0]}`;
 
             if (format === 'pdf') {
-                // =======================================================================
-                //           EXPORT PDF NOHAVAOZINA MIARAKA AMIN'NY VONDROM-PIASA
-                // =======================================================================
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
@@ -6655,20 +6642,23 @@
                 dataToExport.forEach(adv => {
                     const employee = employees.find(e => e.id === adv.employeeId);
                     const group = groups.find(g => g.id === employee?.groupId);
-                    const formattedAmount = adv.amount.toLocaleString('fr-FR');
                     
+                    // ================== FIAROVANA 1 ==================
+                    // Ataovy azo antoka fa isa foana ny "amount"
+                    const amount = adv.amount || 0;
+                    const formattedAmount = amount.toLocaleString('fr-FR');
+                    // ===============================================
+
                     tableData.push({
                         group: group ? group.name : 'Sans Groupe',
                         name: employee ? employee.name : 'N/A',
                         amount: formattedAmount,
                         signature: ''
                     });
-                    totalAdvances += adv.amount;
+                    totalAdvances += amount;
                 });
 
                 doc.autoTable({
-                    // Mampiasa ny lojika "rowGroup" an'ny jspdf-autotable
-                    // mba hanoratana ny anaran'ny vondrona ho lohateny isaky ny miova
                     rowPageBreak: 'avoid',
                     body: tableData,
                     columns: [
@@ -6677,28 +6667,22 @@
                         { header: 'Signature', dataKey: 'signature' },
                     ],
                     didDrawCell: (data) => {
-                        // Asiana tsipika kely eo amin'ny toerana hanaovana sonia
                         if (data.column.dataKey === 'signature' && data.cell.section === 'body') {
                             doc.setDrawColor(200, 200, 200);
                             doc.line(data.cell.x + 2, data.cell.y + data.cell.height - 5, data.cell.x + data.cell.width - 2, data.cell.y + data.cell.height - 5);
                         }
                     },
-                    // Ity no majika manao ny fampivondronana
                     didDrawPage: (data) => {
                         doc.setFontSize(12);
                         doc.setFont('helvetica', 'bold');
                     },
                     willDrawCell: (data) => {
-                        // Fanamarinana raha miova ny vondrona
                         const previousRow = data.table.body[data.row.index - 1];
                         if (data.row.index === 0 || data.row.raw.group !== previousRow.raw.group) {
                             doc.setFontSize(11);
                             doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(103, 80, 164); // Loko volomparasy
-                            
-                            // Fanamarinana mba tsy hifanindry amin'ny loha-tenin'ny tabilao
+                            doc.setTextColor(103, 80, 164);
                             const yPos = data.row.y > 35 ? data.row.y : data.row.y + 5;
-
                             doc.text(data.row.raw.group, data.settings.margin.left, yPos - 2);
                         }
                     },
@@ -6715,45 +6699,45 @@
                 const finalY = doc.lastAutoTable.finalY + 12;
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(0, 0, 0); // Averina mainty ny loko
-                const formattedTotal = totalAdvances.toLocaleString('fr-FR');
+                doc.setTextColor(0, 0, 0);
+                
+                // ================== FIAROVANA 2 ==================
+                // Ataovy azo antoka fa misy sanda foana ny totaly alohan'ny hanoratana azy
+                const formattedTotal = (totalAdvances || 0).toLocaleString('fr-FR');
                 doc.text(`Total des Avances à Payer: ${formattedTotal} Ar`, 14, finalY);
+                // ===============================================
 
                 doc.save(`liste-avances-a-signer-${monthFilter || 'tous'}.pdf`);
                 showAlert('La liste PDF groupée par équipe a été générée!', 'success');
 
             } else if (format === 'xlsx') {
-                // Ny export Excel dia efa mampiseho ny vondrona ka tsy misy fiovana lehibe
+                // Ny export Excel dia efa voaaro tsara ka tsy mila ovaina
                 const headers = ["Date", "Nom de l'Employé", "Groupe", "Montant (Ar)", "Motif", "Statut"];
                 const sheetData = [headers];
-
                 let totalAdvances = 0;
                 dataToExport.forEach(adv => {
                     const employee = employees.find(e => e.id === adv.employeeId);
                     const group = groups.find(g => g.id === employee?.groupId);
+                    const amount = adv.amount || 0;
                     sheetData.push([
                         adv.date,
                         employee ? employee.name : 'N/A',
                         group ? group.name : 'Sans groupe',
-                        adv.amount,
+                        amount,
                         adv.reason || '',
                         adv.status || 'En attente'
                     ]);
-                    totalAdvances += adv.amount;
+                    totalAdvances += amount;
                 });
-
                 sheetData.push([]);
                 sheetData.push(["", "", "Total des Avances:", totalAdvances, ""]);
-
                 const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
                 const numberFormat = "#,##0";
                 const totalFormat = `#,##0 "Ar"`;
-
                 for (let i = 1; i < dataToExport.length + 1; i++) {
                     const cellRef = XLSX.utils.encode_cell({r: i, c: 3});
                     if(worksheet[cellRef]) worksheet[cellRef].z = numberFormat;
                 }
-                
                 const totalCellRef = XLSX.utils.encode_cell({r: dataToExport.length + 2, c: 3});
                 if(worksheet[totalCellRef]) {
                     worksheet[totalCellRef].z = totalFormat;
@@ -6761,18 +6745,14 @@
                 }
                 const totalLabelCellRef = XLSX.utils.encode_cell({r: dataToExport.length + 2, c: 2});
                 if(worksheet[totalLabelCellRef]) worksheet[totalLabelCellRef].s = { font: { bold: true } };
-
-                worksheet['!cols'] = [
-                    { wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 18 }, { wch: 40 }, { wch: 15 }
-                ];
-
+                worksheet['!cols'] = [ { wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 18 }, { wch: 40 }, { wch: 15 } ];
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Avances");
                 XLSX.writeFile(workbook, `${filename}.xlsx`);
-                
                 showAlert('Export Excel des avances réussi!', 'success');
             }
         }
+
 
         /**
          * Manamarina ny fandoavana ny trosa iray.
