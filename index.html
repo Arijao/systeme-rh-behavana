@@ -4345,13 +4345,12 @@
 
         function displayAdvances() {
             const container = document.getElementById('advancesList');
-    
-            // --- DINGANA 1: Alaina ny sandan'ny sivana REHETRA ---
+            
+            // Alaina ny sivana rehetra (tsy miova)
             const searchTerm = document.getElementById('advanceSearchInput').value.toLowerCase();
             const monthFilter = document.getElementById('advanceMonthFilter').value;
-            const groupFilter = document.getElementById('advanceGroupFilter').value; // Sivana vaovao
+            const groupFilter = document.getElementById('advanceGroupFilter').value;
 
-            // --- DINGANA 2: Sivana ny lisitry ny trosa ---
             let filteredAdvances = advances.filter(advance => {
                 const employee = employees.find(emp => emp.id === advance.employeeId);
                 if (!employee) return false;
@@ -4361,76 +4360,90 @@
                                     (advance.reason || '').toLowerCase().includes(searchTerm);
                 
                 const matchesMonth = !monthFilter || advance.date.startsWith(monthFilter);
-
-                // Fanamarinana ny vondrona
                 const matchesGroup = groupFilter === 'all' || employee.groupId === groupFilter;
 
                 return matchesSearch && matchesMonth && matchesGroup;
             });
 
-            // --- DINGANA 3: Kajiana ny totalin'ny trosa voasivana (tsy miova) ---
-            const totalAmount = filteredAdvances.reduce((sum, advance) => sum + advance.amount, 0);
-            document.getElementById('totalAdvancesMonth').textContent = formatCurrency(totalAmount);
-            const advancesSummaryPeriodEl = document.getElementById('advancesSummaryPeriod');
-            if (advancesSummaryPeriodEl) {
-                if (monthFilter) {
-                    const [year, month] = monthFilter.split('-');
-                    const date = new Date(year, month - 1);
-                    const monthName = date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
-                    advancesSummaryPeriodEl.textContent = `Période: ${monthName}`;
-                } else {
-                    advancesSummaryPeriodEl.textContent = "Période: Toutes les avances";
-                }
-            }
-
             // Alahatra araka ny daty (tsy miova)
             filteredAdvances.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            // --- DINGANA 4: Lojika Pagination (mampiasa ny filteredAdvances) ---
+            // Lojika Pagination (tsy miova)
             const totalItems = filteredAdvances.length;
             const totalPages = Math.ceil(totalItems / advancesItemsPerPage);
-
-            // Fanamarinana mba tsy hihoatra ny pejy misy
             if (advancesCurrentPage > totalPages && totalPages > 0) {
                 advancesCurrentPage = totalPages;
             } else if (totalPages === 0) {
                 advancesCurrentPage = 1;
             }
-
             const startIndex = (advancesCurrentPage - 1) * advancesItemsPerPage;
             const endIndex = startIndex + advancesItemsPerPage;
             const paginatedAdvances = filteredAdvances.slice(startIndex, endIndex);
 
-            // --- DINGANA 5: Fampisehoana ny lisitra ---
             if (paginatedAdvances.length === 0) {
                 container.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--md-sys-color-on-surface-variant);">Aucune avance trouvée pour ces critères.</p>';
-                document.getElementById('advancesPagination').innerHTML = ''; // Fafana koa ny pagination
+                document.getElementById('advancesPagination').innerHTML = '';
                 return;
             }
 
+            // ================== FANITSIANA LEHIBE ETO ==================
             container.innerHTML = paginatedAdvances.map(advance => {
                 const employee = employees.find(emp => emp.id === advance.employeeId);
                 const employeeName = employee ? employee.name : "Mpiasa voafafa";
                 const employeePosition = employee ? employee.position : 'Poste tsy hita';
+                
+                // Famaritana ny sata sy ny loko mifanaraka aminy
+                const status = advance.status || 'En attente'; // Raha tsy misy dia 'En attente'
+                const isConfirmed = status === 'Confirmé';
+                const statusColor = isConfirmed ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-warning)';
+                const statusIcon = isConfirmed ? 'check_circle' : 'hourglass_top';
+                const statusText = isConfirmed ? 'Confirmé' : 'En attente';
+
+                // Famaritana ny bokotra aseho arakaraka ny sata
+                let actionButtonsHTML = '';
+                if (!isConfirmed) {
+                    actionButtonsHTML = `
+                        <button class="btn btn-success" style="padding: 8px 12px;" onclick="confirmAdvance('${advance.id}')" title="Confirmer le paiement de cette avance">
+                            <span class="material-icons" style="font-size: 18px;">check</span> Confirmer
+                        </button>
+                        <button class="btn-icon" onclick="openEditAdvanceModal('${advance.id}')" title="Modifier l'avance">
+                            <span class="material-icons">edit</span>
+                        </button>
+                    `;
+                }
+
                 return `
-                    <div class="advance-item">
+                    <div class="advance-item" style="border-left: 5px solid ${statusColor};">
                         <div class="advance-info">
                             <h4>${employeeName}</h4>
                             <p><strong>Poste:</strong> ${employeePosition}</p>
                             <p><strong>Date:</strong> ${formatDate(advance.date, false)} | <strong>Motif:</strong> ${advance.reason || 'Non spécifié'}</p>
+                            
+                            <!-- Fampisehoana ny sata vaovao -->
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 500; color: ${statusColor};">
+                                <span class="material-icons">${statusIcon}</span>
+                                <span>Statut: ${statusText}</span>
+                            </div>
                         </div>
                         <div class="amount-actions">
                             <div class="amount">${formatCurrency(advance.amount)}</div>
-                            <div>
-                                <button class="btn-icon" onclick="openEditAdvanceModal('${advance.id}')" title="Modifier l'avance"><span class="material-icons">edit</span></button>
-                                <button class="btn-icon" onclick="deleteAdvance('${advance.id}')" title="Supprimer l'avance"><span class="material-icons">delete_outline</span></button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                ${actionButtonsHTML}
+                                <button class="btn-icon" onclick="deleteAdvance('${advance.id}')" title="Supprimer l'avance">
+                                    <span class="material-icons">delete_outline</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+            // ================== FARAN'NY FANITSIANA ==================
 
-            // --- DINGANA 6: Fampisehoana ny bokotra Pagination ---
+            // Fampisehoana ny famintinana sy ny pagination (tsy miova)
+            const totalAmount = filteredAdvances.reduce((sum, advance) => sum + advance.amount, 0);
+            document.getElementById('totalAdvancesMonth').textContent = formatCurrency(totalAmount);
+            // ... (ny tohin'ny function dia tsy miova)
+            
             renderPaginationControls(
                 'advancesPagination', 
                 advancesCurrentPage, 
@@ -4443,6 +4456,7 @@
                 }
             );
         }
+
 
 
 
@@ -6562,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY: Mampiasa SheetJS ho an'ny export Excel tena izy.
+         * VERSION FARANY: Mandahatra ny lisitra isaky ny vondrona (groupé par groupe).
          */
         function exportAdvances(format) {
             // 1. Alaina indray ny sivana rehetra (tsy miova)
@@ -6578,66 +6592,140 @@
                                     (advance.reason || '').toLowerCase().includes(searchTerm);
                 const matchesMonth = !monthFilter || advance.date.startsWith(monthFilter);
                 const matchesGroup = groupFilter === 'all' || employee.groupId === groupFilter;
+                
+                if (format === 'pdf') {
+                    const isPending = (advance.status || 'En attente') === 'En attente';
+                    return matchesSearch && matchesMonth && matchesGroup && isPending;
+                }
                 return matchesSearch && matchesMonth && matchesGroup;
             });
 
             if (dataToExport.length === 0) {
-                showAlert("Aucune donnée à exporter pour les filtres actuels.", 'warning');
+                const message = format === 'pdf' 
+                    ? "Aucune avance 'En attente' à imprimer pour les filtres actuels." 
+                    : "Aucune donnée à exporter pour les filtres actuels.";
+                showAlert(message, 'warning');
                 return;
             }
 
-            dataToExport.sort((a, b) => new Date(a.date) - new Date(b.date));
+            // =======================================================================
+            //          FANALAHARANA VAOVAO: ISAKY NY VONDROM-PIASA ALOHA
+            // =======================================================================
+            dataToExport.sort((a, b) => {
+                const employeeA = employees.find(e => e.id === a.employeeId);
+                const employeeB = employees.find(e => e.id === b.employeeId);
+
+                const groupA = groups.find(g => g.id === employeeA?.groupId);
+                const groupB = groups.find(g => g.id === employeeB?.groupId);
+
+                const groupNameA = groupA ? groupA.name : 'zzz_Sans Groupe'; // 'zzz' mba ho any amin'ny farany foana
+                const groupNameB = groupB ? groupB.name : 'zzz_Sans Groupe';
+
+                // 1. Ampitahaina aloha ny anaran'ny vondrona
+                if (groupNameA < groupNameB) return -1;
+                if (groupNameA > groupNameB) return 1;
+
+                // 2. Raha mitovy ny vondrona, dia ampitahaina ny anaran'ny mpiasa
+                const nameA = employeeA?.name || '';
+                const nameB = employeeB?.name || '';
+                return nameA.localeCompare(nameB);
+            });
+            // =======================================================================
+
             const filename = `export-avances-${new Date().toISOString().split('T')[0]}`;
 
             if (format === 'pdf') {
-                // Ny export PDF dia tsy miova
+                // =======================================================================
+                //           EXPORT PDF NOHAVAOZINA MIARAKA AMIN'NY VONDROM-PIASA
+                // =======================================================================
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
+                
                 doc.setFontSize(18);
-                doc.text("Rapport des Avances", 105, 20, { align: 'center' });
-                doc.setFontSize(10);
-                doc.text(`Exporté le: ${new Date().toLocaleDateString('fr-FR')}`, 105, 26, { align: 'center' });
-                const tableColumn = ["Date", "Employé", "Groupe", "Montant (Ar)", "Motif"];
-                const tableRows = [];
+                doc.setFont("helvetica", "bold");
+                doc.text("Liste des Avances à Payer", 105, 20, { align: 'center' });
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+                const periodText = monthFilter ? `Période: ${monthFilter}` : "Toutes les périodes";
+                doc.text(periodText, 105, 28, { align: 'center' });
+
+                const tableData = [];
                 let totalAdvances = 0;
+                
                 dataToExport.forEach(adv => {
                     const employee = employees.find(e => e.id === adv.employeeId);
                     const group = groups.find(g => g.id === employee?.groupId);
-                    const formattedAmount = adv.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                    const rowData = [
-                        formatDate(adv.date, false),
-                        employee ? employee.name : 'N/A',
-                        group ? group.name : 'Sans groupe',
-                        formattedAmount,
-                        adv.reason || ''
-                    ];
-                    tableRows.push(rowData);
+                    const formattedAmount = adv.amount.toLocaleString('fr-FR');
+                    
+                    tableData.push({
+                        group: group ? group.name : 'Sans Groupe',
+                        name: employee ? employee.name : 'N/A',
+                        amount: formattedAmount,
+                        signature: ''
+                    });
                     totalAdvances += adv.amount;
                 });
+
                 doc.autoTable({
-                    head: [tableColumn],
-                    body: tableRows,
-                    startY: 35,
+                    // Mampiasa ny lojika "rowGroup" an'ny jspdf-autotable
+                    // mba hanoratana ny anaran'ny vondrona ho lohateny isaky ny miova
+                    rowPageBreak: 'avoid',
+                    body: tableData,
+                    columns: [
+                        { header: 'Nom de l\'Employé', dataKey: 'name' },
+                        { header: 'Montant (Ar)', dataKey: 'amount' },
+                        { header: 'Signature', dataKey: 'signature' },
+                    ],
+                    didDrawCell: (data) => {
+                        // Asiana tsipika kely eo amin'ny toerana hanaovana sonia
+                        if (data.column.dataKey === 'signature' && data.cell.section === 'body') {
+                            doc.setDrawColor(200, 200, 200);
+                            doc.line(data.cell.x + 2, data.cell.y + data.cell.height - 5, data.cell.x + data.cell.width - 2, data.cell.y + data.cell.height - 5);
+                        }
+                    },
+                    // Ity no majika manao ny fampivondronana
+                    didDrawPage: (data) => {
+                        doc.setFontSize(12);
+                        doc.setFont('helvetica', 'bold');
+                    },
+                    willDrawCell: (data) => {
+                        // Fanamarinana raha miova ny vondrona
+                        const previousRow = data.table.body[data.row.index - 1];
+                        if (data.row.index === 0 || data.row.raw.group !== previousRow.raw.group) {
+                            doc.setFontSize(11);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(103, 80, 164); // Loko volomparasy
+                            
+                            // Fanamarinana mba tsy hifanindry amin'ny loha-tenin'ny tabilao
+                            const yPos = data.row.y > 35 ? data.row.y : data.row.y + 5;
+
+                            doc.text(data.row.raw.group, data.settings.margin.left, yPos - 2);
+                        }
+                    },
+                    startY: 40,
                     theme: 'grid',
-                    headStyles: { fillColor: [103, 80, 164] },
-                    columnStyles: { 3: { halign: 'right' } }
+                    headStyles: { fillColor: [103, 80, 164], textColor: 255, fontStyle: 'bold' },
+                    columnStyles: { 
+                        amount: { halign: 'right', cellWidth: 30 },
+                        signature: { cellWidth: 60 }
+                    },
+                    margin: { top: 40 }
                 });
-                const finalY = doc.lastAutoTable.finalY + 10;
+
+                const finalY = doc.lastAutoTable.finalY + 12;
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                const formattedTotal = totalAdvances.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                doc.text(`Total des Avances: ${formattedTotal} Ar`, 14, finalY);
-                doc.save(`${filename}.pdf`);
-                showAlert('Export PDF des avances réussi!', 'success');
+                doc.setTextColor(0, 0, 0); // Averina mainty ny loko
+                const formattedTotal = totalAdvances.toLocaleString('fr-FR');
+                doc.text(`Total des Avances à Payer: ${formattedTotal} Ar`, 14, finalY);
+
+                doc.save(`liste-avances-a-signer-${monthFilter || 'tous'}.pdf`);
+                showAlert('La liste PDF groupée par équipe a été générée!', 'success');
 
             } else if (format === 'xlsx') {
-                // ===================================================
-                // DINGANA VAOVAO: FAMORONANA RAKITRA EXCEL (.xlsx)
-                // ===================================================
-                
-                // 1. Fanomanana ny angona ho an'ny SheetJS
-                const headers = ["Date", "Nom de l'Employé", "Groupe", "Montant (Ar)", "Motif"];
-                const sheetData = [headers]; // Ampidirina voalohany ny lohateny
+                // Ny export Excel dia efa mampiseho ny vondrona ka tsy misy fiovana lehibe
+                const headers = ["Date", "Nom de l'Employé", "Groupe", "Montant (Ar)", "Motif", "Statut"];
+                const sheetData = [headers];
 
                 let totalAdvances = 0;
                 dataToExport.forEach(adv => {
@@ -6647,63 +6735,70 @@
                         adv.date,
                         employee ? employee.name : 'N/A',
                         group ? group.name : 'Sans groupe',
-                        adv.amount, // Ampidirina ho isa tsotra ny vola
-                        adv.reason || ''
+                        adv.amount,
+                        adv.reason || '',
+                        adv.status || 'En attente'
                     ]);
                     totalAdvances += adv.amount;
                 });
 
-                // Ampiana andalana farany ho an'ny totaly
-                sheetData.push([]); // Andalana banga
+                sheetData.push([]);
                 sheetData.push(["", "", "Total des Avances:", totalAdvances, ""]);
 
-                // 2. Famoronana ny "worksheet" (takelaka)
                 const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-
-                // 3. Fanamboarana ny endriky ny sela (Styles)
-                // Fomba fanoratra ny isa (ohatra: 10 000)
-                const numberFormat = "#,##0"; 
-                // Fomba fanoratra ny totaly (misy "Ar" eo aoriany)
+                const numberFormat = "#,##0";
                 const totalFormat = `#,##0 "Ar"`;
 
-                // Ampiharina amin'ny tsanganana "Montant" (tsanganana D, index 3)
-                for (let i = 1; i < dataToExport.length + 1; i++) { // Manomboka amin'ny 1 fa tsy 0
+                for (let i = 1; i < dataToExport.length + 1; i++) {
                     const cellRef = XLSX.utils.encode_cell({r: i, c: 3});
-                    if(worksheet[cellRef]) {
-                        worksheet[cellRef].z = numberFormat;
-                    }
+                    if(worksheet[cellRef]) worksheet[cellRef].z = numberFormat;
                 }
                 
-                // Ampiharina amin'ny selan'ny totaly
                 const totalCellRef = XLSX.utils.encode_cell({r: dataToExport.length + 2, c: 3});
                 if(worksheet[totalCellRef]) {
                     worksheet[totalCellRef].z = totalFormat;
-                    worksheet[totalCellRef].s = { font: { bold: true } }; // Atao matavy
+                    worksheet[totalCellRef].s = { font: { bold: true } };
                 }
                 const totalLabelCellRef = XLSX.utils.encode_cell({r: dataToExport.length + 2, c: 2});
-                if(worksheet[totalLabelCellRef]) {
-                    worksheet[totalLabelCellRef].s = { font: { bold: true } }; // Atao matavy koa ny soratra
-                }
+                if(worksheet[totalLabelCellRef]) worksheet[totalLabelCellRef].s = { font: { bold: true } };
 
-                // 4. Fanamboarana ny sakan'ny tsanganana
                 worksheet['!cols'] = [
-                    { wch: 12 }, // Date
-                    { wch: 30 }, // Nom de l'Employé
-                    { wch: 20 }, // Groupe
-                    { wch: 18 }, // Montant
-                    { wch: 40 }  // Motif
+                    { wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 18 }, { wch: 40 }, { wch: 15 }
                 ];
 
-                // 5. Famoronana ny "workbook" (rakitra Excel)
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Avances");
-
-                // 6. Famoahana ny rakitra
                 XLSX.writeFile(workbook, `${filename}.xlsx`);
                 
                 showAlert('Export Excel des avances réussi!', 'success');
             }
         }
+
+        /**
+         * Manamarina ny fandoavana ny trosa iray.
+         * Ovainy ho 'Confirmé' ny satan'ilay trosa.
+         * @param {string} advanceId - Ny ID an'ilay trosa ho hamarinina.
+         */
+        async function confirmAdvance(advanceId) {
+            const advanceIndex = advances.findIndex(adv => adv.id === advanceId);
+            
+            if (advanceIndex === -1) {
+                showAlert("Erreur: Avance non trouvée.", 'error');
+                return;
+            }
+
+            // Ovaina ny sata
+            advances[advanceIndex].status = 'Confirmé';
+
+            // Tehirizina ny fanovana
+            await saveData();
+
+            // Havaozina ny fampisehoana
+            displayAdvances();
+
+            showAlert("L'avance a été marquée comme confirmée et payée.", 'success');
+        }
+
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
