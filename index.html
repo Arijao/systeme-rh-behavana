@@ -6576,7 +6576,7 @@
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
-         * VERSION FARANY: Mampiasa ny function formatCurrency() efa misy.
+         * VERSION FARANY INDRINDRA: Manolo an-keriny ny "non-breaking space" ho "espace" tsotra.
          */
         function exportAdvances(format) {
             // 1. Fakan-tsivana (tsy miova)
@@ -6643,10 +6643,13 @@
                     const amount = adv.amount || 0;
                     
                     // =======================================================================
-                    //           FANITSARANA LEHIBE: Mampiasa ny formatCurrency()
+                    //           VAHAOLANA FARANY: Fanoloana ny karazana "espace"
                     // =======================================================================
-                    // Esorina ny " Ar" amin'ny farany mba ho isa madio no ao anaty tabilao
-                    const formattedAmount = formatCurrency(amount).replace(' Ar', '').trim();
+                    let formattedAmount = formatCurrency(amount);
+                    // 1. Esorina ny " Ar"
+                    formattedAmount = formattedAmount.replace(' Ar', '').trim();
+                    // 2. Soloina "espace" tsotra ilay "non-breaking space" (\u00A0)
+                    formattedAmount = formattedAmount.replace(/\s/g, ' ');
                     // =======================================================================
 
                     tableData.push({
@@ -6691,12 +6694,11 @@
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
                 
-                // =======================================================================
-                //           FANITSARANA LEHIBE: Mampiasa ny formatCurrency()
-                // =======================================================================
-                const formattedTotal = formatCurrency(totalAdvances || 0);
+                // Ampiharina koa eto ilay fanitsiana
+                let formattedTotal = formatCurrency(totalAdvances || 0);
+                formattedTotal = formattedTotal.replace(/\s/g, ' '); // Soloina "espace" tsotra daholo
+
                 doc.text(`Total des Avances à Payer: ${formattedTotal}`, 14, finalY);
-                // =======================================================================
 
                 doc.save(`liste-avances-a-signer-${monthFilter || 'tous'}.pdf`);
                 showAlert('La liste PDF finale a été générée avec succès!', 'success');
