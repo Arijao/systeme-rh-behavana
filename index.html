@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/dist/face-api.min.js"></script>
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
     <link rel="manifest" href="/systeme-rh-behavana/manifest.json">
@@ -2163,7 +2164,7 @@
             constructor() {
                 this.db = null;
                 this.dbName = 'BehavanaHRSystem';
-                this.version = 3; // Augmenter la version pour les nouvelles tables
+                this.version = 4; // Augmenter la version pour les nouvelles tables
                 this.isInitialized = false;
             }
 
@@ -2247,6 +2248,11 @@
                         }
 
                         console.log('Structures de base de données créées avec support QR Code');
+                        // Nouvelles tables pour FaceId
+                        if (!db.objectStoreNames.contains('face_descriptors')) {
+                            const faceStore = db.createObjectStore('face_descriptors', { keyPath: 'employeeId' });
+                            faceStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        }
                     };
                 });
             }
@@ -2408,6 +2414,386 @@
         //========================================================
         let displayedEmployeesCount = 0;
         const employeesPerPage = 25; // Isan'ny mpiasa aseho isaky ny mandeha
+
+        // 1. VARIABLES GLOBALS VAOVAO
+        let faceApi = null;
+        let faceDescriptors = {}; // Stockage ny face descriptors ho an'ny employés
+        let isUsingFacialRecognition = false;
+        let currentFaceDetectionMode = 'qr-only'; // 'qr-only', 'face-only', 'both'
+
+        // ===============================================================
+        //  2. INITIALIZATION FACIAL RECOGNITION
+        // ===============================================================
+        async function initializeFaceAPI() {
+            try {
+                // Load models (avy amin'ny CDN)
+                await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
+                await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
+                await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
+                await faceapi.nets.faceExpressionNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
+                
+                console.log('✅ Face-API.js models loaded');
+                return true;
+            } catch (error) {
+                console.error('❌ Erreur chargement Face-API:', error);
+                showAlert('Reconnaissance faciale non disponible', 'warning');
+                return false;
+            }
+        }
+
+        // ===============================================================
+        //  3. ENREGISTREMENT VISAGE EMPLOYÉ
+        // ===============================================================
+        async function registerEmployeeFace(employeeId) {
+            try {
+                const modal = `
+                    <div class="modal active" id="faceRegistrationModal">
+                        <div class="modal-content" style="max-width: 500px;">
+                            <div class="modal-header">
+                                <h3><span class="material-icons">face</span> Enregistrer le Visage</h3>
+                                <button class="close-btn" onclick="closeFaceRegistration()">
+                                    <span class="material-icons">close</span>
+                                </button>
+                            </div>
+                            <div style="text-align: center; padding: 16px;">
+                                <p>Positionnez-vous face à la caméra</p>
+                                <video id="faceRegisterVideo" style="width: 100%; max-width: 400px; border-radius: 12px;"></video>
+                                <canvas id="faceRegisterCanvas" style="display: none;"></canvas>
+                                <div id="faceRegisterStatus" style="margin-top: 16px;"></div>
+                                <button class="btn" onclick="captureFaceDescriptor('${employeeId}')" style="margin-top: 16px;">
+                                    <span class="material-icons">camera</span>
+                                    Capturer le Visage
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+                await startFaceRegistrationCamera();
+                
+            } catch (error) {
+                console.error('Erreur enregistrement visage:', error);
+                showAlert('Erreur lors de l\'enregistrement du visage', 'error');
+            }
+        }
+
+        async function startFaceRegistrationCamera() {
+            const video = document.getElementById('faceRegisterVideo');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, facingMode: 'user' } 
+                });
+                video.srcObject = stream;
+                await video.play();
+            } catch (error) {
+                console.error('Erreur caméra:', error);
+                document.getElementById('faceRegisterStatus').innerHTML = 
+                    '<div class="alert alert-error">Erreur d\'accès à la caméra</div>';
+            }
+        }
+
+        async function captureFaceDescriptor(employeeId) {
+            const video = document.getElementById('faceRegisterVideo');
+            const canvas = document.getElementById('faceRegisterCanvas');
+            const statusDiv = document.getElementById('faceRegisterStatus');
+            
+            try {
+                statusDiv.innerHTML = '<p>Analyse du visage en cours...</p>';
+                
+                // Détecter le visage
+                const detections = await faceapi
+                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                    
+                if (detections) {
+                    // Sauvegarder le face descriptor
+                    faceDescriptors[employeeId] = detections.descriptor;
+                    
+                    // Sauvegarder dans IndexedDB
+                    await saveFaceDescriptor(employeeId, Array.from(detections.descriptor));
+                    
+                    statusDiv.innerHTML = '<div class="alert alert-success">Visage enregistré avec succès!</div>';
+                    
+                    setTimeout(() => {
+                        closeFaceRegistration();
+                        showAlert('Visage enregistré pour cet employé', 'success');
+                    }, 2000);
+                    
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-error">Aucun visage détecté. Réessayez.</div>';
+                }
+                
+            } catch (error) {
+                console.error('Erreur capture visage:', error);
+                statusDiv.innerHTML = '<div class="alert alert-error">Erreur lors de la capture</div>';
+            }
+        }
+
+        // ===============================================================
+        //  4. SAUVEGARDE/CHARGEMENT FACE DESCRIPTORS
+        // ===============================================================
+        async function saveFaceDescriptor(employeeId, descriptor) {
+            try {
+                await dbManager.put('face_descriptors', {
+                    employeeId: employeeId,
+                    descriptor: descriptor,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Erreur sauvegarde face descriptor:', error);
+            }
+        }
+
+        async function loadAllFaceDescriptors() {
+            try {
+                const descriptors = await dbManager.getAll('face_descriptors');
+                faceDescriptors = {};
+                
+                descriptors.forEach(desc => {
+                    faceDescriptors[desc.employeeId] = new Float32Array(desc.descriptor);
+                });
+                
+                console.log(`✅ ${Object.keys(faceDescriptors).length} visages chargés`);
+            } catch (error) {
+                console.error('Erreur chargement face descriptors:', error);
+            }
+        }
+
+        // ===============================================================
+        //  5. RECONNAISSANCE FACIALE PENDANT SCAN
+        // ===============================================================
+        async function detectFaceInVideo(video) {
+            try {
+                if (!faceApi || Object.keys(faceDescriptors).length === 0) {
+                    return null;
+                }
+
+                const detections = await faceapi
+                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                    
+                if (!detections) return null;
+
+                // Comparer avec les visages enregistrés
+                let bestMatch = null;
+                let bestDistance = 0.6; // Seuil de similarité
+                
+                for (const [employeeId, storedDescriptor] of Object.entries(faceDescriptors)) {
+                    const distance = faceapi.euclideanDistance(detections.descriptor, storedDescriptor);
+                    
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestMatch = employeeId;
+                    }
+                }
+                
+                if (bestMatch) {
+                    const employee = employees.find(emp => emp.id === bestMatch);
+                    return {
+                        employee: employee,
+                        confidence: (1 - bestDistance) * 100 // Pourcentage de confiance
+                    };
+                }
+                
+                return null;
+                
+            } catch (error) {
+                console.error('Erreur détection faciale:', error);
+                return null;
+            }
+        }
+
+        // ===============================================================
+        //  6. INTERFACE MODES DE RECONNAISSANCE
+        // ===============================================================
+        function createRecognitionModeSelector() {
+            return `
+                <div class="recognition-mode-selector" style="margin-bottom: 16px; padding: 12px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: var(--md-sys-color-primary);">
+                        <span class="material-icons">settings</span> Mode de Reconnaissance
+                    </h4>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="recognitionMode" value="qr-only" checked onchange="setRecognitionMode(this.value)">
+                            <span style="margin-left: 8px;">QR Code seulement</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="recognitionMode" value="face-only" onchange="setRecognitionMode(this.value)">
+                            <span style="margin-left: 8px;">Visage seulement</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="recognitionMode" value="both" onchange="setRecognitionMode(this.value)">
+                            <span style="margin-left: 8px;">QR + Visage (Double vérification)</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setRecognitionMode(mode) {
+            currentFaceDetectionMode = mode;
+            console.log(`Mode reconnaissance changé: ${mode}`);
+        }
+
+        // ===============================================================
+        //  7. SCANNER UNIFIÉ (QR + FACE)
+        // ===============================================================
+        async function scanQRFromVideo(video, canvas) {
+            if (!video || video.readyState !== video.HAVE_ENOUGH_DATA || !isScanning) {
+                return;
+            }
+
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            try {
+                let qrResult = null;
+                let faceResult = null;
+
+                // 1. SCAN QR CODE (raha ilaina)
+                if (currentFaceDetectionMode === 'qr-only' || currentFaceDetectionMode === 'both') {
+                    if (typeof jsQR !== 'undefined') {
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (qrCode) {
+                            qrResult = qrCode.data;
+                        }
+                    }
+                }
+
+                // 2. RECONNAISSANCE FACIALE (raha ilaina)
+                if (currentFaceDetectionMode === 'face-only' || currentFaceDetectionMode === 'both') {
+                    faceResult = await detectFaceInVideo(video);
+                }
+
+                // 3. PROCESSING RESULTS
+                await processCombinedRecognition(qrResult, faceResult);
+
+            } catch (error) {
+                console.error('Erreur lors du scan combiné:', error);
+            }
+        }
+
+        async function processCombinedRecognition(qrResult, faceResult) {
+            switch (currentFaceDetectionMode) {
+                case 'qr-only':
+                    if (qrResult) {
+                        await handleQRScanResult(qrResult);
+                    }
+                    break;
+
+                case 'face-only':
+                    if (faceResult) {
+                        showScanResult(`👤 ${faceResult.employee.name} reconnu (${faceResult.confidence.toFixed(1)}%)`, 'success');
+                        await processFaceRecognitionResult(faceResult.employee);
+                    }
+                    break;
+
+                case 'both':
+                    if (qrResult && faceResult) {
+                        // Double vérification
+                        const qrEmployee = await getEmployeeFromQR(qrResult);
+                        
+                        if (qrEmployee && qrEmployee.id === faceResult.employee.id) {
+                            showScanResult(`✅ Double vérification réussie: ${faceResult.employee.name}`, 'success');
+                            await handleQRScanResult(qrResult);
+                        } else {
+                            showScanResult(`❌ Incohérence: QR et visage ne correspondent pas`, 'error');
+                        }
+                    } else if (qrResult) {
+                        showScanResult(`⚠️ QR détecté, visage requis pour validation`, 'warning');
+                    } else if (faceResult) {
+                        showScanResult(`⚠️ Visage détecté, QR Code requis pour validation`, 'warning');
+                    }
+                    break;
+            }
+        }
+
+        // ===============================================================
+        //  8. MISE À JOUR INTERFACE EMPLOYÉS
+        // ===============================================================
+        function addFaceRegistrationButtons() {
+            // Ajouter boutons d'enregistrement visage dans la liste des employés
+            const employeeItems = document.querySelectorAll('.employee-item');
+            
+            employeeItems.forEach(item => {
+                const employeeId = item.dataset.employeeId;
+                if (employeeId && !item.querySelector('.face-register-btn')) {
+                    const actions = item.querySelector('.employee-actions');
+                    if (actions) {
+                        const faceBtn = document.createElement('button');
+                        faceBtn.className = 'btn-icon face-register-btn';
+                        faceBtn.title = 'Enregistrer le visage';
+                        faceBtn.onclick = () => registerEmployeeFace(employeeId);
+                        faceBtn.innerHTML = '<span class="material-icons">face</span>';
+                        actions.appendChild(faceBtn);
+                    }
+                }
+            });
+        }
+
+        // ===============================================================
+        //  9. HELPER FUNCTIONS
+        // ===============================================================
+        async function getEmployeeFromQR(qrData) {
+            try {
+                let parsedData;
+                if (qrData.startsWith('{')) {
+                    parsedData = JSON.parse(qrData);
+                } else {
+                    const decodedString = decodeURIComponent(escape(atob(qrData)));
+                    parsedData = JSON.parse(decodedString);
+                }
+                
+                return employees.find(emp => emp.id === parsedData.employeeId);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function processFaceRecognitionResult(employee) {
+            const purpose = currentScanPurpose;
+            
+            if (purpose === 'attendance') {
+                await processAttendanceScan(employee);
+            } else if (purpose === 'advance') {
+                const advanceEmployeeSelect = document.getElementById('advanceEmployee');
+                advanceEmployeeSelect.value = employee.id;
+                showAlert(`Employé sélectionné par reconnaissance faciale: ${employee.name}`, 'success');
+                stopQRScan(false);
+            } else if (purpose === 'payroll') {
+                const payrollEmployeeSelect = document.getElementById('payrollEmployeeSelect');
+                payrollEmployeeSelect.value = employee.id;
+                handlePayrollEmployeeChange();
+                showAlert(`Employé sélectionné par reconnaissance faciale: ${employee.name}`, 'success');
+                stopQRScan(false);
+            } else if (purpose === 'advances-search') {
+                const searchInput = document.getElementById('advanceSearchInput');
+                searchInput.value = employee.name;
+                advancesCurrentPage = 1;
+                displayAdvances();
+                showAlert(`Recherche par reconnaissance faciale: ${employee.name}`, 'success');
+                stopQRScan(false);
+            }
+        }
+
+        function closeFaceRegistration() {
+            const modal = document.getElementById('faceRegistrationModal');
+            if (modal) {
+                const video = document.getElementById('faceRegisterVideo');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                modal.remove();
+            }
+        }
+
         // =================================================================
         //  GESTION DU SON (VERSION 6 - "TRITONE" STYLE IPHONE NATAO TAMIN'NY JS)
         // =================================================================
@@ -2655,6 +3041,14 @@
                 advancesCurrentPage = 1;
                 displayAdvances();
             });
+
+            // Ao amin'ny DOMContentLoaded:
+            const faceApiLoaded = await initializeFaceAPI();
+            if (faceApiLoaded) {
+                await loadAllFaceDescriptors();
+                isUsingFacialRecognition = true;
+                console.log('✅ Reconnaissance faciale activée');
+            }
         });
 
 
