@@ -3704,6 +3704,21 @@
                 // Charger les données existantes (identique à l'original)
                 employees = await dbManager.getAll('employees');
 
+                // 🔥 MIGRATION AUTOMATIQUE: Mampiasa ID timestamp ho date d'ajout
+                employees = employees.map(emp => {
+                    if (!emp.dateAjout && emp.id) {
+                        // Ny ID dia timestamp, averina ho date
+                        emp.dateAjout = new Date(emp.id).toISOString();
+                    } else if (!emp.dateAjout) {
+                        // Fallback raha tsy misy ID (tsy tokony hitranga)
+                        emp.dateAjout = new Date().toISOString();
+                    }
+                    return emp;
+                });
+
+                // Tehirizina ny migration
+                await saveData();
+
                 const attendanceRecords = await dbManager.getAll('attendance');
                 attendance = {};
                 attendanceRecords.forEach(record => {
@@ -4220,7 +4235,6 @@
 
             // Fampisehoana ny lisitra (tsy miova)
             container.innerHTML = paginatedEmployees.map(employee => {
-                // ... (ny kaody fampisehoana ny employee-item dia tsy miova) ...
                 const group = groups.find(g => g.id === employee.groupId);
                 const groupName = group ? group.name : "<i>Sans groupe</i>";
                 const currentMonth = new Date().toISOString().slice(0, 7);
@@ -4238,6 +4252,10 @@
                             <p><strong>Poste:</strong> ${employee.position} | <strong>Groupe:</strong> ${groupName}</p>
                             <p><strong>Salaire:</strong> ${formatCurrency(employee.salary)}</p>
                             ${advanceHTML}
+                            <p style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-top: 4px;">
+                                <span class="material-icons" style="font-size: 14px; vertical-align: middle;">event</span>
+                                Ajouté le: <strong>${employee.dateAjout ? new Date(employee.dateAjout).toLocaleDateString('fr-FR') : 'Non défini'}</strong>
+                            </p>
                         </div>
                         <div class="employee-actions">
                             <button class="btn-icon" onclick="editEmployee('${employee.id}')" title="Modifier"><span class="material-icons">edit</span></button>
@@ -5541,7 +5559,7 @@
                     gender: gender,
                     salary: salary,
                     groupId: groupId || null,
-                    dateAdded: new Date().toISOString(),
+                    dateAjout: new Date().toISOString(),
                     status: 'actif', // Mpiasa vaovao dia 'actif' foana
                     departureDate: null // Tsy manana daty fialana
                 };
