@@ -5005,7 +5005,13 @@
                 payrollHTML.push(`
                     <div class="payroll-item ${isPaid ? 'paid' : ''}" id="payroll-item-${emp.id}" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; border: 1px solid var(--md-sys-color-outline-variant); border-left-width: 6px;">
                         <div>
-                            <h4>${emp.name}</h4>
+                            <h4>
+                                ${emp.name}
+                                <span class="attendance-badge ${presenceDays === 0 ? 'no-attendance' : ''}">
+                                    <span class="material-icons">${presenceDays === 0 ? 'event_busy' : 'check_circle'}</span>
+                                    <span>${presenceDays} jour${presenceDays > 1 ? 's' : ''}</span>
+                                </span>
+                            </h4>
                             <p>${emp.position}</p>
                             <div class="payroll-status-container">
                                 ${isPaid ? `
@@ -5019,8 +5025,8 @@
                                         
                                         <!-- Ity no andalana vaovao mampiseho ny acompte -->
                                         ${ includeAdvance && advanceAmountForNextMonth > 0 ? `
-                                            
-            <span title="Acompte pour le mois suivant" style="color: var(--md-sys-color-primary);">+ Acompte (${advanceDays}j): <b>${formatCurrency(advanceAmountForNextMonth)}</b></span>
+                                            <br>
+                                            <span title="Acompte pour le mois suivant" style="color: var(--md-sys-color-primary);">+ Acompte (${advanceDays}j): <b>${formatCurrency(advanceAmountForNextMonth)}</b></span>
                                         ` : '' }
                                         
                                         <hr style="margin: 4px 0; border-color: var(--md-sys-color-outline-variant);">
