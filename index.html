@@ -1061,6 +1061,30 @@
             margin-bottom: 0; 
         }
 
+        /* Style pour le badge de présence dans la paie */
+        .attendance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid var(--md-sys-color-success);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--md-sys-color-success);
+            vertical-align: middle;
+        }
+
+        .attendance-badge .material-icons {
+            font-size: 16px;
+        }
+
+        .attendance-badge.no-attendance {
+            background: rgba(211, 47, 47, 0.1);
+            border-color: var(--md-sys-color-error);
+            color: var(--md-sys-color-error);
+        }
 
     </style>
 </head>
@@ -4815,36 +4839,45 @@
                 <h3 style="margin: 24px 0 16px 0; color: var(--md-sys-color-primary);">
                     Résultats de Paie - ${results[0]?.month || ''}
                 </h3>
-                ${results.map(result => `
-                    <div class="payroll-item ${result.status === 'PAID' ? 'paid' : ''}">
-                        <div class="payroll-header">
-                            <h4>${result.employee.name}</h4>
-                            <div class="payroll-actions">
-                                ${result.status === 'PAID' ? `
-                                    <button class="btn btn-secondary" onclick="updatePayrollPrompt('${result.id}')">
-                                        <span class="material-icons">edit</span>
-                                        Modifier
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteExistingPayroll('${result.id}')">
-                                        <span class="material-icons">delete</span>
-                                        Supprimer
-                                    </button>
-                                ` : `
-                                    <button class="btn" onclick="savePayroll('${result.employee.id}', '${result.month}', ${result.netSalary})">
-                                        <span class="material-icons">save</span>
-                                        Enregistrer
-                                    </button>
-                                `}
+                ${results.map(result => {
+                    // ⭐ VAOVAO: Manisa ny andro nisy
+                    const attendanceDays = result.workDays || 0;
+                    const attendanceBadgeHTML = createAttendanceBadge(attendanceDays);
+                    
+                    return `
+                        <div class="payroll-item ${result.status === 'PAID' ? 'paid' : ''}">
+                            <div class="payroll-header">
+                                <h4>
+                                    ${result.employee.name}
+                                    ${attendanceBadgeHTML}
+                                </h4>
+                                <div class="payroll-actions">
+                                    ${result.status === 'PAID' ? `
+                                        <button class="btn btn-secondary" onclick="updatePayrollPrompt('${result.id}')">
+                                            <span class="material-icons">edit</span>
+                                            Modifier
+                                        </button>
+                                        <button class="btn btn-danger" onclick="deleteExistingPayroll('${result.id}')">
+                                            <span class="material-icons">delete</span>
+                                            Supprimer
+                                        </button>
+                                    ` : `
+                                        <button class="btn" onclick="savePayroll('${result.employee.id}', '${result.month}', ${result.netSalary})">
+                                            <span class="material-icons">save</span>
+                                            Enregistrer
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                            <div class="payroll-details">
+                                <div><strong>Jours travaillés:</strong> ${result.workDays}/${result.daysInMonth}</div>
+                                <div><strong>Salaire brut:</strong> ${formatCurrency(result.grossSalary)}</div>
+                                <div><strong>Avances:</strong> ${formatCurrency(result.totalAdvances)}</div>
+                                <div><strong>Salaire net:</strong> <span class="amount">${formatCurrency(result.netSalary)}</span></div>
                             </div>
                         </div>
-                        <div class="payroll-details">
-                            <div><strong>Jours travaillés:</strong> ${result.workDays}/${result.daysInMonth}</div>
-                            <div><strong>Salaire brut:</strong> ${formatCurrency(result.grossSalary)}</div>
-                            <div><strong>Avances:</strong> ${formatCurrency(result.totalAdvances)}</div>
-                            <div><strong>Salaire net:</strong> <span class="amount">${formatCurrency(result.netSalary)}</span></div>
-                        </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             `;
         }
 
@@ -7381,6 +7414,70 @@
             }
         }
 
+        /**
+         * Manisa ny isan'ny andro nisy ho an'ny mpiasa iray nandritra ny volana iray
+         * @param {string} employeeId - ID ny mpiasa
+         * @param {string} month - Volana (format: YYYY-MM)
+         * @returns {number} - Isan'ny andro nisy (>= 4 ora)
+         */
+        function calculateAttendanceDaysForMonth(employeeId, month) {
+            if (!month) return 0;
+            
+            const [year, monthNum] = month.split('-');
+            let totalDays = 0;
+            
+            // Mijery ny andro rehetra ao anatin'ny volana
+            const daysInMonth = new Date(year, monthNum, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${monthNum.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Jerena ao amin'ny présence manuelle
+                if (attendance[dateStr] && attendance[dateStr][employeeId]) {
+                    totalDays++;
+                    continue;
+                }
+                
+                // Jerena ao amin'ny présence QR
+                const qrRecords = qrAttendance.filter(record => 
+                    record.employeeId === employeeId && 
+                    record.date === dateStr
+                );
+                
+                if (qrRecords.length > 0) {
+                    // Kajy ny totalin'ny ora
+                    const totalHours = qrRecords.reduce((sum, record) => sum + (record.hours || 0), 0);
+                    if (totalHours >= 4) {
+                        totalDays++;
+                    }
+                }
+            }
+            
+            return totalDays;
+        }
+
+        /**
+         * Mamorona ny badge HTML mampiseho ny isan'ny andro nisy
+         * @param {number} days - Isan'ny andro
+         * @returns {string} - HTML ny badge
+         */
+        function createAttendanceBadge(days) {
+            if (days === 0) {
+                return `
+                    <span class="attendance-badge no-attendance">
+                        <span class="material-icons">event_busy</span>
+                        <span>0 jour</span>
+                    </span>
+                `;
+            }
+            
+            return `
+                <span class="attendance-badge">
+                    <span class="material-icons">check_circle</span>
+                    <span>${days} jour${days > 1 ? 's' : ''}</span>
+                </span>
+            `;
+        }
 
     </script>
 </body>
