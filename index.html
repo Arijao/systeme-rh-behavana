@@ -1403,6 +1403,13 @@
                         <span class="material-icons">camera_alt</span>
                         Démarrer le Scanner
                     </button>
+                    
+                    <button class="btn btn-secondary" onclick="document.getElementById('qrImageInput').click()">
+                        <span class="material-icons">photo_library</span>
+                        Choisir une Image
+                    </button>
+                    <input type="file" id="qrImageInput" accept="image/*" capture="environment" style="display: none;" onchange="handleQRImageUpload(event)">
+
                 </div>
             </div>
 
@@ -7511,6 +7518,36 @@
                     <span>${days} jour${days > 1 ? 's' : ''}</span>
                 </span>
             `;
+        }
+
+        async function handleQRImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const img = new Image();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.getElementById('qrCanvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    
+                    if (code) {
+                        processQRCode(code.data);
+                    } else {
+                        showAlert('Aucun QR code détecté dans l\'image', 'error');
+                    }
+                };
+            };
+            
+            reader.readAsDataURL(file);
         }
 
     </script>
