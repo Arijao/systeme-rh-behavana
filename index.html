@@ -2155,7 +2155,7 @@
 
                 <!-- ITO ILAY KAODY NAFINDRA AVY ANY AMBONY -->
                 <div class="video-container">
-                    <video id="qrVideo" style="width: 100%; border-radius: 8px; display: none;"></video>
+                    <video id="qrVideo" playsinline autoplay muted style="width: 100%; border-radius: 8px; display: none;"></video>
                     <canvas id="qrCanvas" style="display: none;"></canvas>
                     <div class="scan-overlay" id="scanOverlay" style="display: none;"></div>
                 </div>
@@ -2955,12 +2955,30 @@
             openModal('qrScannerModal');
 
             try {
-                scanStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
-                });
+                // ========== FANATSARANA 1: Configuration tsara kokoa ========== 
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
 
+                scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                // ========== FANATSARANA 2: iOS compatibility ========== 
                 video.srcObject = scanStream;
-                await video.play();
+
+                // Ampio ireto attribute ireto ho an'ny iOS
+                video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
+                video.setAttribute('muted', '');
+
+                // Alefaso ny video
+                await video.play().catch(err => {
+                    console.error('Erreur lecture vidéo:', err);
+                });
 
                 video.style.display = 'block';
                 overlay.style.display = 'block';
@@ -2973,13 +2991,23 @@
                 }, 500);
 
             } catch (error) {
+                // ========== FANATSARANA 3: Error handling tsara kokoa ========== 
                 console.error("Erreur d'accès à la caméra:", error);
                 permissionMsg.style.display = 'flex';
-                if (error.name === "NotAllowedError") {
-                    permissionMsg.querySelector('span').textContent = "Vous avez refusé l'accès à la caméra. Veuillez l'autoriser.";
+                
+                let errorMessage = '';
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = "Permission refusée. Sur iPhone: Réglages > Safari > Caméra > Autoriser.";
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = "Aucune caméra trouvée sur cet appareil.";
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = "Caméra déjà utilisée. Fermez les autres apps utilisant la caméra.";
                 } else {
-                    permissionMsg.querySelector('span').textContent = "Erreur: Impossible de trouver ou d'accéder à la caméra.";
+                    errorMessage = "Erreur: " + error.message;
                 }
+                
+                permissionMsg.querySelector('span').textContent = errorMessage;
+                stopQRScan();
             }
         }
 
