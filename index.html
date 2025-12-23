@@ -1961,6 +1961,24 @@
                 <p id="lastBackupInfo" style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant);"></p>
             </div>
         </div>
+        <div class="settings-section">
+            <h3><span class="material-icons">delete_forever</span>Réinitialisation</h3>
+            <p style="
+                margin-bottom:8px;
+                font-size: 11px;
+                color: var(--md-sys-color-on-surface-variant);
+                font-style: italic;
+            ">
+                Hamafa tanteraka ny angona rehetra ao amin'ny rafitra
+                (employés, présences, paie, avances, groupes, QR, paramètres).
+            </p>
+
+            <button class="btn btn-danger" onclick="resetAllData()" style="width:100%;">
+                <span class="material-icons">delete_forever</span>
+                Reset total des données
+            </button>
+        </div>
+
         <!-- FANAMPIANA VAOVAO: Fizarana "À Propos" ao anatin'ny Settings -->
         <div class="settings-section" style="margin-top: 40px; text-align: center; opacity: 0.8;">
             <h3 style="justify-content: center;">
@@ -2508,6 +2526,73 @@
             }
         }
 
+        async function resetAllData() {
+            if (!dbManager || !dbManager.isInitialized) {
+                alert("Base de données non initialisée.");
+                return;
+            }
+
+            if (!confirm(
+                "Hamafa tanteraka ny angona rehetra (employés, présences, paie, avances, groupes, QR, paramètres) ve ianao ?"
+            )) {
+                return;
+            }
+
+            try {
+                const stores = [
+                    "groups",
+                    "employees",
+                    "attendance",
+                    "payrolls",
+                    "advances",
+                    "settings",
+                    "qr_attendance",
+                    "qr_codes"
+                ];
+
+                // 1. Fafao ao amin'ny IndexedDB
+                for (const store of stores) {
+                    await dbManager.clear(store);
+                }
+
+                // 2. Diovy ny variables en mémoire
+                employees      = [];
+                groups         = [];
+                attendance     = {};
+                payrolls       = [];
+                advances       = [];
+                qr_attendance  = [];
+                qr_codes       = [];
+
+                // 3. Havaozy avy hatrany ny UI (sections rehetra)
+                if (typeof updateStatistics      === "function") updateStatistics();
+                if (typeof displayEmployees      === "function") displayEmployees();
+                if (typeof displayAttendance     === "function") displayAttendance();
+                if (typeof displayAdvances       === "function") displayAdvances();
+                if (typeof displayQRAttendance   === "function") displayQRAttendance();
+                if (typeof displayPayments       === "function") displayPayments();
+                if (typeof displayGroups         === "function") displayGroups();
+                if (typeof updateReportStats     === "function") updateReportStats();
+
+                // 4. Fafao ny containers sasany raha ilaina
+                ["payrollResults",
+                "payrollSummary",
+                "employeeStatusResults",
+                "smartSearchResults",
+                "advancesSummary",
+                "qrContainer"
+                ].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = "";
+                });
+
+                showAlert("Remise à zéro vita soa aman-tsara.", "success");
+                console.log("Existing stores:", Array.from(dbManager.db.objectStoreNames));
+            } catch (e) {
+                console.error("Erreur reset:", e);
+                showAlert("Nisy olana tamin'ny reset.", "error");
+            }
+        }
 
 
         // ===============================
