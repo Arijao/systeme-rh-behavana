@@ -11,9 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
-    <link rel="manifest" href="/systeme-rh-behavana/manifest.json">
+    <link rel="manifest" href="manifest.json">
+
 
 
 
@@ -563,9 +565,62 @@
             padding: 24px;
             max-width: 500px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
             animation: modalSlideIn 0.3s ease;
+            position: relative;
+        }
+
+        @media (max-width: 600px) {
+            .modal-content {
+                padding: 16px;
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .modal-header h3 {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-height: 500px) {
+            .modal.active {
+                align-items: center;
+                padding: 5px;
+            }
+            .modal-content {
+                max-height: 98vh;
+                padding: 12px;
+                width: 98%;
+                max-width: 600px;
+            }
+            .qr-modal-body {
+                padding: 4px 0 !important;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+                text-align: left !important;
+            }
+            .qr-video-container {
+                max-width: 160px !important;
+                margin: 0 !important;
+                flex-shrink: 0;
+            }
+            #qrScannerInstruction {
+                margin-bottom: 0 !important;
+                flex: 1;
+                font-size: 0.85rem !important;
+            }
+            .modal-header {
+                margin-bottom: 4px;
+                padding-bottom: 4px;
+            }
+            .modal-header h3 {
+                font-size: 1rem !important;
+            }
         }
 
         @keyframes modalSlideIn {
@@ -678,6 +733,16 @@
             width: 100%;
             max-width: 400px;
             margin: 0 auto;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        @media (max-height: 500px) {
+            .video-container {
+                max-width: 280px;
+            }
         }
 
         #qrVideo {
@@ -1086,7 +1151,36 @@
             color: var(--md-sys-color-error);
         }
 
+    
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .nav-tabs { padding: 8px; }
+            .nav-tab { padding: 8px 12px; font-size: 14px; }
+            .container { padding: 8px; }
+            .card { padding: 16px; }
+            .settings-btn { right: 70px; }
+            .theme-toggle { right: 16px; }
+            
+            /* Optimisation caméra pour mobile */
+            .video-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            #qrVideo {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    
     </style>
+
+    <!-- Face Recognition Library -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+
 </head>
 <body>
     <div class="container">
@@ -1141,6 +1235,11 @@
                 <span class="material-icons">qr_code</span>
                 Présence QR
             </button>
+            <button class="nav-tab" onclick="showSection('face-presence')">
+                <span class="material-icons">face</span>
+                Pointage Facial
+            </button>
+
             <button class="nav-tab" onclick="showSection('qr-codes')">
                 <span class="material-icons">qr_code_2</span>
                 Codes QR
@@ -1383,6 +1482,89 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- SECTION: POINTAGE FACIAL -->
+        <!-- ========================================== -->
+        <div id="face-presence" class="section">
+            <div class="card">
+                <h2>
+                    <span class="material-icons">face</span>
+                    Pointage par Reconnaissance Faciale
+                </h2>
+                <p style="margin-top: -12px; margin-bottom: 20px; color: var(--md-sys-color-on-surface-variant);">
+                    Système de pointage automatique par reconnaissance faciale avec détection de vivacité.
+                </p>
+
+                <!-- Instructions -->
+                <div style="margin-bottom: 24px; padding: 16px; background: rgba(103, 80, 164, 0.08); border-radius: 12px; border-left: 4px solid var(--md-sys-color-primary);">
+                    <h3 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                        <span class="material-icons" style="color: var(--md-sys-color-primary);">info</span>
+                        Comment ça marche?
+                    </h3>
+                    <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                        <li><strong>Enrollment</strong>: Chaque employé doit d'abord enregistrer son visage (bouton 📸 dans la liste employés)</li>
+                        <li><strong>Pointage</strong>: Cliquez sur le bouton ci-dessous et regardez la caméra</li>
+                        <li><strong>Reconnaissance</strong>: Le système identifie automatiquement l'employé</li>
+                        <li><strong>Sécurité</strong>: La détection de vivacité empêche l'utilisation de photos</li>
+                    </ol>
+                </div>
+
+                <!-- Bouton principal -->
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <button 
+                        onclick="openFacePointageModal()" 
+                        style="
+                            padding: 20px 40px;
+                            background: linear-gradient(135deg, #6750A4 0%, #7C4DFF 100%);
+                            color: white;
+                            border: none;
+                            border-radius: 12px;
+                            cursor: pointer;
+                            font-size: 18px;
+                            font-weight: 600;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 12px;
+                            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+                            transition: all 0.3s ease;
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(103, 80, 164, 0.4)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.3)';"
+                    >
+                        <span class="material-icons" style="font-size: 32px;">face_retouching_natural</span>
+                        <span>Démarrer le Pointage Facial</span>
+                    </button>
+                    
+                    <p style="margin-top: 16px; color: var(--md-sys-color-on-surface-variant); font-size: 14px;">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle;">verified_user</span>
+                        Reconnaissance faciale sécurisée avec détection de vivacité
+                    </p>
+                </div>
+            </div>
+
+            <!-- Employés Enrolled -->
+            <div class="card">
+                <h3 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons" style="color: var(--md-sys-color-primary);">people</span>
+                    Employés Enrolled (<span id="enrolledCount">0</span>)
+                </h3>
+                <div id="enrolledEmployeesList">
+                    <!-- Rempli par JavaScript -->
+                </div>
+            </div>
+
+            <!-- Pointages du jour -->
+            <div class="card">
+                <h3 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons" style="color: var(--md-sys-color-success);">check_circle</span>
+                    Pointages Faciaux du Jour
+                </h3>
+                <div id="todayFaceAttendance">
+                    <!-- Rempli par JavaScript -->
+                </div>
+            </div>
+        </div>
+
 
         <!-- QR Presence Section -->
         <!-- =================================================== -->
@@ -1415,13 +1597,13 @@
 
             <div class="card">
                 <h2><span class="material-icons">today</span>Présences QR d'Aujourd'hui</h2>
-                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                    <input type="date" class="form-control" id="qrAttendanceDate" style="max-width: 200px;" onchange="qrAttendanceCurrentPage = 1; displayQRAttendance()">
-                    <button class="btn btn-secondary" onclick="refreshQRAttendance()">
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <input type="date" class="form-control" id="qrAttendanceDate" style="max-width: 200px; flex: 1; min-width: 150px;" onchange="qrAttendanceCurrentPage = 1; displayQRAttendance()">
+                    <button class="btn btn-secondary" onclick="refreshQRAttendance()" style="flex: 1; min-width: 120px;">
                         <span class="material-icons">refresh</span>
                         Actualiser
                     </button>
-                    <button class="btn btn-warning" onclick="exportQRAttendancePDF()">
+                    <button class="btn btn-warning" onclick="exportQRAttendancePDF()" style="flex: 1; min-width: 120px;">
                         <span class="material-icons">picture_as_pdf</span>
                         Export PDF
                     </button>
@@ -1541,6 +1723,10 @@
 
                                     <span class="material-icons">qr_code_scanner</span>
                                 </button>
+                                <button type="button" class="btn btn-secondary" onclick="startFaceScanForSelection('advance')" title="Scanner Visage">
+                                    <span class="material-icons">face</span>
+                                </button>
+
                             </div>
                         </div>
 
@@ -1658,6 +1844,10 @@
                             <button type="button" class="btn btn-secondary" onclick="startQRScan('payroll')" title="Scanner QR">
                                 <span class="material-icons">qr_code_scanner</span>
                             </button>
+                            <button type="button" class="btn btn-secondary" onclick="startFaceScanForSelection('payroll')" title="Scanner Visage">
+                                <span class="material-icons">face</span>
+                            </button>
+
                         </div>
                     </div>
 
@@ -1960,6 +2150,40 @@
                 </div>
                 <p id="lastBackupInfo" style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant);"></p>
             </div>
+
+            <!-- FIZARANA SYNC QR CODE VAOVAO -->
+            <div class="settings-section">
+                <h3>
+                    <span class="material-icons">sync</span>
+                    Synchronisation Mobile ↔ Laptop
+                </h3>
+                
+                <div class="alert" style="background-color: rgba(103, 80, 164, 0.1); color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary);">
+                    <span class="material-icons">info</span>
+                    <div>
+                        <strong>Mode d'emploi:</strong><br>
+                        📱 Téléphone: Générez un QR Code<br>
+                        💻 Laptop: Scannez pour importer
+                    </div>
+                </div>
+                
+                <!-- BOUTON GENERATE QR SYNC -->
+                <button class="btn" onclick="openSyncQRModal('generate')" style="width: 100%; margin-bottom: 12px;">
+                    <span class="material-icons">qr_code_2</span>
+                    📱 Générer QR Sync (Mobile)
+                </button>
+                
+                <!-- BOUTON SCANNER QR SYNC -->
+                <button class="btn btn-secondary" onclick="openSyncQRModal('scan')" style="width: 100%;">
+                    <span class="material-icons">qr_code_scanner</span>
+                    💻 Scanner QR Sync (Laptop)
+                </button>
+                
+                <p style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant); margin-top: 12px;">
+                    ⚡ Synchronisation instantanée sans Internet
+                </p>
+            </div>
+
         </div>
         <div class="settings-section">
             <h3><span class="material-icons">delete_forever</span>Réinitialisation</h3>
@@ -2163,38 +2387,36 @@
 
     <!-- ========================================================== -->
     <!--      MODAL VAOVAO HO AN'NY SCANNER QR (IRAIZAN'NY REHETRA)      -->
-    <!-- ========================================================== -->
-    <div class="modal" id="qrScannerModal">
-        <div class="modal-content" style="max-width: 450px;">
+    <!-- ========================================================== -->    <div class="modal" id="qrScannerModal">
+        <div class="modal-content qr-modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3 id="qrScannerTitle"><span class="material-icons">qr_code_scanner</span> Scanner le QR Code</h3>
+                <h3 id="qrScannerTitle" style="display: flex; align-items: center; gap: 8px; font-size: clamp(1rem, 4vw, 1.3rem);"><span class="material-icons">qr_code_scanner</span> Scanner le QR Code</h3>
                 <button class="close-btn" onclick="stopQRScan()">
                     <span class="material-icons">close</span>
                 </button>
             </div>
             
-            <div style="text-align: center; padding: 16px 0;">
-                <p id="qrScannerInstruction" style="margin-bottom: 16px; color: var(--md-sys-color-on-surface-variant);">
+            <div class="qr-modal-body" style="text-align: center; padding: 12px 0;">
+                <p id="qrScannerInstruction" style="margin-bottom: 12px; color: var(--md-sys-color-on-surface-variant); font-size: 0.9rem; line-height: 1.2;">
                     Veuillez pointer la caméra vers le QR Code de l'employé.
                 </p>
 
-                <!-- ITO ILAY KAODY NAFINDRA AVY ANY AMBONY -->
-                <div class="video-container">
+                <div class="video-container qr-video-container">
                     <video id="qrVideo" playsinline autoplay muted style="width: 100%; border-radius: 8px; display: none;"></video>
                     <canvas id="qrCanvas" style="display: none;"></canvas>
                     <div class="scan-overlay" id="scanOverlay" style="display: none;"></div>
                 </div>
                 
-                <div id="cameraPermissionMessage" class="alert alert-warning" style="display: none; justify-content: center; margin-top: 16px;">
-                    <span class="material-icons">videocam_off</span>
+                <div id="cameraPermissionMessage" class="alert alert-warning" style="display: none; justify-content: center; margin-top: 12px; padding: 8px; font-size: 0.85rem;">
+                    <span class="material-icons" style="font-size: 18px;">videocam_off</span>
                     <span>Mila fahazoan-dàlana hampiasa ny fakantsary.</span>
                 </div>
 
-                <div id="scanResult" class="scan-result" style="display: none; margin-top: 16px;"></div>
+                <div id="scanResult" class="scan-result" style="display: none; margin-top: 12px; padding: 8px; font-size: 0.9rem;"></div>
             </div>
 
-            <div style="text-align: center; margin-top: 16px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 16px;">
-                <button class="btn btn-danger" onclick="stopQRScan()">
+            <div style="text-align: center; margin-top: 8px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 12px;">
+                <button class="btn btn-danger" onclick="stopQRScan()" style="width: 100%; max-width: 200px; padding: 10px;">
                     <span class="material-icons">cancel</span>
                     Annuler le Scan
                 </button>
@@ -2202,6 +2424,80 @@
         </div>
     </div>
 
+    <!-- MODAL SYNC QR CODE -->
+    <div class="modal" id="syncQRModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 id="syncQRTitle">
+                    <span class="material-icons">sync</span>
+                    Synchronisation QR Code
+                </h3>
+                <button class="close-btn" onclick="closeSyncQRModal()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <!-- GENERATE MODE -->
+            <div id="syncQRGenerateMode" style="display: none;">
+                <div class="alert alert-info">
+                    <span class="material-icons">info</span>
+                    <div>
+                        Les données suivantes seront encodées:
+                        <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+                            <li><span id="syncEmployeesCount">0</span> employés</li>
+                            <li><span id="syncAttendanceCount">0</span> présences</li>
+                            <li><span id="syncAdvancesCount">0</span> avances</li>
+                            <li><span id="syncGroupsCount">0</span> groupes</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 24px 0;">
+                    <canvas id="syncQRCanvas" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
+                </div>
+                
+                <div style="margin-top: 16px; text-align: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant);">
+                    📱 Scannez ce QR Code avec le laptop
+                </div>
+                
+                <button class="btn btn-warning" onclick="downloadSyncQR()" style="width: 100%; margin-top: 16px;">
+                    <span class="material-icons">download</span>
+                    Télécharger l'Image
+                </button>
+            </div>
+            
+            <!-- SCAN MODE -->
+            <div id="syncQRScanMode" style="display: none;">
+                <div class="alert alert-warning">
+                    <span class="material-icons">warning</span>
+                    <div>
+                        <strong>Attention:</strong> Cette opération va <strong>fusionner</strong> les données du QR Code avec vos données actuelles.
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 16px 0;">
+                    <video id="syncScanVideo" autoplay playsinline style="width: 100%; max-height: 300px; border-radius: 12px; background: #000;"></video>
+                </div>
+                
+                <div id="syncScanStatus" style="padding: 12px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-top: 16px; font-size: 14px;">
+                    📷 Positionnez le QR Code devant la caméra...
+                </div>
+                
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('syncImageUpload').click()" style="flex: 1;">
+                        <span class="material-icons">photo_library</span>
+                        Choisir Image
+                    </button>
+                    <button class="btn" onclick="startSyncScan()" id="btnStartSyncScan" style="flex: 1;">
+                        <span class="material-icons">qr_code_scanner</span>
+                        Démarrer
+                    </button>
+                </div>
+                
+                <input type="file" id="syncImageUpload" accept="image/*" style="display: none;" onchange="handleSyncImageUpload(event)">
+            </div>
+        </div>
+    </div>
 
 
     <script>
@@ -2450,6 +2746,7 @@
         // Fanomanana ny feo
         let audioContext;
         let successSoundBuffer;
+        let nextSoundBuffer;
 
 
         //========================================================
@@ -2523,6 +2820,38 @@
 
             } catch (e) {
                 console.error("Tsy afaka nandefa feo:", e);
+            }
+        }
+
+        function playAuSuivantSound() {
+            // Hamarino aloha raha efa noforonina ilay singa audio
+            let audioPlayer = document.getElementById('audioPlayerAuSuivant');
+            
+            if (!audioPlayer) {
+                // Raha mbola tsy misy dia amboary izy ary afeno.
+                // Ovaina eto ny anaran'ilay rakitra feo mba hifanaraka amin'ny anao.
+                audioPlayer = new Audio('suivant.mp3'); 
+                audioPlayer.id = 'audioPlayerAuSuivant';
+                audioPlayer.style.display = 'none'; // Afenina tsy ho hitan'ny maso
+                document.body.appendChild(audioPlayer);
+            }
+
+            // Mba hahafahana mamerina mandefa azy avy hatrany raha vao avy nandeha teo
+            audioPlayer.currentTime = 0; 
+            
+            // Alefa ny feo
+            const playPromise = audioPlayer.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error("Tsy afaka nandefa ny feo 'suivant.mp3':", error);
+                    // Ity dia fomba iray hamahana ny olan'ny navigateur izay manakana ny feo mandeha ho azy
+                    if (typeof audioContext !== 'undefined' && audioContext.state === 'suspended') {
+                        audioContext.resume().then(() => {
+                            audioPlayer.play();
+                        });
+                    }
+                });
             }
         }
 
@@ -3268,7 +3597,7 @@
         async function processAttendanceScan(employee) {
             const now = new Date();
             const today = now.toISOString().split('T')[0];
-            const currentTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            const currentTime = now.toLocaleTimeString('fr-FR', { hour12: false }); //HH:MM:SS
 
             if (!attendance[today]) {
                 attendance[today] = {};
@@ -3402,8 +3731,8 @@
 
                 let statusHTML = '';
                 if (isPresent) {
-                    const arrivalTime = presenceData.arrivee || 'N/A';
-                    const departureTime = presenceData.depart || '...';
+                    const arrivalTime = formatDisplayTime(presenceData.arrivee); 
+                    const departureTime = formatDisplayTime(presenceData.depart);
                     const method = presenceData.method || 'MANUAL';
                     const methodColor = method === 'QR' ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-secondary)';
                     const methodIcon = method === 'QR' ? 'qr_code_scanner' : 'edit';
@@ -3414,7 +3743,7 @@
                             <span>Présent</span>
                         </div>
                         <div style="font-size: 12px; text-align: right; margin-top: 4px;">
-                            Arrivée: <strong>${arrivalTime}</strong> | Départ: ${departureTime}
+                            Arrivée: <strong>${arrivalTime}</strong> | Départ: <strong>${departureTime}</strong>
                             <span style="color: ${methodColor}; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin-left: 8px; vertical-align: middle;">
                                 <span class="material-icons" style="font-size: 14px;">${methodIcon}</span>
                                 ${method}
@@ -3632,7 +3961,32 @@
                                     width: 250px; /* Haben'ny sary voafaritra */
                                     height: 250px;
                                 }
-                            </style>
+                            
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .nav-tabs { padding: 8px; }
+            .nav-tab { padding: 8px 12px; font-size: 14px; }
+            .container { padding: 8px; }
+            .card { padding: 16px; }
+            .settings-btn { right: 70px; }
+            .theme-toggle { right: 16px; }
+            
+            /* Optimisation caméra pour mobile */
+            .video-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            #qrVideo {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    
+    </style>
                         </head>
                         <body>
                             <div class="qr-print-card">
@@ -3722,7 +4076,32 @@
                                 @media print {
                                     body { -webkit-print-color-adjust: exact; } /* Mba ho azo antoka ny loko */
                                 }
-                            </style>
+                            
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .nav-tabs { padding: 8px; }
+            .nav-tab { padding: 8px 12px; font-size: 14px; }
+            .container { padding: 8px; }
+            .card { padding: 16px; }
+            .settings-btn { right: 70px; }
+            .theme-toggle { right: 16px; }
+            
+            /* Optimisation caméra pour mobile */
+            .video-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            #qrVideo {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    
+    </style>
                         </head>
                         <body>
                             <h1 style="text-align: center; margin-bottom: 20px;">QR CODES - BEHAVANA HR SYSTEM</h1>
@@ -4229,11 +4608,37 @@
             }).format(amount) + ' Ar';
         }
 
+        // =================================================================
+        //  FUNCTION VAOVAO: Manamboatra ny fampisehoana ny ora
+        // =================================================================
+        /**
+         * Manova ny endriky ny ora avy amin'ny "20:09:47" ho "20h 09min 47s".
+         * @param {string | null} timeString - Ny ora ho avadika (ohatra: "20:09:47").
+         * @returns {string} - Ny ora voamboatra na "..." raha tsy misy.
+         */
+        function formatDisplayTime(timeString) {
+            if (!timeString || typeof timeString !== 'string' || !timeString.includes(':')) {
+                return "..."; // Averina ity raha tsy misy ora na tsy ara-dalàna
+            }
+            
+            try {
+                const parts = timeString.split(':');
+                const h = parts[0] || "00";
+                const min = parts[1] || "00";
+                const s = parts[2] || "00";
+                
+                return `${h}h ${min}min ${s}s`;
+            } catch (e) {
+                console.error("Erreur formatage heure:", timeString, e);
+                return timeString; // Averina ilay tany am-boalohany raha misy olana
+            }
+        }
+
         // ===============================
         // FONCTIONS EXISTANTES (partielles pour l'exemple)
         // ===============================
         
-                // =======================================================================
+        // =======================================================================
         //  showSection (VERSION FARANY INDRINDRA - TSY MILA MANOVA HTML)
         // =======================================================================
         function showSection(sectionId, event = null) { // Ampiana 'event = null'
@@ -4287,6 +4692,10 @@
                 case 'qr-presence':
                     displayQRAttendance();
                     break;
+                case 'face-presence': 
+                    displayEnrolledEmployees();
+                    displayTodayFaceAttendance();
+                    break;    
                 case 'qr-codes':
                     generateAllQRCodes();
                     break;
@@ -4502,7 +4911,7 @@
                                 <div id="detailed-att-${employee.id}" style="display: ${isDetailedPresence ? 'block' : 'none'};">
                                     ${isDetailedPresence ? `
                                         <div style="font-size: 14px; margin-bottom: 8px;">
-                                            <span>Arrivée: <b>${presenceData.arrivee}</b></span> | <span>Départ: <b>${presenceData.depart || '...'}</b></span>
+                                            <span>Arrivée: <b>${formatDisplayTime(presenceData.arrivee)}</b></span> | <span>Départ: <b>${formatDisplayTime(presenceData.depart)}</b></span>
                                         </div>
                                         ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
                                         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
@@ -4706,7 +5115,7 @@
                 // --- Fanitsiana ny recordTime ---
         async function recordTime(employeeId, type, date) {
             const now = new Date();
-            const currentTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            const currentTime = now.toLocaleTimeString('fr-FR', { hour12: false });
 
             if (!attendance[date]) {
                 attendance[date] = {};
@@ -5975,8 +6384,8 @@
 
                 let status = '<span style="color: var(--md-sys-color-error);">Absent</span>';
                 if (presenceData) {
-                    const arrival = presenceData.arrivee || 'N/A';
-                    const departure = presenceData.depart || '...';
+                    const arrival = formatDisplayTime(presenceData.arrivee); // <-- OVANA
+                    const departure = formatDisplayTime(presenceData.depart); // <-- OVANA
                     status = `<span style="color: var(--md-sys-color-success);">Présent (${arrival} - ${departure})</span>`;
                 }
 
@@ -7633,6 +8042,1320 @@
             };
             
             reader.readAsDataURL(file);
+        }
+
+
+
+        // ==========================================
+        // FACE RECOGNITION MODULE
+        // ==========================================
+
+        const FaceRecognition = {
+            modelsLoaded: false,
+            
+            async loadModels() {
+                if (this.modelsLoaded) return true;
+                
+                try {
+                    console.log('📦 Chargement models face-api.js...');
+                    
+                    const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
+                        ? '/systeme-rh-behavana' 
+                        : '';
+                    const modelPath = `${basePath}/models`;
+                    
+                    console.log('Model path:', modelPath);
+                    
+                    // ⬇️⬇️⬇️ VERSION AVEC FALLBACK CDN ⬇️⬇️⬇️
+                    try {
+                        // Essayer local d'abord
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+                        await faceapi.nets.faceLandmark68Net.loadFromUri(modelPath);
+                        await faceapi.nets.faceRecognitionNet.loadFromUri(modelPath);
+                        console.log('✅ Models chargés depuis:', modelPath);
+                    } catch (localError) {
+                        console.warn('⚠️ Models locaux non trouvés, tentative CDN...');
+                        const cdnPath = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+                        await faceapi.nets.tinyFaceDetector.loadFromUri(cdnPath);
+                        await faceapi.nets.faceLandmark68Net.loadFromUri(cdnPath);
+                        await faceapi.nets.faceRecognitionNet.loadFromUri(cdnPath);
+                        console.log('✅ Models chargés depuis CDN');
+                    }
+                    // ⬆️⬆️⬆️ FIN MODIFICATION ⬆️⬆️⬆️
+                    
+                    this.modelsLoaded = true;
+                    return true;
+                } catch (error) {
+                    console.error('❌ Erreur models:', error);
+                    alert('Erreur chargement models: ' + error.message);
+                    return false;
+                }
+            },
+
+            
+            calculateEAR(eye) {
+                const points = eye.map(p => ({x: p.x, y: p.y}));
+                const v1 = this.distance(points[1], points[5]);
+                const v2 = this.distance(points[2], points[4]);
+                const h = this.distance(points[0], points[3]);
+                return (v1 + v2) / (2.0 * h);
+            },
+            
+            distance(p1, p2) {
+                return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+            },
+            
+            // =================================================================
+            //  ENROLLFACE (VERSION 6 - MISARAKA NY DINGANA)
+            // =================================================================
+            async enrollFace(videoElement, employeData) {
+                const descriptors = [];
+                const instructions = [
+                    "Mijere mahitsy",
+                    "Atongilano kely miankavia ny loha",
+                    "Atongilano kely miankavanana ny loha",
+                    "Atongilano kely miakatra ny loha",
+                    "Atongilano kely midina ny loha"
+                ];
+                
+                console.log('🎥 Démarrage enrollment (version manuelle)...');
+                
+                const statusElement = document.getElementById('enrollStatus');
+                const btnStart = document.getElementById('btnEnrollStart');
+                
+                for (let i = 0; i < instructions.length; i++) {
+                    if(statusElement) {
+                        statusElement.innerHTML = `Sary ${i + 1}/${instructions.length}: <strong>${instructions[i]}</strong><br><small>Tsindrio ny bokotra rehefa vonona</small>`;
+                    }
+                    
+                    // Miandry ny admin hanindry ny bokotra "Manaraka" na "Haka sary"
+                    if (btnStart) {
+                        btnStart.disabled = false;
+                        btnStart.style.opacity = '1';
+                        btnStart.innerHTML = i === 0 ? '📸 Haka sary voalohany' : `📸 Haka sary faha ${i + 1}`;
+                    }
+
+                    await new Promise(resolve => {
+                        const originalOnClick = btnStart.onclick;
+                        btnStart.onclick = () => {
+                            btnStart.disabled = true;
+                            btnStart.style.opacity = '0.5';
+                            btnStart.innerHTML = '⏳ Miandry...';
+                            resolve();
+                        };
+                    });
+
+                    // Maka ny sary
+                    const detectionWithData = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    if (!detectionWithData) {
+                        // Raha tsy nahita tarehy dia averina amin'io sary io ihany
+                        i--; 
+                        if(statusElement) statusElement.innerHTML = `❌ Tsy nahita tarehy. Avereno azafady.<br>Sary ${i + 2}/${instructions.length}: <strong>${instructions[i+1]}</strong>`;
+                        await new Promise(r => setTimeout(r, 2000));
+                        continue;
+                    }
+                    
+                    descriptors.push(Array.from(detectionWithData.descriptor));
+                    console.log(`📸 Descriptor ${descriptors.length}/${instructions.length} voaray.`);
+                    
+                    if(statusElement) {
+                        statusElement.innerHTML = `✅ Sary faha ${i + 1} voaray!`;
+                        statusElement.style.background = '#d4edda';
+                    }
+                    await new Promise(r => setTimeout(r, 1000));
+                    if(statusElement) statusElement.style.background = '#f0f0f0';
+                }
+                
+                if (descriptors.length < instructions.length) {
+                    throw new Error('Tsy feno ny sary voaray. Avereno azafady.');
+                }
+                
+                console.log(`✅ Enrollment OK: ${descriptors.length} descriptors voaray.`);
+                
+                return {
+                    ...employeData,
+                    face_descriptors: descriptors,
+                    face_enrolled: true,
+                    face_enrollment_date: new Date().toISOString()
+                };
+            },
+
+
+
+            
+            // =================================================================
+            //  RECOGNIZEFACE (VERSION 6 - HAINGANA INDRINDRA)
+            // =================================================================
+            async recognizeFace(videoElement, employesDatabase) {
+                // ===> FANITSIANA LEHIBE: Mampiasa `detectSingleFace` mitambatra indray isika <===
+                // Ity no fomba haingana indrindra
+                const detection = await faceapi
+                    .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                
+                if (!detection) {
+                    return { success: false, message: 'Tsy nahita tarehy mazava' };
+                }
+                
+                const labeledDescriptors = employesDatabase
+                    .filter(emp => emp.face_descriptors && emp.face_descriptors.length > 0)
+                    .map(emp => {
+                        const descriptors = emp.face_descriptors.map(d => new Float32Array(d));
+                        return new faceapi.LabeledFaceDescriptors(emp.id, descriptors);
+                    });
+                
+                if (labeledDescriptors.length === 0) {
+                    return { success: false, message: 'Tsy misy mpiasa voasoratra anarana' };
+                }
+                
+                // Hamafisina foana ny fepetra mba tsy hisy fahadisoana
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5); 
+                
+                // Miverina amin'ny `findBestMatch` izay haingana kokoa
+                const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                
+                if (bestMatch.label === 'unknown') {
+                    return { 
+                        success: false, 
+                        message: 'Tsy fantatra',
+                        distance: bestMatch.distance 
+                    };
+                }
+                
+                const employe = employesDatabase.find(e => e.id === bestMatch.label);
+                const confidence = 1 - bestMatch.distance;
+                
+                return {
+                    success: true,
+                    employe: employe,
+                    confidence: confidence,
+                    distance: bestMatch.distance
+                };
+            },
+
+
+
+        };
+
+        // ==========================================
+        // UI: ENROLLMENT MODAL
+        // ==========================================
+
+        async function openEnrollmentModal(employeId) {
+            // Utilise directement la variable globale employees
+            const employe = employees.find(e => e.id === employeId);
+
+            if (!employe) return;
+            
+            const loaded = await FaceRecognition.loadModels();
+            if (!loaded) return;
+            
+            const modal = document.createElement('div');
+            // ===> FANAMPIANA: Omena ID ilay modal mba ho mora esorina raha misy olana
+            modal.id = 'enrollmentModal'; 
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content-facial" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 95%; max-height: 95vh; overflow-y: auto;">
+                <h2 style="margin: 0 0 16px 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                    📸 Enrollment: ${employe.name} 
+                </h2>
+                
+                <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
+                    <video id="enrollVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="enrollCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                </div>
+                
+                <div id="enrollStatus" style="padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 13px;">
+                    📹 Apetraho eo anoloan'ny fakantsary ny tarehy...
+                </div>
+                
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button id="btnEnrollStart" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500;">
+                    ▶ Hanomboka
+                    </button>
+                    <button id="btnEnrollCancel" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">
+                    ✕ Hanakatona
+                    </button>
+                </div>
+                </div>
+                <style>
+                    @media (max-height: 500px) {
+                        .modal-content-facial { padding: 12px !important; }
+                        .modal-content-facial h2 { margin-bottom: 8px !important; }
+                        .modal-content-facial div[style*="max-width: 320px"] { max-width: 200px !important; margin-bottom: 8px !important; }
+                        .modal-content-facial #enrollStatus { margin-bottom: 8px !important; padding: 6px !important; }
+                    }
+                </style>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const video = modal.querySelector('#enrollVideo');
+            const canvas = modal.querySelector('#enrollCanvas');
+            const status = modal.querySelector('#enrollStatus');
+            const btnStart = modal.querySelector('#btnEnrollStart');
+            const btnCancel = modal.querySelector('#btnEnrollCancel');
+            
+            let stream; 
+            let animationId;
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 320 },
+                        height: { ideal: 240 }
+                    }
+                });
+                video.srcObject = stream;
+
+                // Fampisehoana landmarks amin'ny fotoana tena izy
+                video.onplay = () => {
+                    const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
+                    faceapi.matchDimensions(canvas, displaySize);
+
+                    async function drawLandmarks() {
+                        if (video.paused || video.ended) return;
+                        
+                        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                            .withFaceLandmarks();
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        if (detections) {
+                            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                            // Sary teboka sy tsipika (Landmarks)
+                            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                            
+                            // Manampy cadre mavo toy ny amin'ny sary nomen'ny mpampiasa
+                            const box = resizedDetections.detection.box;
+                            ctx.strokeStyle = '#FFEB3B';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        }
+                        
+                        animationId = requestAnimationFrame(drawLandmarks);
+                    }
+                    drawLandmarks();
+                };
+                
+                btnStart.onclick = async () => {
+                    try {
+                        status.innerHTML = '⏳ Manangona données... Aza mihetsika! (3 sec)';
+                        btnStart.disabled = true;
+                        btnStart.style.opacity = '0.5';
+                        
+                        const enrolledData = await FaceRecognition.enrollFace(video, employe);
+                        
+                        // Update dans la variable globale
+                        const index = employees.findIndex(e => e.id === employeId);
+                        if (index > -1) {
+                            employees[index] = enrolledData;
+                        }
+                        await saveData(); // Utilise la fonction de sauvegarde existante
+
+                        
+                        status.innerHTML = '✅ Enrollment vita!';
+                        status.style.background = '#d4edda';
+                        status.style.color = '#155724';
+                        
+                        if (stream) stream.getTracks().forEach(track => track.stop());
+                        if (animationId) cancelAnimationFrame(animationId);
+                        
+                        setTimeout(() => {
+                            const modalToClose = document.getElementById('enrollmentModal');
+                            if (modalToClose) modalToClose.remove();
+                            
+                            alert(`✅ ${employe.name} enrollé!`);
+                            
+                            // Havaozina ny fampisehoana
+                            displayEmployees();
+                            if (document.getElementById('face-presence').classList.contains('active')) {
+                                displayEnrolledEmployees();
+                            }
+                        }, 1500);
+                        
+                    } catch (error) {
+                        status.innerHTML = `❌ ${error.message}`;
+                        status.style.background = '#f8d7da';
+                        status.style.color = '#721c24';
+                        btnStart.disabled = false;
+                        btnStart.style.opacity = '1';
+                    }
+                };
+                
+                btnCancel.onclick = () => {
+                    if (stream) stream.getTracks().forEach(track => track.stop());
+                    if (animationId) cancelAnimationFrame(animationId);
+                    const modalToClose = document.getElementById('enrollmentModal');
+                    if (modalToClose) modalToClose.remove();
+                };
+                
+            } catch (error) {
+                alert('❌ Erreur camera: ' + error.message);
+                const modalToClose = document.getElementById('enrollmentModal');
+                if (modalToClose) modalToClose.remove();
+            }
+        }
+
+
+        // ==========================================
+        // UI: POINTAGE FACIAL
+        // ==========================================
+
+        async function openFacePointageModal() {
+            const loaded = await FaceRecognition.loadModels();
+            if (!loaded) return;
+            
+            // Utilise directement employees
+            const enrolled = employees.filter(e => e.face_descriptors && e.face_descriptors.length > 0);
+
+            
+            if (enrolled.length === 0) {
+                alert('⚠ Tsy misy employé enrolled! Mba enrollment aloha.');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content-facial" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 95%; max-height: 95vh; overflow-y: auto;">
+                <h2 style="margin: 0 0 16px 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                    🎯 Pointage Reconnaissance Faciale
+                </h2>
+                
+                <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
+                    <video id="pointageVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                </div>
+                
+                <div id="pointageStatus" style="padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 13px;">
+                    📹 Prêt pour le pointage...
+                </div>
+                
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button id="btnPointageCapture" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500;">
+                    📸 Pointage
+                    </button>
+                    <button id="btnPointageClose" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">
+                    ✕ Hanakatona
+                    </button>
+                </div>
+                
+                <div style="margin-top: 12px; font-size: 12px; color: #666; text-align: center;">
+                    ${enrolled.length} employé(s) enrolled
+                </div>
+                </div>
+                <style>
+                    @media (max-height: 500px) {
+                        .modal-content-facial { padding: 12px !important; }
+                        .modal-content-facial h2 { margin-bottom: 8px !important; }
+                        .modal-content-facial div[style*="max-width: 320px"] { max-width: 200px !important; margin-bottom: 8px !important; }
+                        .modal-content-facial #pointageStatus { margin-bottom: 8px !important; padding: 6px !important; }
+                    }
+                </style>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const video = modal.querySelector('#pointageVideo');
+            const status = modal.querySelector('#pointageStatus');
+            const btnCapture = modal.querySelector('#btnPointageCapture');
+            const btnClose = modal.querySelector('#btnPointageClose');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                });
+                video.srcObject = stream;
+
+                // ⬇️⬇️⬇️ NOUVEAU CODE: Attendre que la vidéo soit prête ⬇️⬇️⬇️
+                await new Promise(resolve => {
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        console.log('✅ Vidéo prête:', video.videoWidth, 'x', video.videoHeight);
+                        resolve();
+                    };
+                });
+
+                // Petit délai supplémentaire pour stabilisation
+                await new Promise(r => setTimeout(r, 500));
+                // ⬆️⬆️⬆️ FIN NOUVEAU CODE ⬆️⬆️⬆️
+
+                // ⬇️⬇️⬇️ AJOUTER WARM-UP ⬇️⬇️⬇️
+                status.innerHTML = '⏳ Initialisation de la caméra...';
+
+                // Effectuer 2 détections "vides" pour warm-up
+                for (let i = 0; i < 2; i++) {
+                    try {
+                        await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({
+                            inputSize: 224,
+                            scoreThreshold: 0.4
+                        }));
+                    } catch (e) {
+                        // Ignore les erreurs de warm-up
+                    }
+                    await new Promise(r => setTimeout(r, 300));
+                }
+
+                status.innerHTML = '🔹 Prêt pour le pointage...';
+                // ⬆️⬆️⬆️ FIN WARM-UP ⬆️⬆️⬆️
+            
+                // Ity no apetraka ao anatin'ny openFacePointageModal
+                btnCapture.onclick = async () => {
+                    try {
+                        // ===> FANITSIANA: Esorina ilay "Analyse en cours" <===
+                        status.innerHTML = '⏳ Maka sary...';
+                        btnCapture.disabled = true;
+                        btnCapture.style.opacity = '0.5';
+
+                        // Antsoina avy hatrany ilay recognizeFace haingana
+                        const result = await FaceRecognition.recognizeFace(video, enrolled);
+                        
+                        if (result.success) {
+                            const emp = result.employe;
+                            const confidence = (result.confidence * 100).toFixed(1);
+                            
+                            status.innerHTML = `✅ <strong>${emp.name}</strong>  
+                Confiance: ${confidence}%`;
+                            status.style.background = '#d4edda';
+                            status.style.color = '#155724';
+                            
+                            playAuSuivantSound();
+                            
+                            // Fandraiketana ny angona (mitovy amin'ny anao)
+                            const aujourdhui = new Date().toISOString().split('T')[0];
+                            const heure = new Date().toLocaleTimeString('fr-FR', { hour12: false }); // HH:MM
+                            
+                            if (!attendance[aujourdhui]) {
+                                attendance[aujourdhui] = {};
+                            }
+                            if (!attendance[aujourdhui][emp.id]) {
+                                attendance[aujourdhui][emp.id] = { arrivee: heure, depart: null, method: 'FACIAL' };
+                            } else {
+                                attendance[aujourdhui][emp.id].depart = heure;
+                            }
+                            
+                            await saveAttendanceData();
+                            updateStats();
+                            
+                            // Fiatoana kely alohan'ny hahafahana manindry indray
+                            setTimeout(() => {
+                                status.innerHTML = '🔹 Prêt pour le suivant...';
+                                status.style.background = '#f0f0f0';
+                                status.style.color = '#333';
+                                btnCapture.disabled = false;
+                                btnCapture.style.opacity = '1';
+                            }, 2000);
+                            
+                        } else {
+                            status.innerHTML = `❌ ${result.message}`;
+                            status.style.background = '#f8d7da';
+                            status.style.color = '#721c24';
+                            btnCapture.disabled = false;
+                            btnCapture.style.opacity = '1';
+                        }
+                        
+                    } catch (error) {
+                        status.innerHTML = `❌ Erreur: ${error.message}`;
+                        status.style.background = '#f8d7da';
+                        status.style.color = '#721c24';
+                        btnCapture.disabled = false;
+                        btnCapture.style.opacity = '1';
+                    }
+
+
+                };
+                
+                btnClose.onclick = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                    document.body.removeChild(modal);
+                    
+                    // ⬇️⬇️⬇️ HAFINDRA ETO ⬇️⬇️⬇️
+                    // Rafraîchir l'affichage si on est dans l'onglet
+                    if (document.getElementById('face-presence')?.classList.contains('active')) {
+                        displayEnrolledEmployees();
+                        displayTodayFaceAttendance();
+                    }
+                    // ⬆️⬆️⬆️ ETO NO MARINA ⬆️⬆️⬆️
+                };
+
+                
+            } catch (error) {
+                alert('❌ Erreur camera: ' + error.message);
+                document.body.removeChild(modal);
+            }
+            
+
+        }
+
+        // =================================================================
+        //  RECONNAISSANCE FACIALE POUR SÉLECTION (AVANCE & PAIE)
+        // =================================================================
+
+        /**
+         * Manokatra ny fakantsary mba hisafidianana mpiasa amin'ny alalan'ny tarehy.
+         * @param {string} purpose - Ny tanjona ('advance' na 'payroll') mba hahafantarana hoe aiza no hametrahana ny valiny.
+         */
+        async function startFaceScanForSelection(purpose) {
+            // 1. Fanamarinana raha efa vonona ny maodely
+            const loaded = await FaceRecognition.loadModels();
+            if (!loaded) {
+                showAlert("Tsy afaka nampiditra ny maodely reconnaissance faciale.", "error");
+                return;
+            }
+
+            // 2. Fanamarinana raha misy mpiasa efa voasoratra anarana
+            const enrolledEmployees = employees.filter(e => e.face_enrolled && e.face_descriptors && e.face_descriptors.length > 0);
+            if (enrolledEmployees.length === 0) {
+                showAlert("Tsy misy mpiasa voasoratra anarana amin'ny reconnaissance faciale.", 'warning');
+                return;
+            }
+
+            // 3. Famoronana ny varavarankely (modal) fampisehoana ny fakantsary
+            const modal = document.createElement('div');
+            modal.id = 'faceScanSelectionModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 10001;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 450px; text-align: center;">
+                    <div class="modal-header">
+                        <h3><span class="material-icons">face</span> Scanner le visage</h3>
+                        <button class="close-btn" onclick="document.getElementById('faceScanSelectionModal').remove();">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </div>
+                    <div style="position: relative; width: 100%; max-width: 320px; margin: 16px auto; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
+                        <video id="selectionVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    </div>
+                    <div id="selectionStatus" class="alert alert-info" style="margin-bottom: 16px;">
+                        Azafady, apetraho eo anoloan'ny fakantsary ny tarehinao...
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const video = modal.querySelector('#selectionVideo');
+            const status = modal.querySelector('#selectionStatus');
+            let stream; // Tehirizina eto ny stream mba hahafahana manapaka azy
+
+            // 4. Fandefasana ny fakantsary sy ny fizotry ny "reconnaissance"
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+                video.srcObject = stream;
+
+                // Miandry kely mba ho vonona tsara ny video
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+
+                // Manomboka ny fitadiavana tarehy isaky ny 1 segondra
+                const intervalId = setInterval(async () => {
+                    const result = await FaceRecognition.recognizeFace(video, enrolledEmployees);
+
+                    if (result.success) {
+                        clearInterval(intervalId); // Ajanona ny fitadiavana
+                        const employee = result.employe;
+
+                        // Fampisehoana ny fahombiazana
+                        status.className = 'alert alert-success';
+                        status.innerHTML = `✅ Fantatra: <strong>${employee.name}</strong>`;
+                        
+                        // Alefa ny feo "Tritone" (ilay efa anananao)
+                        playSuccessSound();
+
+                        // 5. Fametrahana ny anaran'ilay mpiasa ao amin'ny SELECT mety aminy
+                        if (purpose === 'advance') {
+                            const select = document.getElementById('advanceEmployee');
+                            if (select) select.value = employee.id;
+                        } else if (purpose === 'payroll') {
+                            const select = document.getElementById('payrollEmployeeSelect');
+                            if (select) select.value = employee.id;
+                        }
+
+                        // Miandry 1.5 segondra vao manakatona ny modal
+                        setTimeout(() => {
+                            if (stream) stream.getTracks().forEach(track => track.stop());
+                            modal.remove();
+                        }, 1500);
+                    } else {
+                        // Raha tsy mahita na tsy fantatra
+                        status.innerHTML = result.message || 'Mitady tarehy...';
+                    }
+                }, 1000); // Isaky ny 1 segondra
+
+                // Manapaka ny stream rehefa mikatona ny modal
+                modal.querySelector('.close-btn').addEventListener('click', () => {
+                    clearInterval(intervalId);
+                    if (stream) stream.getTracks().forEach(track => track.stop());
+                });
+
+            } catch (error) {
+                showAlert('Tsy afaka nampiasa ny fakantsary: ' + error.message, 'error');
+                if (stream) stream.getTracks().forEach(track => track.stop());
+                modal.remove();
+            }
+        }
+
+        // ==========================================
+        // FACE RECOGNITION: AJOUT BOUTONS UI
+        // ==========================================
+
+        // Fonction pour ajouter les boutons enrollment après le chargement
+        function addEnrollmentButtons() {
+            // Trouve tous les items employés
+            const employeeItems = document.querySelectorAll('.employee-item');
+            
+            employeeItems.forEach(item => {
+                // Vérifie si le bouton n'existe pas déjà
+                if (item.querySelector('.btn-enroll-face')) return;
+                
+                // Trouve le conteneur d'actions (avec les boutons edit/delete)
+                const actionsDiv = item.querySelector('.employee-actions');
+                if (!actionsDiv) return;
+                
+                // Essaie de trouver l'ID de l'employé
+                let employeeId = null;
+                
+                // Méthode 1: depuis onclick de l'item
+                const onclickAttr = item.getAttribute('onclick');
+                if (onclickAttr) {
+                const match = onclickAttr.match(/['"]([^'"]+)['"]/);
+                if (match) employeeId = match[1];
+                }
+                
+                // Méthode 2: depuis le bouton edit
+                if (!employeeId) {
+                const editBtn = actionsDiv.querySelector('[onclick*="editEmployee"]');
+                if (editBtn) {
+                    const editMatch = editBtn.getAttribute('onclick').match(/editEmployee\(['"]([^'"]+)['"]\)/);
+                    if (editMatch) employeeId = editMatch[1];
+                }
+                }
+                
+                if (!employeeId) return;
+                
+                // Trouve l'employé dans la base
+                const employee = employees.find(e => e.id === employeeId);
+                if (!employee) return;
+                
+                // Crée le bouton enrollment
+                const btnEnroll = document.createElement('button');
+                btnEnroll.className = 'btn-icon btn-enroll-face';
+                btnEnroll.title = employee.face_enrolled ? 'Déjà enrolled' : 'Enrollment facial';
+                btnEnroll.style.cssText = `
+                background: ${employee.face_enrolled ? '#28a745' : '#6750A4'};
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                margin: 0 4px;
+                `;
+                btnEnroll.innerHTML = `<span class="material-icons">${employee.face_enrolled ? 'face' : 'face_retouching_natural'}</span>`;
+                btnEnroll.onclick = (e) => {
+                e.stopPropagation();
+                openEnrollmentModal(employeeId);
+                };
+                
+                // Ajoute le bouton au début du conteneur
+                actionsDiv.insertBefore(btnEnroll, actionsDiv.firstChild);
+            });
+        }
+
+        // Remplace displayEmployees pour ajouter les boutons après affichage
+        if (typeof displayEmployees === 'function') {
+            const originalDisplayEmployees = displayEmployees;
+            displayEmployees = async function() {
+                await originalDisplayEmployees.apply(this, arguments);
+                setTimeout(addEnrollmentButtons, 100); // Petit délai pour être sûr que le DOM est prêt
+            };
+        }
+
+        // Ajoute aussi au chargement initial
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(addEnrollmentButtons, 1000);
+        });
+
+        // ==========================================
+        // BOUTON POINTAGE FACIAL DANS PRÉSENCE
+        // ==========================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                // Cherche la section présence
+                const tabs = document.querySelectorAll('button[data-section]');
+                let presenceTab = null;
+                tabs.forEach(tab => {
+                if (tab.textContent.includes('Présence') || tab.getAttribute('data-section') === 'presences') {
+                    presenceTab = tab;
+                }
+                });
+                
+                if (presenceTab) {
+                // Ajoute le bouton pointage facial
+                const btnContainer = document.createElement('div');
+                btnContainer.style.cssText = 'margin: 16px 0;';
+                
+                const btnFacePointage = document.createElement('button');
+                btnFacePointage.className = 'btn btn-face-pointage';
+                btnFacePointage.innerHTML = `
+                    <span class="material-icons" style="margin-right: 8px;">face</span>
+                    Pointage Facial
+                `;
+                btnFacePointage.style.cssText = `
+                    padding: 12px 24px;
+                    background: #6750A4;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 500;
+                    display: inline-flex;
+                    align-items: center;
+                    margin: 8px;
+                `;
+                btnFacePointage.onclick = openFacePointageModal;
+                
+                btnContainer.appendChild(btnFacePointage);
+                
+                // Trouve où insérer (après le titre ou au début de la section)
+                const section = document.querySelector('[data-section="presences"]') || 
+                                document.getElementById('presences-section') ||
+                                document.querySelector('.attendance-section');
+                
+                if (section) {
+                    section.insertBefore(btnContainer, section.firstChild);
+                }
+                }
+            }, 1500);
+        });
+
+        // ==========================================
+        // AFFICHAGE SECTION POINTAGE FACIAL
+        // ==========================================
+
+        function displayEnrolledEmployees() {
+            const container = document.getElementById('enrolledEmployeesList');
+            const countSpan = document.getElementById('enrolledCount');
+            if (!container) return;
+            
+            const enrolled = employees.filter(e => e.face_enrolled && e.face_descriptors && e.face_descriptors.length > 0);
+            
+            if (countSpan) countSpan.textContent = enrolled.length;
+            
+            if (enrolled.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 32px; color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons" style="font-size: 64px; opacity: 0.3;">face_retouching_off</span>
+                        <p style="margin-top: 16px; font-size: 16px;">Aucun employé enrolled pour le moment.</p>
+                        <p style="font-size: 14px; opacity: 0.8;">Allez dans la liste des employés et cliquez sur l'icône 📸</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = enrolled.map(emp => `
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 14px;
+                    background: var(--md-sys-color-surface);
+                    border: 1px solid var(--md-sys-color-outline-variant);
+                    border-radius: 12px;
+                    margin-bottom: 12px;
+                    border-left: 4px solid var(--md-sys-color-success);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none';">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span class="material-icons" style="font-size: 40px; color: var(--md-sys-color-success);">face</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 16px;">${emp.name}</div>
+                            <div style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">${emp.position || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 12px; color: var(--md-sys-color-on-surface-variant);">
+                        <div style="opacity: 0.7;">Enrolled le</div>
+                        <div style="font-weight: 500; margin-top: 4px;">${formatDate(emp.face_enrollment_date, false)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // =================================================================
+        //  DISPLAYTODAYFACEATTENDANCE (VERSION 2 - Mitovy endrika amin'ny Présence QR)
+        // =================================================================
+        function displayTodayFaceAttendance() {
+            const container = document.getElementById('todayFaceAttendance');
+            if (!container) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const dayAttendance = attendance[today] || {};
+
+            // 1. Famintinana (Présents, Absents, Total)
+            // Isaina fotsiny ireo izay nanao pointage FACIAL
+            const facialPresents = Object.values(dayAttendance).filter(att => att && att.method === 'FACIAL').length;
+            const totalEmployees = employees.length;
+            const summaryHTML = `
+                <div style="display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">
+                    <div style="color: var(--md-sys-color-success); font-weight: 500;">
+                        <span class="material-icons" style="vertical-align: middle;">check_circle</span>
+                        Présents (Facial): ${facialPresents}
+                    </div>
+                    <div style="color: var(--md-sys-color-on-surface-variant); font-weight: 500;">
+                        <span class="material-icons" style="vertical-align: middle;">people</span>
+                        Total Employés: ${totalEmployees}
+                    </div>
+                </div>
+            `;
+
+            // 2. Fampisehoana ny lisitry ny mpiasa rehetra
+            // Alahatra mba ho eo ambony foana ireo izay nanao pointage facial
+            const sortedEmployees = [...employees].sort((a, b) => {
+                const aIsFacial = dayAttendance[a.id] && dayAttendance[a.id].method === 'FACIAL';
+                const bIsFacial = dayAttendance[b.id] && dayAttendance[b.id].method === 'FACIAL';
+                if (aIsFacial && !bIsFacial) return -1;
+                if (!aIsFacial && bIsFacial) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            const listHTML = sortedEmployees.map(employee => {
+                const presenceData = dayAttendance[employee.id];
+                const isFacialPresent = presenceData && presenceData.method === 'FACIAL';
+
+                let statusHTML = `
+                    <div class="qr-status absent">
+                        <span class="material-icons">cancel</span>
+                        <span>Absent</span>
+                    </div>
+                `;
+
+                if (isFacialPresent) {
+                    const arrivalTime = formatDisplayTime(presenceData.arrivee);
+                    const departureTime = formatDisplayTime(presenceData.depart);
+                    
+                    statusHTML = `
+                        <div>
+                            <div class="qr-status present">
+                                <span class="material-icons">check_circle</span>
+                                <span>Présent</span>
+                            </div>
+                            <div style="font-size: 12px; text-align: right; margin-top: 4px;">
+                                Arrivée: <strong>${arrivalTime}</strong> | Départ: <strong>${departureTime}</strong>
+                                <span style="color: var(--md-sys-color-primary); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin-left: 8px; vertical-align: middle;">
+                                    <span class="material-icons" style="font-size: 14px;">face</span>
+                                    FACIAL
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="employee-qr-item">
+                        <div class="employee-qr-info">
+                            <h4>${employee.name}</h4>
+                            <p>${employee.position}</p>
+                        </div>
+                        <div>
+                            ${statusHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 3. Atambatra ny famintinana sy ny lisitra
+            container.innerHTML = summaryHTML + listHTML;
+        }
+
+
+        // Mettre à jour quand on affiche la section
+        const _originalShowSection = showSection;
+        showSection = function(sectionId, event) {
+            _originalShowSection(sectionId, event);
+            if (sectionId === 'face-presence') {
+                displayEnrolledEmployees();
+                displayTodayFaceAttendance();
+            }
+        };
+
+    
+        // --- Synchronisation Logic ---
+        async function exportDataAsQR() {
+            const data = {
+                employees: JSON.parse(localStorage.getItem('employees') || '[]'),
+                attendance: JSON.parse(localStorage.getItem('attendance') || '{}')
+            };
+            const jsonStr = JSON.stringify(data);
+            // On utilise un QR Code pour partager les données (limité en taille)
+            // Pour les grosses données, on génère un fichier JSON à scanner ou transférer
+            const blob = new Blob([jsonStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rh_sync_data.json';
+            a.click();
+            showAlert('Data exported as JSON for sync', 'success');
+        }
+
+        async function importDataFromSync(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.employees) localStorage.setItem('employees', JSON.stringify(data.employees));
+                    if (data.attendance) localStorage.setItem('attendance', JSON.stringify(data.attendance));
+                    showAlert('Data synchronized successfully!', 'success');
+                    location.reload();
+                } catch (err) {
+                    showAlert('Sync failed: Invalid file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+    
+        // ==========================================
+        // SYNC QR CODE SYSTEM
+        // ==========================================
+
+        function openSyncQRModal(mode) {
+            const modal = document.getElementById('syncQRModal');
+            const generateMode = document.getElementById('syncQRGenerateMode');
+            const scanMode = document.getElementById('syncQRScanMode');
+            const title = document.getElementById('syncQRTitle');
+            
+            if (mode === 'generate') {
+                // MODE GENERATE (MOBILE)
+                title.innerHTML = '<span class="material-icons">qr_code_2</span> Générer QR Sync';
+                generateMode.style.display = 'block';
+                scanMode.style.display = 'none';
+                generateSyncQR();
+            } else {
+                // MODE SCAN (LAPTOP)
+                title.innerHTML = '<span class="material-icons">qr_code_scanner</span> Scanner QR Sync';
+                generateMode.style.display = 'none';
+                scanMode.style.display = 'block';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeSyncQRModal() {
+            const modal = document.getElementById('syncQRModal');
+            modal.classList.remove('active');
+            
+            // Stop video stream raha misy
+            const video = document.getElementById('syncScanVideo');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        async function generateSyncQR() {
+            try {
+                // Préparer les données
+                const syncData = {
+                    version: '1.0',
+                    timestamp: new Date().toISOString(),
+                    employees: employees,
+                    attendance: attendance,
+                    qrAttendance: qrAttendance,
+                    advances: advances,
+                    payments: payments,
+                    groups: groups || [],
+                    settings: {
+                        theme: localStorage.getItem('theme') || 'light'
+                    }
+                };
+                
+                // Update counts
+                document.getElementById('syncEmployeesCount').textContent = employees.length;
+                document.getElementById('syncAttendanceCount').textContent = qrAttendance.length;
+                document.getElementById('syncAdvancesCount').textContent = advances.length;
+                document.getElementById('syncGroupsCount').textContent = (groups || []).length;
+                
+                // Compresser les données (base64)
+                const jsonString = JSON.stringify(syncData);
+                const compressed = btoa(unescape(encodeURIComponent(jsonString)));
+                
+                console.log('📊 Taille données:', jsonString.length, 'bytes');
+                console.log('📦 Taille compressée:', compressed.length, 'bytes');
+                
+                // Générer QR Code
+                const canvas = document.getElementById('syncQRCanvas');
+                QRCode.toCanvas(canvas, compressed, {
+                    width: 400,
+                    margin: 2,
+                    color: {
+                        dark: '#6750A4',
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'M'
+                }, (error) => {
+                    if (error) {
+                        console.error('❌ Erreur QR:', error);
+                        alert('Erreur génération QR: ' + error.message);
+                    } else {
+                        console.log('✅ QR Code généré avec succès!');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function downloadSyncQR() {
+            const canvas = document.getElementById('syncQRCanvas');
+            const link = document.createElement('a');
+            link.download = `sync-rh-behavana-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        let syncScanInterval = null;
+
+        async function startSyncScan() {
+            const video = document.getElementById('syncScanVideo');
+            const status = document.getElementById('syncScanStatus');
+            const btn = document.getElementById('btnStartSyncScan');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = stream;
+                
+                btn.textContent = '⏸ Pause';
+                btn.onclick = () => {
+                    clearInterval(syncScanInterval);
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                    btn.textContent = '▶ Démarrer';
+                    btn.onclick = startSyncScan;
+                };
+                
+                // Scanner en continu
+                syncScanInterval = setInterval(async () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0);
+                        
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            clearInterval(syncScanInterval);
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            status.innerHTML = '🔄 Importation en cours...';
+                            status.style.background = '#fff3cd';
+                            
+                            await importSyncData(code.data);
+                        }
+                    } catch (err) {
+                        // Ignore errors silencieux
+                    }
+                }, 300);
+                
+            } catch (error) {
+                alert('❌ Erreur caméra: ' + error.message);
+            }
+        }
+
+        async function handleSyncImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const status = document.getElementById('syncScanStatus');
+            status.innerHTML = '🔄 Analyse de l\'image...';
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        await importSyncData(code.data);
+                    } else {
+                        status.innerHTML = '❌ Aucun QR Code détecté';
+                        status.style.background = '#f8d7da';
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function importSyncData(compressedData) {
+            const status = document.getElementById('syncScanStatus');
+            
+            try {
+                // Décompresser
+                const jsonString = decodeURIComponent(escape(atob(compressedData)));
+                const syncData = JSON.parse(jsonString);
+                
+                console.log('📥 Données reçues:', syncData);
+                
+                // Confirmation
+                const confirm = window.confirm(
+                    `🔄 SYNC DÉTECTÉ:\n\n` +
+                    `📊 ${syncData.employees?.length || 0} employés\n` +
+                    `📅 ${syncData.qrAttendance?.length || 0} présences\n` +
+                    `💰 ${syncData.advances?.length || 0} avances\n` +
+                    `👥 ${syncData.groups?.length || 0} groupes\n\n` +
+                    `⚠️ Les données seront FUSIONNÉES avec vos données actuelles.\n\n` +
+                    `Continuer?`
+                );
+                
+                if (!confirm) {
+                    status.innerHTML = '❌ Importation annulée';
+                    status.style.background = '#f8d7da';
+                    return;
+                }
+                
+                // FUSION DES DONNÉES
+                
+                // 1. Employés (merge par ID)
+                if (syncData.employees) {
+                    syncData.employees.forEach(emp => {
+                        const index = employees.findIndex(e => e.id === emp.id);
+                        if (index >= 0) {
+                            // Update existant
+                            employees[index] = { ...employees[index], ...emp };
+                        } else {
+                            // Nouveau
+                            employees.push(emp);
+                        }
+                    });
+                }
+                
+                // 2. Présences (merge par date + employeeId)
+                if (syncData.qrAttendance) {
+                    syncData.qrAttendance.forEach(att => {
+                        const exists = qrAttendance.some(a => 
+                            a.employeeId === att.employeeId && a.date === att.date
+                        );
+                        if (!exists) {
+                            qrAttendance.push(att);
+                        }
+                    });
+                }
+                
+                // 3. Attendance object
+                if (syncData.attendance) {
+                    Object.keys(syncData.attendance).forEach(date => {
+                        if (!attendance[date]) {
+                            attendance[date] = {};
+                        }
+                        Object.keys(syncData.attendance[date]).forEach(empId => {
+                            attendance[date][empId] = syncData.attendance[date][empId];
+                        });
+                    });
+                }
+                
+                // 4. Avances (merge par ID)
+                if (syncData.advances) {
+                    syncData.advances.forEach(adv => {
+                        const exists = advances.some(a => a.id === adv.id);
+                        if (!exists) {
+                            advances.push(adv);
+                        }
+                    });
+                }
+                
+                // 5. Payments (merge par ID)
+                if (syncData.payments) {
+                    syncData.payments.forEach(pay => {
+                        const exists = payments.some(p => p.id === pay.id);
+                        if (!exists) {
+                            payments.push(pay);
+                        }
+                    });
+                }
+                
+                // 6. Groups (merge par ID)
+                if (syncData.groups) {
+                    syncData.groups.forEach(grp => {
+                        const exists = groups.some(g => g.id === grp.id);
+                        if (!exists) {
+                            groups.push(grp);
+                        }
+                    });
+                }
+                
+                // Sauvegarder tout
+                await saveData();
+                await saveAttendanceData();
+                
+                // Rafraîchir l'UI
+                displayEmployees();
+                displayQRAttendance();
+                displayAttendance();
+                displayAdvances();
+                updateStats();
+                
+                status.innerHTML = '✅ Synchronisation réussie!';
+                status.style.background = '#d4edda';
+                status.style.color = '#155724';
+                
+                console.log('✅ Sync terminé!');
+                
+                setTimeout(() => {
+                    closeSyncQRModal();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('❌ Erreur import:', error);
+                status.innerHTML = `❌ Erreur: ${error.message}`;
+                status.style.background = '#f8d7da';
+            }
         }
 
     </script>
