@@ -2153,38 +2153,90 @@
                 <p id="lastBackupInfo" style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant);"></p>
             </div>
 
-            <!-- FIZARANA SYNC QR CODE VAOVAO -->
+            <!-- ==========================================
+                SYNC JOURNALIER - VERSION NOUVEAU
+                ========================================== -->
             <div class="settings-section">
                 <h3>
                     <span class="material-icons">sync</span>
-                    Synchronisation Mobile ↔ Laptop
+                    Synchronisation Journalière
                 </h3>
                 
                 <div class="alert" style="background-color: rgba(103, 80, 164, 0.1); color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary);">
                     <span class="material-icons">info</span>
                     <div>
-                        <strong>Mode d'emploi:</strong><br>
-                        📱 Téléphone: Générez un QR Code<br>
-                        💻 Laptop: Scannez pour importer
+                        <strong>Pointage 300 employés:</strong><br>
+                        1. Faites pointer tous les employés (local)<br>
+                        2. Fin journée: Sync en 15 secondes (3-4 QR codes)<br>
+                        3. Laptop scan les QR codes → Terminé!
                     </div>
                 </div>
                 
-                <!-- BOUTON GENERATE QR SYNC -->
-                <button class="btn" onclick="openSyncQRModal('generate')" style="width: 100%; margin-bottom: 12px;">
+                <!-- Statistiques du jour -->
+                <div style="margin: 16px 0; padding: 16px; background: var(--md-sys-color-surface); border-radius: 12px; border-left: 4px solid var(--md-sys-color-primary);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--md-sys-color-on-surface-variant);">📅 Date:</span>
+                        <strong id="syncTodayDate">-</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--md-sys-color-on-surface-variant);">✅ Pointages:</span>
+                        <strong id="syncTodayCount" style="color: var(--md-sys-color-primary); font-size: 1.2em;">0</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--md-sys-color-on-surface-variant);">💰 Avances:</span>
+                        <strong id="syncTodayAdvances">0</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--md-sys-color-on-surface-variant);">📦 QR Codes:</span>
+                        <strong id="syncBatchCount" style="color: var(--md-sys-color-success);">0</strong>
+                    </div>
+                </div>
+                
+                <!-- Boutons -->
+                <button class="btn" onclick="openDailySyncModal()" style="width: 100%; margin-bottom: 12px;">
                     <span class="material-icons">qr_code_2</span>
-                    📱 Générer QR Sync (Mobile)
+                    📱 Générer QR Sync Journalier
                 </button>
                 
-                <!-- BOUTON SCANNER QR SYNC -->
-                <button class="btn btn-secondary" onclick="openSyncQRModal('scan')" style="width: 100%;">
+                <button class="btn btn-secondary" onclick="openSyncScanModal()" style="width: 100%;">
                     <span class="material-icons">qr_code_scanner</span>
                     💻 Scanner QR Sync (Laptop)
                 </button>
                 
                 <p style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant); margin-top: 12px;">
-                    ⚡ Synchronisation instantanée sans Internet
+                    ⚡ Synchronisation batch intelligente
                 </p>
             </div>
+
+            <!-- Section Backup Complet (garder l'ancien) -->
+            <div class="settings-section">
+                <h3>
+                    <span class="material-icons">backup</span>
+                    Sauvegarde Complète (Mensuelle)
+                </h3>
+                
+                <div class="alert alert-warning">
+                    <span class="material-icons">warning</span>
+                    <div>
+                        <strong>Backup mensuel recommandé:</strong><br>
+                        Pour sécurité, téléchargez une sauvegarde JSON complète 1x par mois.
+                    </div>
+                </div>
+                
+                <button class="btn btn-warning" onclick="exportData()" style="width: 100%; margin-bottom: 12px;">
+                    <span class="material-icons">file_download</span>
+                    Télécharger Sauvegarde Complète
+                </button>
+                
+                <div class="form-group">
+                    <label for="importFile" style="cursor: pointer; display: block; padding: 12px; background-color: var(--md-sys-color-secondary-container); text-align: center; border-radius: 8px;">
+                        <span class="material-icons">file_upload</span>
+                        Importer Sauvegarde
+                    </label>
+                    <input type="file" class="form-control" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
+                </div>
+            </div>
+
 
         </div>
         <div class="settings-section">
@@ -2426,80 +2478,106 @@
         </div>
     </div>
 
-    <!-- MODAL SYNC QR CODE -->
-    <div class="modal" id="syncQRModal">
-        <div class="modal-content" style="max-width: 450px;">
+    <!-- ==========================================
+     MODAL DAILY SYNC QR CAROUSEL
+     ========================================== -->
+    <div class="modal" id="dailySyncModal">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 id="syncQRTitle">
-                    <span class="material-icons">sync</span>
-                    Synchronisation QR Code
+                <h3>
+                    <span class="material-icons">qr_code_2</span>
+                    Sync Journalier (<span id="currentBatchNum">1</span>/<span id="totalBatches">0</span>)
                 </h3>
-                <button class="close-btn" onclick="closeSyncQRModal()">
+                <button class="close-btn" onclick="closeDailySyncModal()">
                     <span class="material-icons">close</span>
                 </button>
             </div>
             
-            <!-- GENERATE MODE -->
-            <div id="syncQRGenerateMode" style="display: none;">
-                <div class="alert alert-info">
-                    <span class="material-icons">info</span>
-                    <div>
-                        Les données suivantes seront encodées:
-                        <ul style="margin: 8px 0 0 20px; font-size: 13px;">
-                            <li><span id="syncEmployeesCount">0</span> employés</li>
-                            <li><span id="syncAttendanceCount">0</span> présences</li>
-                            <li><span id="syncAdvancesCount">0</span> avances</li>
-                            <li><span id="syncGroupsCount">0</span> groupes</li>
-                        </ul>
-                    </div>
+            <!-- Info batch actuel -->
+            <div style="padding: 12px; background: var(--md-sys-color-primary-container); border-radius: 8px; margin-bottom: 16px; text-align: center;">
+                <div style="font-size: 14px; color: var(--md-sys-color-on-primary-container); margin-bottom: 4px;">
+                    Batch <span id="batchLabel">1</span>
                 </div>
-                
-                <div style="text-align: center; padding: 24px 0;">
-                    <canvas id="syncQRCanvas" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></canvas>
+                <div style="font-weight: 600; font-size: 16px;">
+                    <span id="batchEmployeeRange">Employés 1-100</span>
                 </div>
-                
-                <div style="margin-top: 16px; text-align: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant);">
-                    📱 Scannez ce QR Code avec le laptop
+                <div style="font-size: 13px; margin-top: 4px; opacity: 0.8;">
+                    📊 <span id="batchDataCount">100</span> pointages
                 </div>
-                
-                <button class="btn btn-warning" onclick="downloadSyncQR()" style="width: 100%; margin-top: 16px;">
-                    <span class="material-icons">download</span>
-                    Télécharger l'Image
+            </div>
+            
+            <!-- QR Code Canvas -->
+            <div style="text-align: center; padding: 16px 0; background: white; border-radius: 12px; margin-bottom: 16px;">
+                <canvas id="dailySyncQRCanvas" style="max-width: 100%; height: auto; border-radius: 8px;"></canvas>
+            </div>
+            
+            <!-- Instructions -->
+            <div style="padding: 12px; background: var(--md-sys-color-surface-variant); border-radius: 8px; margin-bottom: 16px; font-size: 13px; text-align: center;">
+                <span class="material-icons" style="vertical-align: middle; font-size: 16px;">info</span>
+                Scannez ce QR sur le laptop, puis cliquez "Suivant"
+            </div>
+            
+            <!-- Navigation -->
+            <div style="display: flex; gap: 8px;">
+                <button id="btnPrevBatch" class="btn btn-secondary" onclick="prevBatch()" style="flex: 1;" disabled>
+                    <span class="material-icons">chevron_left</span>
+                    Précédent
+                </button>
+                <button id="btnNextBatch" class="btn" onclick="nextBatch()" style="flex: 1;">
+                    Suivant
+                    <span class="material-icons">chevron_right</span>
                 </button>
             </div>
             
-            <!-- SCAN MODE -->
-            <div id="syncQRScanMode" style="display: none;">
-                <div class="alert alert-warning">
-                    <span class="material-icons">warning</span>
-                    <div>
-                        <strong>Attention:</strong> Cette opération va <strong>fusionner</strong> les données du QR Code avec vos données actuelles.
-                    </div>
+            <!-- Progress bar -->
+            <div style="margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--md-sys-color-on-surface-variant);">
+                    <span>Progression</span>
+                    <span id="progressText">0%</span>
                 </div>
-                
-                <div style="text-align: center; padding: 16px 0;">
-                    <video id="syncScanVideo" autoplay playsinline style="width: 100%; max-height: 300px; border-radius: 12px; background: #000;"></video>
+                <div style="width: 100%; height: 8px; background: var(--md-sys-color-outline-variant); border-radius: 4px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: var(--md-sys-color-primary); transition: width 0.3s ease;"></div>
                 </div>
-                
-                <div id="syncScanStatus" style="padding: 12px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-top: 16px; font-size: 14px;">
-                    📷 Positionnez le QR Code devant la caméra...
-                </div>
-                
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
-                    <button class="btn btn-secondary" onclick="document.getElementById('syncImageUpload').click()" style="flex: 1;">
-                        <span class="material-icons">photo_library</span>
-                        Choisir Image
-                    </button>
-                    <button class="btn" onclick="startSyncScan()" id="btnStartSyncScan" style="flex: 1;">
-                        <span class="material-icons">qr_code_scanner</span>
-                        Démarrer
-                    </button>
-                </div>
-                
-                <input type="file" id="syncImageUpload" accept="image/*" style="display: none;" onchange="handleSyncImageUpload(event)">
             </div>
         </div>
     </div>
+
+    <!-- Modal Scanner (garder l'ancien mais simplifié) -->
+    <div class="modal" id="syncScanModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>
+                    <span class="material-icons">qr_code_scanner</span>
+                    Scanner QR Sync
+                </h3>
+                <button class="close-btn" onclick="closeSyncScanModal()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <div style="text-align: center; padding: 16px 0;">
+                <video id="syncScanVideo" autoplay playsinline style="width: 100%; max-height: 300px; border-radius: 12px; background: #000;"></video>
+            </div>
+            
+            <div id="syncScanStatus" style="padding: 12px; background: #f0f0f0; border-radius: 8px; text-align: center; margin: 16px 0; font-size: 14px;">
+                📷 Positionnez le QR Code devant la caméra...
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('syncImageUpload').click()" style="flex: 1;">
+                    <span class="material-icons">photo_library</span>
+                    Image
+                </button>
+                <button class="btn" onclick="startSyncScan()" id="btnStartSyncScan" style="flex: 1;">
+                    <span class="material-icons">qr_code_scanner</span>
+                    Démarrer
+                </button>
+            </div>
+            
+            <input type="file" id="syncImageUpload" accept="image/*" style="display: none;" onchange="handleSyncImageUpload(event)">
+        </div>
+    </div>
+
 
 
     <script>
@@ -2971,6 +3049,11 @@
 
                 console.log('🚀 Système RH avec QR Code initialisé avec succès');
 
+                // Update daily sync stats
+                if (typeof updateDailySyncStats === 'function') {
+                    updateDailySyncStats();
+                }
+                
             } catch (error) {
                 console.error('❌ Erreur lors de l\'initialisation:', error);
                 dbManager.updateDBStatus('Erreur d\'initialisation', 'error');
@@ -3615,6 +3698,7 @@
                 // Tehirizina ny angona
                 await saveAttendanceData();
                 updateStats();
+                updateDailySyncStats();
                 runSmartChecks();
                 if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
                 if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
@@ -3630,6 +3714,7 @@
                 // Tehirizina ny angona
                 await saveAttendanceData();
                 updateStats();
+                updateDailySyncStats();
                 runSmartChecks();
                 if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
                 if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
@@ -9052,44 +9137,9 @@
         // ==========================================
         // SYNC QR CODE SYSTEM
         // ==========================================
-
-        function openSyncQRModal(mode) {
-            const modal = document.getElementById('syncQRModal');
-            const generateMode = document.getElementById('syncQRGenerateMode');
-            const scanMode = document.getElementById('syncQRScanMode');
-            const title = document.getElementById('syncQRTitle');
-            
-            if (mode === 'generate') {
-                // MODE GENERATE (MOBILE)
-                title.innerHTML = '<span class="material-icons">qr_code_2</span> Générer QR Sync';
-                generateMode.style.display = 'block';
-                scanMode.style.display = 'none';
-                generateSyncQR();
-            } else {
-                // MODE SCAN (LAPTOP)
-                title.innerHTML = '<span class="material-icons">qr_code_scanner</span> Scanner QR Sync';
-                generateMode.style.display = 'none';
-                scanMode.style.display = 'block';
-            }
-            
-            modal.classList.add('active');
-        }
-
-        function closeSyncQRModal() {
-            const modal = document.getElementById('syncQRModal');
-            modal.classList.remove('active');
-            
-            // Stop video stream raha misy
-            const video = document.getElementById('syncScanVideo');
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-        }
-
         async function generateSyncQR() {
             try {
-                // Préparer les données
+                // Préparer les données COMPLÈTES
                 const syncData = {
                     version: '1.0',
                     timestamp: new Date().toISOString(),
@@ -9117,31 +9167,89 @@
                 console.log('📊 Taille données:', jsonString.length, 'bytes');
                 console.log('📦 Taille compressée:', compressed.length, 'bytes');
                 
-                // ⬇️⬇️⬇️ VERSION CORRIGÉE avec qrcode-generator ⬇️⬇️⬇️
+                // ⬇️⬇️⬇️ VÉRIFIER TAILLE QR CODE ⬇️⬇️⬇️
+                const maxQRSize = 15000; // Limite sécurisée ~15KB
+                
                 const canvas = document.getElementById('syncQRCanvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Créer QR avec qrcode-generator (librairie existante)
-                const typeNumber = 0; // Auto-detect optimal size
-                const errorCorrectionLevel = 'M'; // Medium error correction
+                if (compressed.length > maxQRSize) {
+                    // ❌ TROP GROS → Fallback automatique JSON
+                    console.warn('⚠️ Données trop volumineuses pour QR Code!');
+                    console.log(`📦 Taille: ${compressed.length} bytes (max: ${maxQRSize} bytes)`);
+                    
+                    canvas.width = 400;
+                    canvas.height = 320;
+                    
+                    // Afficher message d'information
+                    ctx.fillStyle = '#fff3cd';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Icône warning
+                    ctx.font = '48px Arial';
+                    ctx.fillText('⚠️', canvas.width/2 - 24, 70);
+                    
+                    // Texte principal
+                    ctx.fillStyle = '#856404';
+                    ctx.font = 'bold 16px Roboto, Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Base de données volumineuse', canvas.width/2, 120);
+                    
+                    ctx.font = '14px Roboto, Arial';
+                    ctx.fillText(`Taille: ${(compressed.length/1024).toFixed(1)} KB`, canvas.width/2, 150);
+                    ctx.fillText('Limite QR Code: 15 KB', canvas.width/2, 175);
+                    
+                    ctx.font = '12px Roboto, Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.fillText('Un fichier JSON va être téléchargé', canvas.width/2, 220);
+                    ctx.fillText('automatiquement.', canvas.width/2, 240);
+                    ctx.fillText('Transférez-le vers l\'autre appareil', canvas.width/2, 265);
+                    ctx.fillText('puis importez dans Paramètres.', canvas.width/2, 285);
+                    
+                    // Alert + Download automatique
+                    setTimeout(() => {
+                        alert(
+                            '⚠️ Base de données trop volumineuse pour QR Code!\n\n' +
+                            `📊 Taille actuelle: ${(compressed.length/1024).toFixed(1)} KB\n` +
+                            `📦 Limite QR Code: 15 KB\n\n` +
+                            '💡 SOLUTION AUTOMATIQUE:\n' +
+                            '1. Un fichier JSON va être téléchargé\n' +
+                            '2. Transférez-le via USB/Email/Drive\n' +
+                            '3. Sur l\'autre appareil: Paramètres → Importer Sauvegarde\n\n' +
+                            '✅ Aucune perte de données!'
+                        );
+                        
+                        // Télécharger automatiquement
+                        exportData();
+                        
+                    }, 500);
+                    
+                    return; // Stop ici
+                }
+                
+                // ✅ TAILLE OK → Générer QR Code
+                console.log('✅ Taille OK pour QR Code!');
+                
+                // Créer QR avec qrcode-generator
+                const typeNumber = 0; // Auto-detect
+                const errorCorrectionLevel = 'M';
                 const qr = qrcode(typeNumber, errorCorrectionLevel);
                 qr.addData(compressed);
                 qr.make();
                 
                 // Paramètres de dessin
-                const cellSize = 4;  // Taille de chaque cellule en pixels
-                const margin = 8;    // Marge autour du QR code
+                const cellSize = 4;
+                const margin = 8;
                 const moduleCount = qr.getModuleCount();
                 
-                // Calculer et définir la taille du canvas
                 canvas.width = (moduleCount + margin * 2) * cellSize;
                 canvas.height = (moduleCount + margin * 2) * cellSize;
                 
-                // Dessiner le fond blanc
+                // Dessiner fond blanc
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Dessiner le QR code (violet)
+                // Dessiner QR code (violet)
                 ctx.fillStyle = '#6750A4';
                 for (let row = 0; row < moduleCount; row++) {
                     for (let col = 0; col < moduleCount; col++) {
@@ -9163,15 +9271,6 @@
                 console.error('❌ Erreur:', error);
                 alert('Erreur: ' + error.message);
             }
-        }
-
-
-        function downloadSyncQR() {
-            const canvas = document.getElementById('syncQRCanvas');
-            const link = document.createElement('a');
-            link.download = `sync-rh-behavana-${new Date().toISOString().split('T')[0]}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
         }
 
         let syncScanInterval = null;
@@ -9390,6 +9489,216 @@
             }
         }
 
+        // ==========================================
+        // DAILY SYNC QR SYSTEM
+        // ==========================================
+
+        let dailySyncBatches = [];
+        let currentBatchIndex = 0;
+
+        function updateDailySyncStats() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Count pointages aujourd'hui
+            const todayAttendance = qrAttendance.filter(a => a.date === today);
+            
+            // Count avances aujourd'hui
+            const todayAdvances = advances.filter(a => {
+                const advDate = new Date(a.date).toISOString().split('T')[0];
+                return advDate === today;
+            });
+            
+            // Update UI
+            document.getElementById('syncTodayDate').textContent = formatDate(today, false);
+            document.getElementById('syncTodayCount').textContent = todayAttendance.length;
+            document.getElementById('syncTodayAdvances').textContent = todayAdvances.length;
+            
+            // Calcul batches (100 employés par batch)
+            const batchCount = Math.ceil(todayAttendance.length / 100);
+            document.getElementById('syncBatchCount').textContent = batchCount || 0;
+        }
+
+        function openDailySyncModal() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayAttendance = qrAttendance.filter(a => a.date === today);
+            
+            if (todayAttendance.length === 0) {
+                alert('❌ Aucun pointage aujourd\'hui!\n\nEffectuez des pointages avant de synchroniser.');
+                return;
+            }
+            
+            // Générer batches
+            generateDailySyncBatches();
+            
+            // Afficher modal
+            const modal = document.getElementById('dailySyncModal');
+            modal.classList.add('active');
+            
+            // Afficher premier batch
+            currentBatchIndex = 0;
+            displayBatchQR(0);
+        }
+
+        function closeDailySyncModal() {
+            const modal = document.getElementById('dailySyncModal');
+            modal.classList.remove('active');
+            dailySyncBatches = [];
+            currentBatchIndex = 0;
+        }
+
+        function generateDailySyncBatches() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Données aujourd'hui
+            const todayAttendance = qrAttendance.filter(a => a.date === today);
+            const todayAdvances = advances.filter(a => {
+                const advDate = new Date(a.date).toISOString().split('T')[0];
+                return advDate === today;
+            });
+            
+            // Grouper par employés
+            const employeeIds = [...new Set(todayAttendance.map(a => a.employeeId))];
+            
+            // Split en batches de 100
+            const batchSize = 100;
+            dailySyncBatches = [];
+            
+            for (let i = 0; i < employeeIds.length; i += batchSize) {
+                const batchEmployeeIds = employeeIds.slice(i, i + batchSize);
+                
+                const batchData = {
+                    version: '1.0',
+                    timestamp: new Date().toISOString(),
+                    syncType: 'daily-batch',
+                    batchNumber: Math.floor(i / batchSize) + 1,
+                    totalBatches: Math.ceil(employeeIds.length / batchSize),
+                    date: today,
+                    employees: employees.filter(e => batchEmployeeIds.includes(e.id)),
+                    qrAttendance: todayAttendance.filter(a => batchEmployeeIds.includes(a.employeeId)),
+                    advances: todayAdvances.filter(a => batchEmployeeIds.includes(a.employeeId))
+                };
+                
+                dailySyncBatches.push(batchData);
+            }
+            
+            console.log(`📦 ${dailySyncBatches.length} batches générés`);
+            document.getElementById('totalBatches').textContent = dailySyncBatches.length;
+        }
+
+        function displayBatchQR(index) {
+            if (index < 0 || index >= dailySyncBatches.length) return;
+            
+            const batch = dailySyncBatches[index];
+            currentBatchIndex = index;
+            
+            // Update UI info
+            document.getElementById('currentBatchNum').textContent = batch.batchNumber;
+            document.getElementById('batchLabel').textContent = `${batch.batchNumber}`;
+            
+            const startEmp = (batch.batchNumber - 1) * 100 + 1;
+            const endEmp = Math.min(startEmp + 99, startEmp + batch.qrAttendance.length - 1);
+            document.getElementById('batchEmployeeRange').textContent = `Employés ${startEmp}-${endEmp}`;
+            document.getElementById('batchDataCount').textContent = batch.qrAttendance.length;
+            
+            // Progress
+            const progress = ((index + 1) / dailySyncBatches.length * 100).toFixed(0);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = progress + '%';
+            
+            // Buttons state
+            document.getElementById('btnPrevBatch').disabled = (index === 0);
+            const nextBtn = document.getElementById('btnNextBatch');
+            if (index === dailySyncBatches.length - 1) {
+                nextBtn.innerHTML = '<span class="material-icons">check</span> Terminer';
+                nextBtn.classList.add('btn-success');
+            } else {
+                nextBtn.innerHTML = 'Suivant <span class="material-icons">chevron_right</span>';
+                nextBtn.classList.remove('btn-success');
+            }
+            
+            // Générer QR
+            try {
+                const jsonString = JSON.stringify(batch);
+                const compressed = btoa(unescape(encodeURIComponent(jsonString)));
+                
+                console.log(`📦 Batch ${batch.batchNumber}: ${compressed.length} bytes`);
+                
+                const canvas = document.getElementById('dailySyncQRCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Créer QR
+                const qr = qrcode(0, 'M');
+                qr.addData(compressed);
+                qr.make();
+                
+                const cellSize = 4;
+                const margin = 8;
+                const moduleCount = qr.getModuleCount();
+                
+                canvas.width = (moduleCount + margin * 2) * cellSize;
+                canvas.height = (moduleCount + margin * 2) * cellSize;
+                
+                // Fond blanc
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // QR violet
+                ctx.fillStyle = '#6750A4';
+                for (let row = 0; row < moduleCount; row++) {
+                    for (let col = 0; col < moduleCount; col++) {
+                        if (qr.isDark(row, col)) {
+                            ctx.fillRect(
+                                (col + margin) * cellSize,
+                                (row + margin) * cellSize,
+                                cellSize,
+                                cellSize
+                            );
+                        }
+                    }
+                }
+                
+                console.log(`✅ QR Batch ${batch.batchNumber} généré!`);
+                
+            } catch (error) {
+                console.error('❌ Erreur génération QR:', error);
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function prevBatch() {
+            if (currentBatchIndex > 0) {
+                displayBatchQR(currentBatchIndex - 1);
+            }
+        }
+
+        function nextBatch() {
+            if (currentBatchIndex < dailySyncBatches.length - 1) {
+                displayBatchQR(currentBatchIndex + 1);
+            } else {
+                // Dernier batch → Fermer
+                alert('✅ Synchronisation terminée!\n\nTous les QR codes ont été générés.\nVérifiez que le laptop a bien scanné tous les batches.');
+                closeDailySyncModal();
+            }
+        }
+
+        // Scanner functions (garder les anciennes mais adapter)
+        function openSyncScanModal() {
+            const modal = document.getElementById('syncScanModal');
+            modal.classList.add('active');
+        }
+
+        function closeSyncScanModal() {
+            const modal = document.getElementById('syncScanModal');
+            modal.classList.remove('active');
+            
+            const video = document.getElementById('syncScanVideo');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // ... (garder startSyncScan, handleSyncImageUpload, importSyncData - les anciennes fonctions)
 
     </script>
 </body>
