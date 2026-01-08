@@ -9286,10 +9286,10 @@
                     return;
                 }
                 
-                // FUSION DES DONNÉES
+                // ⬇️⬇️⬇️ FUSION SÉCURISÉE DES DONNÉES ⬇️⬇️⬇️
                 
-                // 1. Employés (merge par ID)
-                if (syncData.employees) {
+                // 1. Employés (merge par ID) - SÉCURISÉ
+                if (syncData.employees && Array.isArray(syncData.employees)) {
                     syncData.employees.forEach(emp => {
                         const index = employees.findIndex(e => e.id === emp.id);
                         if (index >= 0) {
@@ -9300,10 +9300,11 @@
                             employees.push(emp);
                         }
                     });
+                    console.log(`✅ ${syncData.employees.length} employés importés`);
                 }
                 
-                // 2. Présences (merge par date + employeeId)
-                if (syncData.qrAttendance) {
+                // 2. Présences (merge par date + employeeId) - SÉCURISÉ
+                if (syncData.qrAttendance && Array.isArray(syncData.qrAttendance)) {
                     syncData.qrAttendance.forEach(att => {
                         const exists = qrAttendance.some(a => 
                             a.employeeId === att.employeeId && a.date === att.date
@@ -9312,10 +9313,11 @@
                             qrAttendance.push(att);
                         }
                     });
+                    console.log(`✅ ${syncData.qrAttendance.length} présences importées`);
                 }
                 
-                // 3. Attendance object
-                if (syncData.attendance) {
+                // 3. Attendance object - SÉCURISÉ
+                if (syncData.attendance && typeof syncData.attendance === 'object') {
                     Object.keys(syncData.attendance).forEach(date => {
                         if (!attendance[date]) {
                             attendance[date] = {};
@@ -9324,54 +9326,58 @@
                             attendance[date][empId] = syncData.attendance[date][empId];
                         });
                     });
+                    console.log(`✅ Attendance object importé`);
                 }
                 
-                // 4. Avances (merge par ID)
-                if (syncData.advances) {
+                // 4. Avances (merge par ID) - SÉCURISÉ
+                if (syncData.advances && Array.isArray(syncData.advances)) {
                     syncData.advances.forEach(adv => {
                         const exists = advances.some(a => a.id === adv.id);
                         if (!exists) {
                             advances.push(adv);
                         }
                     });
+                    console.log(`✅ ${syncData.advances.length} avances importées`);
                 }
                 
-                // 5. Payments (merge par ID)
-                if (syncData.payments) {
+                // 5. Payments (merge par ID) - SÉCURISÉ
+                if (syncData.payments && Array.isArray(syncData.payments)) {
                     syncData.payments.forEach(pay => {
                         const exists = payments.some(p => p.id === pay.id);
                         if (!exists) {
                             payments.push(pay);
                         }
                     });
+                    console.log(`✅ ${syncData.payments.length} paiements importés`);
                 }
                 
-                // 6. Groups (merge par ID)
-                if (syncData.groups) {
+                // 6. Groups (merge par ID) - SÉCURISÉ
+                if (syncData.groups && Array.isArray(syncData.groups)) {
                     syncData.groups.forEach(grp => {
                         const exists = groups.some(g => g.id === grp.id);
                         if (!exists) {
                             groups.push(grp);
                         }
                     });
+                    console.log(`✅ ${syncData.groups.length} groupes importés`);
                 }
                 
                 // Sauvegarder tout
                 await saveData();
                 await saveAttendanceData();
                 
-                // Rafraîchir l'UI
-                displayEmployees();
-                displayQRAttendance();
-                displayAttendance();
-                displayAdvances();
-                updateStats();
+                // Rafraîchir l'UI - AVEC VÉRIFICATION
+                if (typeof displayEmployees === 'function') displayEmployees();
+                if (typeof displayQRAttendance === 'function') displayQRAttendance();
+                if (typeof displayAttendance === 'function') displayAttendance();
+                if (typeof displayAdvances === 'function') displayAdvances();
+                if (typeof updateStats === 'function') updateStats();
                 
                 status.innerHTML = '✅ Synchronisation réussie!';
                 status.style.background = '#d4edda';
                 status.style.color = '#155724';
                 
-                console.log('✅ Sync terminé!');
+                console.log('✅ Sync terminé avec succès!');
                 
                 setTimeout(() => {
                     closeSyncQRModal();
@@ -9383,6 +9389,7 @@
                 status.style.background = '#f8d7da';
             }
         }
+
 
     </script>
 </body>
