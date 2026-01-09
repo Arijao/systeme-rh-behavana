@@ -8371,7 +8371,6 @@
             let currentFacingMode = 'user';
             
             async function startCamera(facingMode) {
-                // Raha efa misy stream, dia ajanona aloha
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
@@ -8379,7 +8378,7 @@
                 try {
                     const constraints = {
                         video: { 
-                            facingMode: { ideal: facingMode }, // Ampiasaina eto ilay safidy
+                            facingMode: { ideal: facingMode },
                             width: { ideal: 640 },
                             height: { ideal: 480 }
                         }
@@ -8388,12 +8387,33 @@
                     video.srcObject = stream;
                     await new Promise(resolve => video.onloadedmetadata = resolve);
                     video.play();
-                    currentFacingMode = facingMode; // Tehirizina ny safidy ankehitriny
+                    currentFacingMode = facingMode;
                 } catch (error) {
-                    alert('❌ Erreur camera: ' + error.message);
-                    modal.remove();
+                    console.error("ERREUR CAMERA:", error); // Mba hahitantsika tsara ny tena karazana erreur
+                    
+                    // ================== FANAMPIANA ETO ==================
+                    // Manome hafatra mazava kokoa ho an'ny mpampiasa
+                    let userMessage = "Tsy afaka nampiasa ny fakan-tsary. ";
+                    if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+                        userMessage += "Nolavinao ny fahazoan-dàlana. Azafady, amboary ao amin'ny paramètres-n'ny navigateur-nao.";
+                    } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+                        userMessage += "Tsy nahitana fakan-tsary tamin'ity fitaovana ity.";
+                    } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+                        userMessage += "Efa misy fampiharana hafa mampiasa ny fakan-tsary.";
+                    } else {
+                        userMessage += "Nisy olana tsy nampoizina.";
+                    }
+                    
+                    // Asehoy amin'ny alerte ilay hafatra
+                    alert(userMessage);
+                    
+                    // Akatona ilay modal satria tsy misy azo atao
+                    const modalToClose = document.getElementById('facePointageModal'); // Hamarino tsara ny ID-n'ny modal
+                    if(modalToClose) modalToClose.remove();
+                    // ====================================================
                 }
             }
+
 
             // Ampifandraisina ilay bokotra
             btnSwitchCamera.onclick = () => {
