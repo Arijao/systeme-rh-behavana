@@ -8313,30 +8313,40 @@
             
             modal.innerHTML = `
                 <div class="modal-content-facial" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 95%; max-height: 95vh; overflow-y: auto;">
-                <h2 style="margin: 0 0 16px 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem);">
-                    🎯 Pointage Reconnaissance Faciale
-                </h2>
-                
-                <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
-                    <video id="pointageVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-                </div>
-                
-                <div id="pointageStatus" style="padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 13px;">
-                    📹 Prêt pour le pointage...
-                </div>
-                
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button id="btnPointageCapture" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500;">
-                    📸 Pointage
-                    </button>
-                    <button id="btnPointageClose" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">
-                    ✕ Hanakatona
-                    </button>
-                </div>
-                
-                <div style="margin-top: 12px; font-size: 12px; color: #666; text-align: center;">
-                    ${enrolled.length} employé(s) enrolled
-                </div>
+                    
+                    <!-- ================== FANITSIANA ETO ================== -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin: 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                            🎯 Pointage Reconnaissance Faciale
+                        </h2>
+                        
+                        <!-- Ity ilay bokotra vaovao nampidirina -->
+                        <button id="btnSwitchCamera" title="Changer de caméra" style="background: none; border: 1px solid #ccc; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="material-icons">cameraswitch</span>
+                        </button>
+                    </div>
+                    <!-- ==================================================== -->
+
+                    <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
+                        <video id="pointageVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    </div>
+                    
+                    <div id="pointageStatus" style="padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 13px;">
+                        📹 Prêt pour le pointage...
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button id="btnPointageCapture" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500;">
+                        📸 Pointage
+                        </button>
+                        <button id="btnPointageClose" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">
+                        ✕ Hanakatona
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 12px; font-size: 12px; color: #666; text-align: center;">
+                        ${enrolled.length} employé(s) enrolled
+                    </div>
                 </div>
                 <style>
                     @media (max-height: 500px) {
@@ -8347,6 +8357,7 @@
                     }
                 </style>
             `;
+
             
             document.body.appendChild(modal);
             
@@ -8354,7 +8365,44 @@
             const status = modal.querySelector('#pointageStatus');
             const btnCapture = modal.querySelector('#btnPointageCapture');
             const btnClose = modal.querySelector('#btnPointageClose');
+            const btnSwitchCamera = modal.querySelector('#btnSwitchCamera');
             
+            let stream;
+            let currentFacingMode = 'user';
+            
+            async function startCamera(facingMode) {
+                // Raha efa misy stream, dia ajanona aloha
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                try {
+                    const constraints = {
+                        video: { 
+                            facingMode: { ideal: facingMode }, // Ampiasaina eto ilay safidy
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    };
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = stream;
+                    await new Promise(resolve => video.onloadedmetadata = resolve);
+                    video.play();
+                    currentFacingMode = facingMode; // Tehirizina ny safidy ankehitriny
+                } catch (error) {
+                    alert('❌ Erreur camera: ' + error.message);
+                    modal.remove();
+                }
+            }
+
+            // Ampifandraisina ilay bokotra
+            btnSwitchCamera.onclick = () => {
+                const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                startCamera(newFacingMode);
+            };
+
+            // Antsoina voalohany
+            await startCamera(currentFacingMode);
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
@@ -8434,7 +8482,7 @@
                             
                             await saveAttendanceData();
                             updateStats();
-                            
+                            runSmartChecks();
                             // Fiatoana kely alohan'ny hahafahana manindry indray
                             setTimeout(() => {
                                 status.innerHTML = '🔹 Prêt pour le suivant...';
