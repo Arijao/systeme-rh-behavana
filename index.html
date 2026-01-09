@@ -2850,7 +2850,6 @@
                 updateLastBackupInfo();
                 displayDashboardCharts();
                 runSmartChecks();
-                updateDailySyncStats(); // <-- AMPIO IZAO
                 console.log('🚀 Système RH avec QR Code initialisé avec succès');
 
                 console.log('✅ Interface initialisée avec QR Code');
@@ -2870,11 +2869,6 @@
                 }
 
                 console.log('🚀 Système RH avec QR Code initialisé avec succès');
-
-                // Update daily sync stats
-                if (typeof updateDailySyncStats === 'function') {
-                    updateDailySyncStats();
-                }
                 
             } catch (error) {
                 console.error('❌ Erreur lors de l\'initialisation:', error);
@@ -3510,7 +3504,6 @@
                 // Tehirizina ny angona
                 await saveAttendanceData();
                 updateStats();
-                updateDailySyncStats();
                 runSmartChecks();
                 if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
                 if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
@@ -3526,7 +3519,6 @@
                 // Tehirizina ny angona
                 await saveAttendanceData();
                 updateStats();
-                updateDailySyncStats();
                 runSmartChecks();
                 if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
                 if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
@@ -4089,8 +4081,7 @@
                 // Sauvegarder les paramètres
                 await dbManager.put('settings', { key: 'theme', value: currentTheme });
                 await dbManager.put('settings', { key: 'qrSettings', value: qrSettings });
-                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() });
-                updateDailySyncStats(); 
+                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() }); 
                 console.log('Données sauvegardées dans IndexedDB avec QR');
                 
                 console.log('Données sauvegardées dans IndexedDB avec QR');
@@ -4568,13 +4559,6 @@
                 const tabToActivate = document.querySelector(`.nav-tab[onclick*="showSection('${sectionId}')"]`);
                 if (tabToActivate) {
                     tabToActivate.classList.add('active');
-                }
-            }
-
-            if (sectionId === 'settings') {
-                // Update sync stats when opening settings
-                if (typeof updateDailySyncStats === 'function') {
-                    updateDailySyncStats();
                 }
             }
             // --- FARAN'NY FANITSIANA ---
@@ -5247,7 +5231,6 @@
             closeModal('editAdvanceModal');
             displayAdvances(); // Havaozina ny fampisehoana ny lisitra
             updateStats(); // Havaozina ny statistika ankapobeny
-            if (typeof updateDailySyncStats === 'function') updateDailySyncStats();
             showAlert("L'avance a été mise à jour avec succès!", 'success');
         }
 
@@ -8466,7 +8449,6 @@
                             
                             await saveAttendanceData();
                             updateStats();
-                            updateDailySyncStats();
                             
                             // Fiatoana kely alohan'ny hahafahana manindry indray
                             setTimeout(() => {
