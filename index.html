@@ -3217,23 +3217,14 @@
                     throw new Error("La bibliothèque qrcode-generator n'est pas chargée.");
                 }
 
-                const qrDataObject = {
-                    employeeId: employee.id,
-                    name: employee.name,
-                    position: employee.position,
-                    type: 'BEHAVANA_ATTENDANCE'
-                };
-                const qrDataString = JSON.stringify(qrDataObject);
+                // ================== FANITSIANA LEHIBE ETO ==================
+                // Ny ID an'ny mpiasa IRERY IHANY no tehirizina.
+                // Ampiana "prefix" mba hahafantarana fa avy amin'ity application ity.
+                const qrDataString = `BEHAVANA_HR::${employee.id}`;
+                // ==========================================================
 
-                // --- ITO NY FANITSIANA LEHIBE ---
-                // 1. Avadika ho Base64 ilay lahatsoratra JSON.
-                //    Ny btoa() dia fonction an'ny navigateur mamadika ho Base64.
-                //    Ny unescape(encodeURIComponent(...)) dia miantoka fa mandeha tsara ny tendro.
-                const base64String = btoa(unescape(encodeURIComponent(qrDataString)));
-
-                const qr = qrcode(0, 'M');
-                // 2. Ampidirina toy ny lahatsoratra tsotra ilay Base64. Tsy misy olana intsony eto.
-                qr.addData(base64String);
+                const qr = qrcode(0, 'M'); // 'M' dia error correction level (azo antoka tsara)
+                qr.addData(qrDataString);
                 qr.make();
 
                 const moduleCount = qr.getModuleCount();
@@ -3253,7 +3244,7 @@
                 return canvas;
 
             } catch (error) {
-                // Ity vahaolana mpisolo toerana ity dia tsy miova
+                // Ity ampahany ity dia tsy miova, ampiasaina raha misy olana
                 console.error(`Erreur génération QR pour ${employee.name}:`, error);
                 ctx.clearRect(0, 0, size, size);
                 ctx.fillStyle = '#FFFFFF';
@@ -3275,6 +3266,7 @@
                 return canvas;
             }
         }
+
 
 
         // Alternative complète sans bibliothèque externe - QR Code simple
@@ -3581,27 +3573,34 @@
             }
 
             let parsedData;
+            let employeeId = null;
+
             try {
-                // ... (ny kaody famakiana QR dia tsy miova) ...
+                // 1. Manandrana mamaky ny endrika JSON taloha (raha mbola misy QR taloha)
                 if (qrData.startsWith('{')) {
-                    parsedData = JSON.parse(qrData);
-                } else {
-                    const decodedString = decodeURIComponent(escape(atob(qrData)));
-                    parsedData = JSON.parse(decodedString);
+                    const parsedData = JSON.parse(qrData);
+                    if (parsedData.type === 'BEHAVANA_ATTENDANCE' && parsedData.employeeId) {
+                        employeeId = parsedData.employeeId;
+                    }
+                }
+                // 2. Manandrana mamaky ny endrika vaovao (ohatra: "BEHAVANA_HR::1672527600000")
+                else if (qrData.startsWith('BEHAVANA_HR::')) {
+                    employeeId = qrData.split('::')[1];
                 }
             } catch (e) {
                 showScanResult('QR Code illisible ou corrompu.', 'error');
                 return;
             }
+            // ==========================================================
 
-            if (!parsedData || parsedData.type !== 'BEHAVANA_ATTENDANCE' || !parsedData.employeeId) {
+            if (!employeeId) {
                 showScanResult('QR Code non valide pour ce système.', 'error');
                 return;
             }
 
-            const employee = employees.find(emp => emp.id === parsedData.employeeId);
+            const employee = employees.find(emp => emp.id === employeeId);
             if (!employee) {
-                showScanResult(`Employé non trouvé (ID: ${parsedData.employeeId})`, 'error');
+                showScanResult(`Employé non trouvé (ID: ${employeeId})`, 'error');
                 return;
             }
 
