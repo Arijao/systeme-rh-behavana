@@ -2153,61 +2153,6 @@
                 <p id="lastBackupInfo" style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant);"></p>
             </div>
 
-            <!-- ==========================================
-                SYNC JOURNALIER - VERSION NOUVEAU
-                ========================================== -->
-            <div class="settings-section">
-                <h3>
-                    <span class="material-icons">sync</span>
-                    Synchronisation Journalière
-                </h3>
-                
-                <div class="alert" style="background-color: rgba(103, 80, 164, 0.1); color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary);">
-                    <span class="material-icons">info</span>
-                    <div>
-                        <strong>Pointage 300 employés:</strong><br>
-                        1. Faites pointer tous les employés (local)<br>
-                        2. Fin journée: Sync en 15 secondes (3-4 QR codes)<br>
-                        3. Laptop scan les QR codes → Terminé!
-                    </div>
-                </div>
-                
-                <!-- Statistiques du jour -->
-                <div style="margin: 16px 0; padding: 16px; background: var(--md-sys-color-surface); border-radius: 12px; border-left: 4px solid var(--md-sys-color-primary);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--md-sys-color-on-surface-variant);">📅 Date:</span>
-                        <strong id="syncTodayDate">-</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--md-sys-color-on-surface-variant);">✅ Pointages:</span>
-                        <strong id="syncTodayCount" style="color: var(--md-sys-color-primary); font-size: 1.2em;">0</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--md-sys-color-on-surface-variant);">💰 Avances:</span>
-                        <strong id="syncTodayAdvances">0</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--md-sys-color-on-surface-variant);">📦 QR Codes:</span>
-                        <strong id="syncBatchCount" style="color: var(--md-sys-color-success);">0</strong>
-                    </div>
-                </div>
-                
-                <!-- Boutons -->
-                <button class="btn" onclick="openDailySyncModal()" style="width: 100%; margin-bottom: 12px;">
-                    <span class="material-icons">qr_code_2</span>
-                    📱 Générer QR Sync Journalier
-                </button>
-                
-                <button class="btn btn-secondary" onclick="openSyncScanModal()" style="width: 100%;">
-                    <span class="material-icons">qr_code_scanner</span>
-                    💻 Scanner QR Sync (Laptop)
-                </button>
-                
-                <p style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant); margin-top: 12px;">
-                    ⚡ Synchronisation batch intelligente
-                </p>
-            </div>
-
             <!-- Section Backup Complet (garder l'ancien) -->
             <div class="settings-section">
                 <h3>
@@ -2236,9 +2181,66 @@
                     <input type="file" class="form-control" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
                 </div>
             </div>
-
-
         </div>
+
+        <!-- ==========================================
+            SYNC JOURNALIER - VERSION NOUVEAU
+            ========================================== -->
+        <div class="settings-section">
+            <h3>
+                <span class="material-icons">sync</span>
+                Synchronisation Journalière
+            </h3>
+            
+            <div class="alert" style="background-color: rgba(103, 80, 164, 0.1); color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary);">
+                <span class="material-icons">info</span>
+                <div>
+                    <strong>Pointage 300 employés:</strong>  
+
+                    1. Faites pointer tous les employés (local)  
+
+                    2. Fin journée: Sync en 15 secondes (3-4 QR codes)  
+
+                    3. Laptop scan les QR codes → Terminé!
+                </div>
+            </div>
+            
+            <!-- Statistiques du jour -->
+            <div style="margin: 16px 0; padding: 16px; background: var(--md-sys-color-surface); border-radius: 12px; border-left: 4px solid var(--md-sys-color-primary);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--md-sys-color-on-surface-variant);">📅 Date:</span>
+                    <strong id="syncTodayDate">-</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--md-sys-color-on-surface-variant);">✅ Pointages:</span>
+                    <strong id="syncTodayCount" style="color: var(--md-sys-color-primary); font-size: 1.2em;">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--md-sys-color-on-surface-variant);">💰 Avances:</span>
+                    <strong id="syncTodayAdvances">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--md-sys-color-on-surface-variant);">📦 QR Codes:</span>
+                    <strong id="syncBatchCount" style="color: var(--md-sys-color-success);">0</strong>
+                </div>
+            </div>
+            
+            <!-- Boutons -->
+            <button class="btn" onclick="openDailySyncModal()" style="width: 100%; margin-bottom: 12px;">
+                <span class="material-icons">qr_code_2</span>
+                📱 Générer QR Sync Journalier
+            </button>
+            
+            <button class="btn btn-secondary" onclick="openSyncScanModal()" style="width: 100%;">
+                <span class="material-icons">qr_code_scanner</span>
+                💻 Scanner QR Sync (Laptop)
+            </button>
+            
+            <p style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant); margin-top: 12px;">
+                ⚡ Synchronisation batch intelligente
+            </p>
+        </div>
+
         <div class="settings-section">
             <h3><span class="material-icons">delete_forever</span>Réinitialisation</h3>
             <p style="
@@ -2479,8 +2481,8 @@
     </div>
 
     <!-- ==========================================
-     MODAL DAILY SYNC QR CAROUSEL
-     ========================================== -->
+    MODAL DAILY SYNC QR CAROUSEL
+    ========================================== -->
     <div class="modal" id="dailySyncModal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
@@ -2577,8 +2579,6 @@
             <input type="file" id="syncImageUpload" accept="image/*" style="display: none;" onchange="handleSyncImageUpload(event)">
         </div>
     </div>
-
-
 
     <script>
         // ===============================
@@ -3030,6 +3030,8 @@
                 updateLastBackupInfo();
                 displayDashboardCharts();
                 runSmartChecks();
+                updateDailySyncStats(); // <-- AMPIO IZAO
+                console.log('🚀 Système RH avec QR Code initialisé avec succès');
 
                 console.log('✅ Interface initialisée avec QR Code');
 
@@ -4278,7 +4280,9 @@
                 await dbManager.put('settings', { key: 'theme', value: currentTheme });
                 await dbManager.put('settings', { key: 'qrSettings', value: qrSettings });
                 await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() });
-
+                updateDailySyncStats(); 
+                console.log('Données sauvegardées dans IndexedDB avec QR');
+                
                 console.log('Données sauvegardées dans IndexedDB avec QR');
             } catch (error) {
                 console.error('Erreur lors de la sauvegarde:', error);
@@ -9281,6 +9285,230 @@
             }
         }
 
+        // ==========================================
+        // DAILY SYNC QR SYSTEM
+        // ==========================================
+
+        let dailySyncBatches = [];
+        let currentBatchIndex = 0;
+
+        function updateDailySyncStats() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const dayAttendance = attendance[today] || {};
+            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && (att === true || att.arrivee);
+            }).length;
+            
+            const todayAdvancesCount = advances.filter(a => {
+                const advDate = a.date ? a.date.split('T')[0] : '';
+                return advDate === today;
+            }).length;
+            
+            const syncTodayDateEl = document.getElementById('syncTodayDate');
+            const syncTodayCountEl = document.getElementById('syncTodayCount');
+            const syncTodayAdvancesEl = document.getElementById('syncTodayAdvances');
+            const syncBatchCountEl = document.getElementById('syncBatchCount');
+            
+            if (syncTodayDateEl) {
+                syncTodayDateEl.textContent = formatDate(today, false);
+            }
+            if (syncTodayCountEl) {
+                syncTodayCountEl.textContent = todayPointagesCount;
+            }
+            if (syncTodayAdvancesEl) {
+                syncTodayAdvancesEl.textContent = todayAdvancesCount;
+            }
+            
+            const batchCount = Math.ceil(todayPointagesCount / 100);
+            if (syncBatchCountEl) {
+                syncBatchCountEl.textContent = batchCount || 0;
+            }
+        }
+
+        function openDailySyncModal() {
+            const today = new Date().toISOString().split('T')[0];
+            const dayAttendance = attendance[today] || {};
+            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && (att === true || att.arrivee);
+            }).length;
+            
+            if (todayPointagesCount === 0) {
+                alert('❌ Aucun pointage aujourd\'hui!\n\nEffectuez des pointages avant de synchroniser.');
+                return;
+            }
+            
+            generateDailySyncBatches();
+            
+            const modal = document.getElementById('dailySyncModal');
+            modal.classList.add('active');
+            
+            currentBatchIndex = 0;
+            displayBatchQR(0);
+        }
+
+        function closeDailySyncModal() {
+            const modal = document.getElementById('dailySyncModal');
+            modal.classList.remove('active');
+            dailySyncBatches = [];
+            currentBatchIndex = 0;
+        }
+
+        function generateDailySyncBatches() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const dayAttendance = attendance[today] || {};
+            const employeeIdsWithAttendance = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && (att === true || att.arrivee);
+            });
+
+            const todayAdvances = advances.filter(a => {
+                const advDate = a.date ? a.date.split('T')[0] : '';
+                return advDate === today;
+            });
+            const employeeIdsWithAdvances = todayAdvances.map(a => a.employeeId);
+
+            const allEmployeeIds = [...new Set([...employeeIdsWithAttendance, ...employeeIdsWithAdvances])];
+            
+            const batchSize = 100;
+            dailySyncBatches = [];
+            
+            for (let i = 0; i < allEmployeeIds.length; i += batchSize) {
+                const batchEmployeeIds = allEmployeeIds.slice(i, i + batchSize);
+                
+                const batchAttendance = {};
+                batchAttendance[today] = {};
+                batchEmployeeIds.forEach(id => {
+                    if (dayAttendance[id]) {
+                        batchAttendance[today][id] = dayAttendance[id];
+                    }
+                });
+
+                const batchData = {
+                    version: '1.0',
+                    timestamp: new Date().toISOString(),
+                    syncType: 'daily-batch',
+                    batchNumber: Math.floor(i / batchSize) + 1,
+                    totalBatches: Math.ceil(allEmployeeIds.length / batchSize),
+                    date: today,
+                    employees: employees.filter(e => batchEmployeeIds.includes(e.id)),
+                    attendance: batchAttendance,
+                    advances: todayAdvances.filter(a => batchEmployeeIds.includes(a.employeeId))
+                };
+                
+                dailySyncBatches.push(batchData);
+            }
+            
+            document.getElementById('totalBatches').textContent = dailySyncBatches.length;
+        }
+
+        function displayBatchQR(index) {
+            if (index < 0 || index >= dailySyncBatches.length) return;
+            
+            const batch = dailySyncBatches[index];
+            currentBatchIndex = index;
+            
+            document.getElementById('currentBatchNum').textContent = batch.batchNumber;
+            document.getElementById('batchLabel').textContent = `${batch.batchNumber}`;
+            
+            const startEmp = (batch.batchNumber - 1) * 100 + 1;
+            const totalInBatch = batch.employees.length;
+            const endEmp = startEmp + totalInBatch - 1;
+            document.getElementById('batchEmployeeRange').textContent = `Employés ${startEmp}-${endEmp}`;
+            document.getElementById('batchDataCount').textContent = totalInBatch;
+            
+            const progress = ((index + 1) / dailySyncBatches.length * 100).toFixed(0);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = progress + '%';
+            
+            document.getElementById('btnPrevBatch').disabled = (index === 0);
+            const nextBtn = document.getElementById('btnNextBatch');
+            if (index === dailySyncBatches.length - 1) {
+                nextBtn.innerHTML = '<span class="material-icons">check</span> Terminer';
+                nextBtn.classList.add('btn-success');
+            } else {
+                nextBtn.innerHTML = 'Suivant <span class="material-icons">chevron_right</span>';
+                nextBtn.classList.remove('btn-success');
+            }
+            
+            try {
+                const jsonString = JSON.stringify(batch);
+                const compressed = btoa(unescape(encodeURIComponent(jsonString)));
+                
+                const canvas = document.getElementById('dailySyncQRCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                const qr = qrcode(0, 'M');
+                qr.addData(compressed);
+                qr.make();
+                
+                const cellSize = 4;
+                const margin = 8;
+                const moduleCount = qr.getModuleCount();
+                
+                canvas.width = (moduleCount + margin * 2) * cellSize;
+                canvas.height = (moduleCount + margin * 2) * cellSize;
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#6750A4';
+                for (let row = 0; row < moduleCount; row++) {
+                    for (let col = 0; col < moduleCount; col++) {
+                        if (qr.isDark(row, col)) {
+                            ctx.fillRect(
+                                (col + margin) * cellSize,
+                                (row + margin) * cellSize,
+                                cellSize,
+                                cellSize
+                            );
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur génération QR:', error);
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function prevBatch() {
+            if (currentBatchIndex > 0) {
+                displayBatchQR(currentBatchIndex - 1);
+            }
+        }
+
+        function nextBatch() {
+            if (currentBatchIndex < dailySyncBatches.length - 1) {
+                displayBatchQR(currentBatchIndex + 1);
+            } else {
+                alert('✅ Synchronisation terminée! Tous les QR codes ont été générés.');
+                closeDailySyncModal();
+            }
+        }
+
+        function openSyncScanModal() {
+            const modal = document.getElementById('syncScanModal');
+            modal.classList.add('active');
+        }
+
+        function closeSyncScanModal() {
+            const modal = document.getElementById('syncScanModal');
+            modal.classList.remove('active');
+            
+            const video = document.getElementById('syncScanVideo');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // NOTE: Ireto fonctions startSyncScan, handleSyncImageUpload, importSyncData
+        // dia mila ampidirina eto indray, satria nofafantsika teo ambony.
+        // Ireto ny version vaovao mifanaraka amin'ny rafitra.
+
         let syncScanInterval = null;
 
         async function startSyncScan() {
@@ -9303,7 +9531,6 @@
                     btn.onclick = startSyncScan;
                 };
                 
-                // Scanner en continu
                 syncScanInterval = setInterval(async () => {
                     try {
                         const canvas = document.createElement('canvas');
@@ -9324,9 +9551,7 @@
                             
                             await importSyncData(code.data);
                         }
-                    } catch (err) {
-                        // Ignore errors silencieux
-                    }
+                    } catch (err) {}
                 }, 300);
                 
             } catch (error) {
@@ -9370,400 +9595,49 @@
             const status = document.getElementById('syncScanStatus');
             
             try {
-                // Décompresser
                 const jsonString = decodeURIComponent(escape(atob(compressedData)));
                 const syncData = JSON.parse(jsonString);
                 
-                console.log('📥 Données reçues:', syncData);
-                
-                // Confirmation
-                const confirm = window.confirm(
-                    `🔄 SYNC DÉTECTÉ:\n\n` +
-                    `📊 ${syncData.employees?.length || 0} employés\n` +
-                    `📅 ${syncData.qrAttendance?.length || 0} présences\n` +
-                    `💰 ${syncData.advances?.length || 0} avances\n` +
-                    `👥 ${syncData.groups?.length || 0} groupes\n\n` +
-                    `⚠️ Les données seront FUSIONNÉES avec vos données actuelles.\n\n` +
-                    `Continuer?`
-                );
-                
-                if (!confirm) {
-                    status.innerHTML = '❌ Importation annulée';
-                    status.style.background = '#f8d7da';
-                    return;
+                if (syncData.syncType !== 'daily-batch') {
+                    throw new Error('QR Code non valide pour la synchronisation journalière.');
                 }
-                
-                // ⬇️⬇️⬇️ FUSION SÉCURISÉE DES DONNÉES ⬇️⬇️⬇️
-                
-                // 1. Employés (merge par ID) - SÉCURISÉ
-                if (syncData.employees && Array.isArray(syncData.employees)) {
+
+                // Fusion des données
+                if (syncData.employees) {
                     syncData.employees.forEach(emp => {
                         const index = employees.findIndex(e => e.id === emp.id);
-                        if (index >= 0) {
-                            // Update existant
-                            employees[index] = { ...employees[index], ...emp };
-                        } else {
-                            // Nouveau
-                            employees.push(emp);
-                        }
+                        if (index > -1) employees[index] = { ...employees[index], ...emp };
+                        else employees.push(emp);
                     });
-                    console.log(`✅ ${syncData.employees.length} employés importés`);
                 }
-                
-                // 2. Présences (merge par date + employeeId) - SÉCURISÉ
-                if (syncData.qrAttendance && Array.isArray(syncData.qrAttendance)) {
-                    syncData.qrAttendance.forEach(att => {
-                        const exists = qrAttendance.some(a => 
-                            a.employeeId === att.employeeId && a.date === att.date
-                        );
-                        if (!exists) {
-                            qrAttendance.push(att);
-                        }
-                    });
-                    console.log(`✅ ${syncData.qrAttendance.length} présences importées`);
-                }
-                
-                // 3. Attendance object - SÉCURISÉ
-                if (syncData.attendance && typeof syncData.attendance === 'object') {
+                if (syncData.attendance) {
                     Object.keys(syncData.attendance).forEach(date => {
-                        if (!attendance[date]) {
-                            attendance[date] = {};
-                        }
-                        Object.keys(syncData.attendance[date]).forEach(empId => {
-                            attendance[date][empId] = syncData.attendance[date][empId];
-                        });
+                        if (!attendance[date]) attendance[date] = {};
+                        Object.assign(attendance[date], syncData.attendance[date]);
                     });
-                    console.log(`✅ Attendance object importé`);
                 }
-                
-                // 4. Avances (merge par ID) - SÉCURISÉ
-                if (syncData.advances && Array.isArray(syncData.advances)) {
+                if (syncData.advances) {
                     syncData.advances.forEach(adv => {
-                        const exists = advances.some(a => a.id === adv.id);
-                        if (!exists) {
-                            advances.push(adv);
-                        }
+                        if (!advances.some(a => a.id === adv.id)) advances.push(adv);
                     });
-                    console.log(`✅ ${syncData.advances.length} avances importées`);
                 }
                 
-                // 5. Payments (merge par ID) - SÉCURISÉ
-                if (syncData.payments && Array.isArray(syncData.payments)) {
-                    syncData.payments.forEach(pay => {
-                        const exists = payments.some(p => p.id === pay.id);
-                        if (!exists) {
-                            payments.push(pay);
-                        }
-                    });
-                    console.log(`✅ ${syncData.payments.length} paiements importés`);
-                }
-                
-                // 6. Groups (merge par ID) - SÉCURISÉ
-                if (syncData.groups && Array.isArray(syncData.groups)) {
-                    syncData.groups.forEach(grp => {
-                        const exists = groups.some(g => g.id === grp.id);
-                        if (!exists) {
-                            groups.push(grp);
-                        }
-                    });
-                    console.log(`✅ ${syncData.groups.length} groupes importés`);
-                }
-                
-                // Sauvegarder tout
                 await saveData();
-                await saveAttendanceData();
                 
-                // Rafraîchir l'UI - AVEC VÉRIFICATION
-                if (typeof updateDailySyncStats === 'function') updateDailySyncStats();
-                if (typeof displayEmployees === 'function') displayEmployees();
-                if (typeof displayQRAttendance === 'function') displayQRAttendance();
-                if (typeof displayAttendance === 'function') displayAttendance();
-                if (typeof displayAdvances === 'function') displayAdvances();
-                if (typeof updateStats === 'function') updateStats();
-                
-                status.innerHTML = '✅ Synchronisation réussie!';
+                status.innerHTML = `✅ Batch ${syncData.batchNumber}/${syncData.totalBatches} importé!`;
                 status.style.background = '#d4edda';
-                status.style.color = '#155724';
-                
-                console.log('✅ Sync terminé avec succès!');
                 
                 setTimeout(() => {
-                    closeSyncQRModal();
+                    status.innerHTML = '📷 Positionnez le QR Code suivant...';
+                    status.style.background = '#f0f0f0';
+                    startSyncScan(); // Relance le scan pour le batch suivant
                 }, 2000);
                 
             } catch (error) {
-                console.error('❌ Erreur import:', error);
                 status.innerHTML = `❌ Erreur: ${error.message}`;
                 status.style.background = '#f8d7da';
             }
         }
-
-        // ==========================================
-        // DAILY SYNC QR SYSTEM
-        // ==========================================
-
-        let dailySyncBatches = [];
-        let currentBatchIndex = 0;
-
-        // ==========================================
-        // DAILY SYNC STATS - VERSION CORRIGÉE
-        // ==========================================
-
-        function updateDailySyncStats() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // ✅ FIX 1: Compter présences depuis attendance object (source correcte)
-            const dayAttendance = attendance[today] || {};
-            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
-                const att = dayAttendance[empId];
-                return att && att.arrivee; // Au moins une arrivée enregistrée
-            }).length;
-            
-            // ✅ FIX 2: Compter avances sans conversion Date (évite timezone issues)
-            const todayAdvancesCount = advances.filter(a => {
-                // Comparer directement les strings de dates
-                const advDate = a.date ? a.date.split('T')[0] : '';
-                return advDate === today;
-            }).length;
-            
-            // ✅ Update UI avec vérification existence éléments
-            const syncTodayDateEl = document.getElementById('syncTodayDate');
-            const syncTodayCountEl = document.getElementById('syncTodayCount');
-            const syncTodayAdvancesEl = document.getElementById('syncTodayAdvances');
-            const syncBatchCountEl = document.getElementById('syncBatchCount');
-            
-            if (syncTodayDateEl) {
-                syncTodayDateEl.textContent = formatDate(today, false);
-            }
-            
-            if (syncTodayCountEl) {
-                syncTodayCountEl.textContent = todayPointagesCount;
-            }
-            
-            if (syncTodayAdvancesEl) {
-                syncTodayAdvancesEl.textContent = todayAdvancesCount;
-            }
-            
-            // ✅ Calcul batches (100 employés par batch)
-            const batchCount = Math.ceil(todayPointagesCount / 100);
-            if (syncBatchCountEl) {
-                syncBatchCountEl.textContent = batchCount || 0;
-            }
-            
-            console.log('📊 Sync Stats Updated:', {
-                date: today,
-                pointages: todayPointagesCount,
-                avances: todayAdvancesCount,
-                batches: batchCount
-            });
-        }
-
-
-        function openDailySyncModal() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // ✅ FIX: Vérifier dans 'attendance' au lieu de 'qrAttendance'
-            const dayAttendance = attendance[today] || {};
-            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
-                const att = dayAttendance[empId];
-                return att && (att === true || att.arrivee);
-            }).length;
-            
-            if (todayPointagesCount === 0) {
-                alert('❌ Aucun pointage aujourd\'hui!\n\nEffectuez des pointages avant de synchroniser.');
-                return;
-            }
-            
-            // Générer batches
-            generateDailySyncBatches();
-            
-            // Afficher modal
-            const modal = document.getElementById('dailySyncModal');
-            modal.classList.add('active');
-            
-            // Afficher premier batch
-            currentBatchIndex = 0;
-            displayBatchQR(0);
-        }
-
-        function closeDailySyncModal() {
-            const modal = document.getElementById('dailySyncModal');
-            modal.classList.remove('active');
-            dailySyncBatches = [];
-            currentBatchIndex = 0;
-        }
-
-        function generateDailySyncBatches() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // ✅ FIX: Récupérer les IDs des employés ayant pointé aujourd'hui (QR, FACIAL ou MANUAL)
-            const dayAttendance = attendance[today] || {};
-            const employeeIdsWithAttendance = Object.keys(dayAttendance).filter(empId => {
-                const att = dayAttendance[empId];
-                return att && (att === true || att.arrivee);
-            });
-
-            // ✅ FIX: Récupérer aussi les employés ayant eu une avance aujourd'hui
-            const todayAdvances = advances.filter(a => {
-                const advDate = a.date ? a.date.split('T')[0] : '';
-                return advDate === today;
-            });
-            const employeeIdsWithAdvances = todayAdvances.map(a => a.employeeId);
-
-            // Fusionner tous les IDs d'employés concernés aujourd'hui
-            const allEmployeeIds = [...new Set([...employeeIdsWithAttendance, ...employeeIdsWithAdvances])];
-            
-            // Split en batches de 100
-            const batchSize = 100;
-            dailySyncBatches = [];
-            
-            for (let i = 0; i < allEmployeeIds.length; i += batchSize) {
-                const batchEmployeeIds = allEmployeeIds.slice(i, i + batchSize);
-                
-                // Préparer les données de pointage pour ce batch (format compatible avec l'import)
-                const batchAttendance = {};
-                batchAttendance[today] = {};
-                batchEmployeeIds.forEach(id => {
-                    if (dayAttendance[id]) {
-                        batchAttendance[today][id] = dayAttendance[id];
-                    }
-                });
-
-                const batchData = {
-                    version: '1.0',
-                    timestamp: new Date().toISOString(),
-                    syncType: 'daily-batch',
-                    batchNumber: Math.floor(i / batchSize) + 1,
-                    totalBatches: Math.ceil(allEmployeeIds.length / batchSize),
-                    date: today,
-                    employees: employees.filter(e => batchEmployeeIds.includes(e.id)),
-                    attendance: batchAttendance, // Utiliser l'objet attendance complet
-                    qrAttendance: qrAttendance.filter(a => a.date === today && batchEmployeeIds.includes(a.employeeId)),
-                    advances: todayAdvances.filter(a => batchEmployeeIds.includes(a.employeeId))
-                };
-                
-                dailySyncBatches.push(batchData);
-            }
-            
-            console.log(`📦 ${dailySyncBatches.length} batches générés`);
-            document.getElementById('totalBatches').textContent = dailySyncBatches.length;
-        }
-
-        function displayBatchQR(index) {
-            if (index < 0 || index >= dailySyncBatches.length) return;
-            
-            const batch = dailySyncBatches[index];
-            currentBatchIndex = index;
-            
-            // Update UI info
-            document.getElementById('currentBatchNum').textContent = batch.batchNumber;
-            document.getElementById('batchLabel').textContent = `${batch.batchNumber}`;
-            
-            const startEmp = (batch.batchNumber - 1) * 100 + 1;
-            const totalInBatch = batch.employees.length;
-            const endEmp = startEmp + totalInBatch - 1;
-            document.getElementById('batchEmployeeRange').textContent = `Employés ${startEmp}-${endEmp}`;
-            document.getElementById('batchDataCount').textContent = totalInBatch;
-            
-            // Progress
-            const progress = ((index + 1) / dailySyncBatches.length * 100).toFixed(0);
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressText').textContent = progress + '%';
-            
-            // Buttons state
-            document.getElementById('btnPrevBatch').disabled = (index === 0);
-            const nextBtn = document.getElementById('btnNextBatch');
-            if (index === dailySyncBatches.length - 1) {
-                nextBtn.innerHTML = '<span class="material-icons">check</span> Terminer';
-                nextBtn.classList.add('btn-success');
-            } else {
-                nextBtn.innerHTML = 'Suivant <span class="material-icons">chevron_right</span>';
-                nextBtn.classList.remove('btn-success');
-            }
-            
-            // Générer QR
-            try {
-                const jsonString = JSON.stringify(batch);
-                const compressed = btoa(unescape(encodeURIComponent(jsonString)));
-                
-                console.log(`📦 Batch ${batch.batchNumber}: ${compressed.length} bytes`);
-                
-                const canvas = document.getElementById('dailySyncQRCanvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Créer QR
-                const qr = qrcode(0, 'M');
-                qr.addData(compressed);
-                qr.make();
-                
-                const cellSize = 4;
-                const margin = 8;
-                const moduleCount = qr.getModuleCount();
-                
-                canvas.width = (moduleCount + margin * 2) * cellSize;
-                canvas.height = (moduleCount + margin * 2) * cellSize;
-                
-                // Fond blanc
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // QR violet
-                ctx.fillStyle = '#6750A4';
-                for (let row = 0; row < moduleCount; row++) {
-                    for (let col = 0; col < moduleCount; col++) {
-                        if (qr.isDark(row, col)) {
-                            ctx.fillRect(
-                                (col + margin) * cellSize,
-                                (row + margin) * cellSize,
-                                cellSize,
-                                cellSize
-                            );
-                        }
-                    }
-                }
-                
-                console.log(`✅ QR Batch ${batch.batchNumber} généré!`);
-                
-            } catch (error) {
-                console.error('❌ Erreur génération QR:', error);
-                alert('Erreur: ' + error.message);
-            }
-        }
-
-        function prevBatch() {
-            if (currentBatchIndex > 0) {
-                displayBatchQR(currentBatchIndex - 1);
-            }
-        }
-
-        function nextBatch() {
-            if (currentBatchIndex < dailySyncBatches.length - 1) {
-                displayBatchQR(currentBatchIndex + 1);
-            } else {
-                // Dernier batch → Fermer
-                alert('✅ Synchronisation terminée!\n\nTous les QR codes ont été générés.\nVérifiez que le laptop a bien scanné tous les batches.');
-                closeDailySyncModal();
-            }
-        }
-
-        // Scanner functions (garder les anciennes mais adapter)
-        function openSyncScanModal() {
-            const modal = document.getElementById('syncScanModal');
-            modal.classList.add('active');
-        }
-
-        function closeSyncScanModal() {
-            const modal = document.getElementById('syncScanModal');
-            modal.classList.remove('active');
-            
-            const video = document.getElementById('syncScanVideo');
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-        }
-
-        // ... (garder startSyncScan, handleSyncImageUpload, importSyncData - les anciennes fonctions)
 
     </script>
 </body>
