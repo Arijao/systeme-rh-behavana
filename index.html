@@ -3370,6 +3370,8 @@
                         });
 
                         // 4. Amboarina ny HTML mba hiseho eo amin'ny pejy
+                        // ================== FANITSIANA LEHIBE ETO ==================
+                        // Tsy mampiasa canvas.outerHTML intsony fa <img> mivantana
                         qrCardsHTML.push(`
                             <div class="qr-card">
                                 <h4>${employee.name}</h4>
@@ -3387,6 +3389,7 @@
                                 </div>
                             </div>
                         `);
+                        // ==========================================================
                     }
                 }
 
@@ -3401,6 +3404,7 @@
                 showAlert('Erreur critique lors de la génération des QR codes', 'error');
             }
         }
+
 
 
         // Scanner QR Code
