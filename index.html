@@ -9395,15 +9395,18 @@
             document.getElementById('totalBatches').textContent = dailySyncBatches.length;
         }
 
+        // =================================================================
+        //  NOUVELLE VERSION DE displayBatchQR AVEC QRCode.js
+        // =================================================================
         function displayBatchQR(index) {
             if (index < 0 || index >= dailySyncBatches.length) return;
             
             const batch = dailySyncBatches[index];
             currentBatchIndex = index;
             
+            // Fampisehoana ny fampahalalana (tsy miova)
             document.getElementById('currentBatchNum').textContent = batch.batchNumber;
             document.getElementById('batchLabel').textContent = `${batch.batchNumber}`;
-            
             const startEmp = (batch.batchNumber - 1) * 100 + 1;
             const totalInBatch = batch.employees.length;
             const endEmp = startEmp + totalInBatch - 1;
@@ -9424,45 +9427,48 @@
                 nextBtn.classList.remove('btn-success');
             }
             
+            // ================== FANITSIANA LEHIBE ETO ==================
+            // Fomba famoronana QR Code vaovao
             try {
                 const jsonString = JSON.stringify(batch);
                 const compressed = btoa(unescape(encodeURIComponent(jsonString)));
                 
+                // Alaina ilay canvas ary diovina aloha
+                const canvasContainer = document.getElementById('dailySyncQRCanvas').parentNode;
+                canvasContainer.innerHTML = '<canvas id="dailySyncQRCanvas" style="max-width: 100%; height: auto; border-radius: 8px;"></canvas>';
+                const tempDivForQR = document.createElement('div'); // Div vonjimaika
+
+                // Ampiasaina ilay tranomboky vaovao
+                new QRCode(tempDivForQR, {
+                    text: compressed,
+                    width: 400, // Habe lehibe tsara ho an'ny sync
+                    height: 400,
+                    colorDark: "#6750A4",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M 
+                });
+
+                // Alaina ny sary avy ao amin'ilay div vonjimaika
+                const imgDataUrl = tempDivForQR.querySelector('img').src;
+                
+                // Apetraka ao anatin'ilay canvas ilay sary
                 const canvas = document.getElementById('dailySyncQRCanvas');
                 const ctx = canvas.getContext('2d');
-                
-                const qr = qrcode(0, 'M');
-                qr.addData(compressed);
-                qr.make();
-                
-                const cellSize = 4;
-                const margin = 8;
-                const moduleCount = qr.getModuleCount();
-                
-                canvas.width = (moduleCount + margin * 2) * cellSize;
-                canvas.height = (moduleCount + margin * 2) * cellSize;
-                
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.fillStyle = '#6750A4';
-                for (let row = 0; row < moduleCount; row++) {
-                    for (let col = 0; col < moduleCount; col++) {
-                        if (qr.isDark(row, col)) {
-                            ctx.fillRect(
-                                (col + margin) * cellSize,
-                                (row + margin) * cellSize,
-                                cellSize,
-                                cellSize
-                            );
-                        }
-                    }
-                }
+                const img = new Image();
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = imgDataUrl;
+
             } catch (error) {
-                console.error('Erreur génération QR:', error);
-                alert('Erreur: ' + error.message);
+                console.error('Erreur génération QR pour le batch:', error);
+                alert('Erreur critique lors de la génération du QR de synchronisation.');
             }
+            // ==========================================================
         }
+
 
         function prevBatch() {
             if (currentBatchIndex > 0) {
