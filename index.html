@@ -3344,37 +3344,38 @@
         // Modifier la fonction generateAllQRCodes pour utiliser la version simple
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
-            container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><p>Génération des QR codes...</p></div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><p>Génération des QR codes en cours...</p></div>';
 
             try {
-                const qrCards = [];
+                const qrCardsHTML = [];
                 
+                // Mandeha isaky ny mpiasa
                 for (const employee of employees) {
-                    // Essayer d'abord la version complète, puis la version simple en cas d'erreur
-                    let canvas;
-                    try {
-                        canvas = await generateQRCode(employee, qrSettings.size, qrSettings.color);
-                    } catch (error) {
-                        console.log('Utilisation de la version simple pour:', employee.name);
-                        canvas = await generateSimpleQRCode(employee, qrSettings.size, qrSettings.color);
-                    }
+                    
+                    // 1. Antsoina ilay function generateQRCode efa nohavaozina (izay tsy misy afa-tsy ID)
+                    // Tsy tokony hisy erreur intsony eto satria kely ny data.
+                    const canvas = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                     
                     if (canvas) {
-                        // Sauvegarder le QR code en base
+                        // 2. Avadika ho Data URL ilay sary kely mba ho azo tehirizina sy aseho
+                        const dataURL = canvas.toDataURL();
+
+                        // 3. Tehirizina ao amin'ny database ilay sary (tsy ny data intsony)
                         await dbManager.put('qr_codes', {
                             employeeId: employee.id,
-                            dataURL: canvas.toDataURL(),
+                            dataURL: dataURL, // Tehirizina ilay sary efa vonona
                             generated: new Date().toISOString(),
                             size: qrSettings.size,
                             color: qrSettings.color
                         });
 
-                        qrCards.push(`
+                        // 4. Amboarina ny HTML mba hiseho eo amin'ny pejy
+                        qrCardsHTML.push(`
                             <div class="qr-card">
                                 <h4>${employee.name}</h4>
                                 <p>${employee.position}</p>
                                 <div class="qr-code-canvas">
-                                    ${canvas.outerHTML}
+                                    <img src="${dataURL}" alt="QR Code de ${employee.name}" width="${qrSettings.size}" height="${qrSettings.size}" />
                                 </div>
                                 <div class="qr-actions">
                                     <button class="btn-icon" onclick="downloadQRCode('${employee.id}')" title="Télécharger">
@@ -3389,15 +3390,18 @@
                     }
                 }
 
-                container.innerHTML = qrCards.join('');
-                showAlert(`${qrCards.length} QR codes générés avec succès!`, 'success');
+                // Asehoy ny vokatra rehetra
+                container.innerHTML = qrCardsHTML.join('');
+                showAlert(`${qrCardsHTML.length} QR codes générés avec succès!`, 'success');
                 
             } catch (error) {
-                console.error('Erreur génération QR codes:', error);
-                container.innerHTML = '<p style="text-align: center; color: var(--md-sys-color-error);">Erreur lors de la génération des QR codes</p>';
-                showAlert('Erreur lors de la génération des QR codes', 'error');
+                // Ity no mandray raha sendra misy olana goavana (tsy tokony hisy intsony)
+                console.error('Erreur critique lors de la génération des QR codes:', error);
+                container.innerHTML = '<p style="text-align: center; color: var(--md-sys-color-error);">Une erreur inattendue est survenue lors de la génération des QR codes.</p>';
+                showAlert('Erreur critique lors de la génération des QR codes', 'error');
             }
         }
+
 
         // Scanner QR Code
         // ===================================================
