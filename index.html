@@ -6,7 +6,7 @@
     <title>Système de Gestion RH - QR Code</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    
     <!-- QRCode.js for Sync QR generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3203,69 +3203,58 @@
         }
 
         // Générer QR Code pour un employé (version alternative qui fonctionne)
-        // ====================================================================
-        //  FANITSIANA 1: Famoronana QR Code miaraka amin'ny Base64
-        // ====================================================================
+        // =================================================================
+        //  NOUVELLE FONCTION generateQRCode AVEC LA LIBRAIRIE QRCode.js
+        // =================================================================
         async function generateQRCode(employee, size = 256, color = '#6750A4') {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
+            
+            // 1. Mamorona DIV vonjimaika sy tsy hita maso isika
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none'; // Tsy hita maso
+            document.body.appendChild(tempDiv);
 
             try {
-                if (typeof qrcode === 'undefined') {
-                    throw new Error("La bibliothèque qrcode-generator n'est pas chargée.");
-                }
-
-                // ================== FANITSIANA LEHIBE ETO ==================
-                // Ny ID an'ny mpiasa IRERY IHANY no tehirizina.
-                // Ampiana "prefix" mba hahafantarana fa avy amin'ity application ity.
+                // 2. Angonina ny data (ID an'ny mpiasa ihany)
                 const qrDataString = `BEHAVANA_HR::${employee.id}`;
-                // ==========================================================
 
-                const qr = qrcode(0, 'M'); // 'M' dia error correction level (azo antoka tsara)
-                qr.addData(qrDataString);
-                qr.make();
+                // 3. Ampiasaina ilay tranomboky vaovao QRCode.js
+                const qrcode = new QRCode(tempDiv, {
+                    text: qrDataString,
+                    width: size,
+                    height: size,
+                    colorDark: color,
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H // Error correction avo lenta
+                });
 
-                const moduleCount = qr.getModuleCount();
-                if (moduleCount === 0) throw new Error("Génération QR échouée.");
-                
-                const cellSize = size / moduleCount;
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, size, size);
-                ctx.fillStyle = color;
-                for (let row = 0; row < moduleCount; row++) {
-                    for (let col = 0; col < moduleCount; col++) {
-                        if (qr.isDark(row, col)) {
-                            ctx.fillRect(col * cellSize, row * cellSize, Math.ceil(cellSize), Math.ceil(cellSize));
-                        }
-                    }
+                // 4. Miandry kely (50ms) mba ho vita tsara ilay sary
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // 5. Alaina ilay sary <img> noforoniny ho azy
+                const imgElement = tempDiv.querySelector('img');
+                if (!imgElement) {
+                    throw new Error("Tsy voaforona ny sary QR Code.");
                 }
-                return canvas;
+                
+                // Alaina ny Data URL an'ilay sary
+                const dataURL = imgElement.src;
+
+                // 6. Fafana ilay DIV vonjimaika
+                document.body.removeChild(tempDiv);
+
+                // 7. Averina ilay Data URL
+                return dataURL;
 
             } catch (error) {
-                // Ity ampahany ity dia tsy miova, ampiasaina raha misy olana
-                console.error(`Erreur génération QR pour ${employee.name}:`, error);
-                ctx.clearRect(0, 0, size, size);
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, size, size);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 4;
-                ctx.strokeRect(2, 2, size - 4, size - 4);
-                ctx.fillStyle = color;
-                ctx.textAlign = 'center';
-                ctx.font = `bold ${size * 0.1}px sans-serif`;
-                ctx.fillText(employee.name, size / 2, size / 2.5);
-                ctx.font = `normal ${size * 0.07}px sans-serif`;
-                ctx.fillText(employee.position, size / 2, size / 1.8);
-                ctx.font = `monospace ${size * 0.06}px`;
-                ctx.fillText(`ID: ${employee.id}`, size / 2, size / 1.2);
-                ctx.fillStyle = '#B3261E';
-                ctx.font = `bold ${size * 0.05}px sans-serif`;
-                ctx.fillText("ERREUR QR - VÉRIFIER", size / 2, size - (size * 0.1));
-                return canvas;
+                console.error(`Erreur critique avec QRCode.js pour ${employee.name}:`, error);
+                // Raha misy olana, fafana ilay div ary averina null
+                if (document.body.contains(tempDiv)) {
+                    document.body.removeChild(tempDiv);
+                }
+                return null; // Averina null mba hahafantarana fa nisy olana
             }
         }
+
 
 
 
@@ -3342,6 +3331,9 @@
         }
 
         // Modifier la fonction generateAllQRCodes pour utiliser la version simple
+        // =================================================================
+        //  NOUVELLE FONCTION generateAllQRCodes NOHAMARININA
+        // =================================================================
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
             container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><p>Génération des QR codes en cours...</p></div>';
@@ -3349,29 +3341,22 @@
             try {
                 const qrCardsHTML = [];
                 
-                // Mandeha isaky ny mpiasa
                 for (const employee of employees) {
                     
-                    // 1. Antsoina ilay function generateQRCode efa nohavaozina (izay tsy misy afa-tsy ID)
-                    // Tsy tokony hisy erreur intsony eto satria kely ny data.
-                    const canvas = await generateQRCode(employee, qrSettings.size, qrSettings.color);
+                    // 1. Antsoina ilay generateQRCode vaovao, izay mamerina Data URL mivantana
+                    const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                     
-                    if (canvas) {
-                        // 2. Avadika ho Data URL ilay sary kely mba ho azo tehirizina sy aseho
-                        const dataURL = canvas.toDataURL();
-
-                        // 3. Tehirizina ao amin'ny database ilay sary (tsy ny data intsony)
+                    if (dataURL) {
+                        // 2. Tehirizina ao amin'ny database ilay Data URL
                         await dbManager.put('qr_codes', {
                             employeeId: employee.id,
-                            dataURL: dataURL, // Tehirizina ilay sary efa vonona
+                            dataURL: dataURL,
                             generated: new Date().toISOString(),
                             size: qrSettings.size,
                             color: qrSettings.color
                         });
 
-                        // 4. Amboarina ny HTML mba hiseho eo amin'ny pejy
-                        // ================== FANITSIANA LEHIBE ETO ==================
-                        // Tsy mampiasa canvas.outerHTML intsony fa <img> mivantana
+                        // 3. Amboarina ny HTML mba hiseho eo amin'ny pejy
                         qrCardsHTML.push(`
                             <div class="qr-card">
                                 <h4>${employee.name}</h4>
@@ -3389,21 +3374,19 @@
                                 </div>
                             </div>
                         `);
-                        // ==========================================================
                     }
                 }
 
-                // Asehoy ny vokatra rehetra
                 container.innerHTML = qrCardsHTML.join('');
                 showAlert(`${qrCardsHTML.length} QR codes générés avec succès!`, 'success');
                 
             } catch (error) {
-                // Ity no mandray raha sendra misy olana goavana (tsy tokony hisy intsony)
                 console.error('Erreur critique lors de la génération des QR codes:', error);
-                container.innerHTML = '<p style="text-align: center; color: var(--md-sys-color-error);">Une erreur inattendue est survenue lors de la génération des QR codes.</p>';
+                container.innerHTML = '<p style="text-align: center; color: var(--md-sys-color-error);">Une erreur inattendue est survenue.</p>';
                 showAlert('Erreur critique lors de la génération des QR codes', 'error');
             }
         }
+
 
 
 
