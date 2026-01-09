@@ -4756,6 +4756,13 @@
                     tabToActivate.classList.add('active');
                 }
             }
+
+            if (sectionId === 'settings') {
+                // Update sync stats when opening settings
+                if (typeof updateDailySyncStats === 'function') {
+                    updateDailySyncStats();
+                }
+            }
             // --- FARAN'NY FANITSIANA ---
             
             // 4. Antsoina ny fonction mifanaraka amin'ny fizarana aseho
@@ -5426,7 +5433,7 @@
             closeModal('editAdvanceModal');
             displayAdvances(); // Havaozina ny fampisehoana ny lisitra
             updateStats(); // Havaozina ny statistika ankapobeny
-            
+            if (typeof updateDailySyncStats === 'function') updateDailySyncStats();
             showAlert("L'avance a été mise à jour avec succès!", 'success');
         }
 
@@ -9466,6 +9473,7 @@
                 await saveAttendanceData();
                 
                 // Rafraîchir l'UI - AVEC VÉRIFICATION
+                if (typeof updateDailySyncStats === 'function') updateDailySyncStats();
                 if (typeof displayEmployees === 'function') displayEmployees();
                 if (typeof displayQRAttendance === 'function') displayQRAttendance();
                 if (typeof displayAttendance === 'function') displayAttendance();
@@ -9496,27 +9504,59 @@
         let dailySyncBatches = [];
         let currentBatchIndex = 0;
 
+        // ==========================================
+        // DAILY SYNC STATS - VERSION CORRIGÉE
+        // ==========================================
+
         function updateDailySyncStats() {
             const today = new Date().toISOString().split('T')[0];
             
-            // Count pointages aujourd'hui
-            const todayAttendance = qrAttendance.filter(a => a.date === today);
+            // ✅ FIX 1: Compter présences depuis attendance object (source correcte)
+            const dayAttendance = attendance[today] || {};
+            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && att.arrivee; // Au moins une arrivée enregistrée
+            }).length;
             
-            // Count avances aujourd'hui
-            const todayAdvances = advances.filter(a => {
-                const advDate = new Date(a.date).toISOString().split('T')[0];
+            // ✅ FIX 2: Compter avances sans conversion Date (évite timezone issues)
+            const todayAdvancesCount = advances.filter(a => {
+                // Comparer directement les strings de dates
+                const advDate = a.date ? a.date.split('T')[0] : '';
                 return advDate === today;
+            }).length;
+            
+            // ✅ Update UI avec vérification existence éléments
+            const syncTodayDateEl = document.getElementById('syncTodayDate');
+            const syncTodayCountEl = document.getElementById('syncTodayCount');
+            const syncTodayAdvancesEl = document.getElementById('syncTodayAdvances');
+            const syncBatchCountEl = document.getElementById('syncBatchCount');
+            
+            if (syncTodayDateEl) {
+                syncTodayDateEl.textContent = formatDate(today, false);
+            }
+            
+            if (syncTodayCountEl) {
+                syncTodayCountEl.textContent = todayPointagesCount;
+            }
+            
+            if (syncTodayAdvancesEl) {
+                syncTodayAdvancesEl.textContent = todayAdvancesCount;
+            }
+            
+            // ✅ Calcul batches (100 employés par batch)
+            const batchCount = Math.ceil(todayPointagesCount / 100);
+            if (syncBatchCountEl) {
+                syncBatchCountEl.textContent = batchCount || 0;
+            }
+            
+            console.log('📊 Sync Stats Updated:', {
+                date: today,
+                pointages: todayPointagesCount,
+                avances: todayAdvancesCount,
+                batches: batchCount
             });
-            
-            // Update UI
-            document.getElementById('syncTodayDate').textContent = formatDate(today, false);
-            document.getElementById('syncTodayCount').textContent = todayAttendance.length;
-            document.getElementById('syncTodayAdvances').textContent = todayAdvances.length;
-            
-            // Calcul batches (100 employés par batch)
-            const batchCount = Math.ceil(todayAttendance.length / 100);
-            document.getElementById('syncBatchCount').textContent = batchCount || 0;
         }
+
 
         function openDailySyncModal() {
             const today = new Date().toISOString().split('T')[0];
