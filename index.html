@@ -8652,6 +8652,7 @@
                             
                             await saveAttendanceData();
                             updateStats();
+                            updateDailySyncStats();
                             
                             // Fiatoana kely alohan'ny hahafahana manindry indray
                             setTimeout(() => {
@@ -9560,9 +9561,15 @@
 
         function openDailySyncModal() {
             const today = new Date().toISOString().split('T')[0];
-            const todayAttendance = qrAttendance.filter(a => a.date === today);
             
-            if (todayAttendance.length === 0) {
+            // ✅ FIX: Vérifier dans 'attendance' au lieu de 'qrAttendance'
+            const dayAttendance = attendance[today] || {};
+            const todayPointagesCount = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && (att === true || att.arrivee);
+            }).length;
+            
+            if (todayPointagesCount === 0) {
                 alert('❌ Aucun pointage aujourd\'hui!\n\nEffectuez des pointages avant de synchroniser.');
                 return;
             }
@@ -9589,32 +9596,49 @@
         function generateDailySyncBatches() {
             const today = new Date().toISOString().split('T')[0];
             
-            // Données aujourd'hui
-            const todayAttendance = qrAttendance.filter(a => a.date === today);
+            // ✅ FIX: Récupérer les IDs des employés ayant pointé aujourd'hui (QR, FACIAL ou MANUAL)
+            const dayAttendance = attendance[today] || {};
+            const employeeIdsWithAttendance = Object.keys(dayAttendance).filter(empId => {
+                const att = dayAttendance[empId];
+                return att && (att === true || att.arrivee);
+            });
+
+            // ✅ FIX: Récupérer aussi les employés ayant eu une avance aujourd'hui
             const todayAdvances = advances.filter(a => {
-                const advDate = new Date(a.date).toISOString().split('T')[0];
+                const advDate = a.date ? a.date.split('T')[0] : '';
                 return advDate === today;
             });
-            
-            // Grouper par employés
-            const employeeIds = [...new Set(todayAttendance.map(a => a.employeeId))];
+            const employeeIdsWithAdvances = todayAdvances.map(a => a.employeeId);
+
+            // Fusionner tous les IDs d'employés concernés aujourd'hui
+            const allEmployeeIds = [...new Set([...employeeIdsWithAttendance, ...employeeIdsWithAdvances])];
             
             // Split en batches de 100
             const batchSize = 100;
             dailySyncBatches = [];
             
-            for (let i = 0; i < employeeIds.length; i += batchSize) {
-                const batchEmployeeIds = employeeIds.slice(i, i + batchSize);
+            for (let i = 0; i < allEmployeeIds.length; i += batchSize) {
+                const batchEmployeeIds = allEmployeeIds.slice(i, i + batchSize);
                 
+                // Préparer les données de pointage pour ce batch (format compatible avec l'import)
+                const batchAttendance = {};
+                batchAttendance[today] = {};
+                batchEmployeeIds.forEach(id => {
+                    if (dayAttendance[id]) {
+                        batchAttendance[today][id] = dayAttendance[id];
+                    }
+                });
+
                 const batchData = {
                     version: '1.0',
                     timestamp: new Date().toISOString(),
                     syncType: 'daily-batch',
                     batchNumber: Math.floor(i / batchSize) + 1,
-                    totalBatches: Math.ceil(employeeIds.length / batchSize),
+                    totalBatches: Math.ceil(allEmployeeIds.length / batchSize),
                     date: today,
                     employees: employees.filter(e => batchEmployeeIds.includes(e.id)),
-                    qrAttendance: todayAttendance.filter(a => batchEmployeeIds.includes(a.employeeId)),
+                    attendance: batchAttendance, // Utiliser l'objet attendance complet
+                    qrAttendance: qrAttendance.filter(a => a.date === today && batchEmployeeIds.includes(a.employeeId)),
                     advances: todayAdvances.filter(a => batchEmployeeIds.includes(a.employeeId))
                 };
                 
@@ -9636,9 +9660,10 @@
             document.getElementById('batchLabel').textContent = `${batch.batchNumber}`;
             
             const startEmp = (batch.batchNumber - 1) * 100 + 1;
-            const endEmp = Math.min(startEmp + 99, startEmp + batch.qrAttendance.length - 1);
+            const totalInBatch = batch.employees.length;
+            const endEmp = startEmp + totalInBatch - 1;
             document.getElementById('batchEmployeeRange').textContent = `Employés ${startEmp}-${endEmp}`;
-            document.getElementById('batchDataCount').textContent = batch.qrAttendance.length;
+            document.getElementById('batchDataCount').textContent = totalInBatch;
             
             // Progress
             const progress = ((index + 1) / dailySyncBatches.length * 100).toFixed(0);
