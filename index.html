@@ -1589,15 +1589,17 @@
             }
         }
     
-        /* Fanalana ny effet miroir amin'ny camera */
+        /* Fanalana ny effet miroir amin'ny camera + canvas landmarks */
         #enrollVideo,
         #pointageVideo, 
-        #selectionVideo {
+        #selectionVideo,
+        #enrollCanvas {
             -webkit-transform: scaleX(-1);
             -moz-transform: scaleX(-1);
             -o-transform: scaleX(-1);
             transform: scaleX(-1);
         }
+
 
         /* ===gris sidéral glassmorphism!===*/
         label, .form-group label {
@@ -8846,6 +8848,8 @@
                             .withFaceLandmarks();
 
                         const ctx = canvas.getContext('2d');
+                        ctx.save();
+                        ctx.scale(-1, 1);
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                         if (detections) {
@@ -8859,7 +8863,7 @@
                             ctx.lineWidth = 2;
                             ctx.strokeRect(box.x, box.y, box.width, box.height);
                         }
-                        
+                        ctx.restore();
                         animationId = requestAnimationFrame(drawLandmarks);
                     }
                     drawLandmarks();
