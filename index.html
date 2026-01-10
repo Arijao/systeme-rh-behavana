@@ -992,60 +992,250 @@
             }
         }
 
+        /* === SIDEBAR MODERNE GLASSMORPHISM GRIS SIDÉRAL === */
+
         .settings-panel {
             position: fixed;
             top: 0;
-            right: -400px;
-            width: 400px;
+            right: -450px;
+            width: 420px;
             height: 100vh;
-            background: var(--md-sys-color-surface);
-            box-shadow: -4px 0 16px rgba(0,0,0,0.15);
-            transition: right 0.3s ease;
+            /* Gris sidéral glassmorphism */
+            background: linear-gradient(
+                165deg,
+                rgba(71, 85, 105, 0.75) 0%,
+                rgba(51, 65, 85, 0.85) 50%,
+                rgba(30, 41, 59, 0.9) 100%
+            );
+            backdrop-filter: blur(25px) saturate(160%);
+            -webkit-backdrop-filter: blur(25px) saturate(160%);
+            border-left: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 
+                -8px 0 40px rgba(15, 23, 42, 0.5),
+                inset 1px 0 0 rgba(255, 255, 255, 0.1);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 3000;
-            padding: 24px;
+            padding: 32px 24px;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .settings-panel.active {
             right: 0;
         }
 
+        /* Scrollbar élégante pour le sidebar */
+        .settings-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .settings-panel::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 4px;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 4px;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+
+        /* Overlay amélioré */
         .settings-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 2999;
             display: none;
+            transition: opacity 0.3s ease;
         }
 
         .settings-overlay.active {
             display: block;
+            animation: overlayFadeIn 0.3s ease;
         }
 
+        @keyframes overlayFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Sections du sidebar stylisées */
         .settings-section {
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-section:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(148, 163, 184, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
         }
 
         .settings-section h3 {
-            color: var(--md-sys-color-primary);
+            color: rgba(226, 232, 240, 0.95);
             margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .settings-section h3 .material-icons {
+            color: rgba(129, 140, 248, 0.9);
+            filter: drop-shadow(0 2px 4px rgba(129, 140, 248, 0.4));
         }
-        
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
+
+        /* Form controls dans le sidebar */
+        .settings-section .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: rgba(241, 245, 249, 0.95);
+            transition: all 0.3s ease;
         }
+
+        .settings-section .form-control:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(129, 140, 248, 0.5);
+        }
+
+        .settings-section .form-control:focus {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            color: white;
+        }
+
+        .settings-section label {
+            color: rgba(203, 213, 225, 0.9);
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Boutons dans le sidebar */
+        .settings-section .btn {
+            background: linear-gradient(
+                135deg,
+                rgba(129, 140, 248, 0.85) 0%,
+                rgba(99, 102, 241, 0.85) 100%
+            );
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+        }
+
+        .settings-section .btn:hover {
+            background: linear-gradient(
+                135deg,
+                rgba(129, 140, 248, 1) 0%,
+                rgba(99, 102, 241, 1) 100%
+            );
+            box-shadow: 0 6px 16px rgba(129, 140, 248, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .settings-section .btn-danger {
+            background: linear-gradient(
+                135deg,
+                rgba(239, 68, 68, 0.85) 0%,
+                rgba(220, 38, 38, 0.85) 100%
+            );
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .settings-section .btn-danger:hover {
+            background: linear-gradient(
+                135deg,
+                rgba(239, 68, 68, 1) 0%,
+                rgba(220, 38, 38, 1) 100%
+            );
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Alert dans le sidebar */
+        .settings-section .alert {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: rgba(226, 232, 240, 0.9);
+        }
+
+        /* Modal header dans le sidebar */
+        .settings-panel .modal-header {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+        }
+
+        .settings-panel .modal-header h3 {
+            color: rgba(241, 245, 249, 0.95);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            font-size: 1.5rem;
+        }
+
+        .settings-panel .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(226, 232, 240, 0.9);
+        }
+
+        .settings-panel .close-btn:hover {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* Animation d'entrée */
+        @keyframes slideInSidebar {
+            from {
+                right: -450px;
+                opacity: 0;
+            }
+            to {
+                right: 0;
+                opacity: 1;
+            }
+        }
+
+        /* Dark mode support */
+        [data-theme="dark"] .settings-panel {
+            background: linear-gradient(
+                165deg,
+                rgba(15, 23, 42, 0.85) 0%,
+                rgba(30, 41, 59, 0.9) 50%,
+                rgba(15, 23, 42, 0.95) 100%
+            );
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .settings-panel.active {
+                right: 0;
+            }
+        }
+
 
         /* Présence QR Tab */
         .qr-scan-section {
