@@ -65,151 +65,204 @@
         }
 
         
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 85px;
+            --dribbble-dark: #0d0d12;
+            --dribbble-glass: rgba(20, 20, 25, 0.7);
+            --dribbble-accent: #7c4dff;
+            --dribbble-text: #e0e0e0;
+            --dribbble-border: rgba(255, 255, 255, 0.08);
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: var(--md-sys-color-surface);
-            color: var(--md-sys-color-on-surface);
-            line-height: 1.6;
-            transition: all 0.3s ease;
+            background-color: #08080a;
+            color: var(--dribbble-text);
+            margin: 0;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ========== GLASSMORPHISM SIDEBAR ========== */
-        .sidebar {
+        #manus-sidebar {
             position: fixed;
-            left: 0;
-            top: 0;
-            width: 100px;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: var(--sidebar-width);
+            background: var(--dribbble-glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--dribbble-border);
+            border-radius: 24px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 24px 0;
-            gap: 16px;
-            z-index: 1000;
-            transition: all 0.3s ease;
-            overflow-y: auto;
+            padding: 25px 15px;
+            z-index: 9999;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
-        [data-theme="dark"] .sidebar {
-            background: rgba(0, 0, 0, 0.25);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        #manus-sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 0 10px;
         }
 
         .sidebar-logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
-            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 800;
+            font-size: 22px;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--dribbble-accent), #448aff);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--md-sys-color-on-primary);
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.3);
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(124, 77, 255, 0.4);
+        }
+
+        #manus-sidebar.collapsed .sidebar-logo-text {
+            display: none;
+        }
+
+        .toggle-btn {
+            cursor: pointer;
+            color: #888;
+            background: rgba(255, 255, 255, 0.05);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
         }
 
         .sidebar-nav {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
         }
+
+        .sidebar-nav::-webkit-scrollbar { width: 0; }
 
         .sidebar-item {
             position: relative;
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 14px 18px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--md-sys-color-on-surface-variant);
-            font-size: 24px;
+            transition: all 0.3s;
+            color: #999;
+            text-decoration: none;
+            gap: 18px;
+            border: 1px solid transparent;
         }
 
         .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.05);
         }
 
         .sidebar-item.active {
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.3);
+            background: rgba(124, 77, 255, 0.15);
+            color: var(--dribbble-accent);
+            border-color: rgba(124, 77, 255, 0.2);
         }
 
-        .sidebar-item .tooltip {
+        .sidebar-item .material-icons {
+            font-size: 26px;
+        }
+
+        .sidebar-item span:not(.material-icons):not(.tooltip) {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        #manus-sidebar.collapsed .sidebar-item span:not(.material-icons):not(.tooltip) {
+            display: none;
+        }
+
+        .tooltip {
             position: absolute;
-            left: 80px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #FFFFFF;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
+            left: 100px;
+            background: #1a1a24;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 500;
             white-space: nowrap;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
             pointer-events: none;
-            z-index: 10;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .sidebar-item:hover .tooltip {
+        #manus-sidebar.collapsed .sidebar-item:hover .tooltip {
             opacity: 1;
             visibility: visible;
-            transform: translateX(8px);
-        }
-
-        .sidebar-item .tooltip::before {
-            content: '';
-            position: absolute;
-            right: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 6px solid transparent;
-            border-right-color: rgba(0, 0, 0, 0.9);
+            left: 85px;
         }
 
         .sidebar-bottom {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--dribbble-border);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-top: auto;
+            gap: 10px;
         }
 
-        .main-content {
-            margin-left: 100px;
+        #manus-main {
+            margin-left: calc(var(--sidebar-width) + 40px);
             flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-            width: calc(100% - 100px);
+            padding: 40px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        #manus-sidebar.collapsed ~ #manus-main {
+            margin-left: calc(var(--sidebar-collapsed-width) + 40px);
         }
 
         .nav-tabs { display: none !important; }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 80px; }
-            .main-content { margin-left: 80px; width: calc(100% - 80px); }
+        @media (max-width: 1024px) {
+            #manus-sidebar { left: 0; top: 0; bottom: 0; border-radius: 0; }
+            #manus-main { padding: 20px; }
         }
-    
+
         .section {
+    
             display: none;
             animation: fadeIn 0.5s ease;
         }
@@ -1219,78 +1272,64 @@
 
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="sidebar-logo">RH</div>
+    <aside id="manus-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="logo-icon"><span class="material-icons">bolt</span></div>
+                <span class="sidebar-logo-text">Manus RH</span>
+            </div>
+            <div class="toggle-btn" onclick="manusToggleSidebar()">
+                <span class="material-icons">menu</span>
+            </div>
+        </div>
+        
         <nav class="sidebar-nav">
             <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">dashboard</span>
-                <span class="tooltip">Tableau de Bord</span>
+                <span class="material-icons">grid_view</span>
+                <span>Dashboard</span>
+                <span class="tooltip">Dashboard</span>
             </div>
             <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">people</span>
+                <span class="material-icons">badge</span>
+                <span>Employés</span>
                 <span class="tooltip">Employés</span>
             </div>
             <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">groups</span>
+                <span class="material-icons">hub</span>
+                <span>Groupes</span>
                 <span class="tooltip">Groupes</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('employee-stats')">
-                <span class="material-icons">person_search</span>
-                <span class="tooltip">Statut Employé</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">schedule</span>
+                <span class="material-icons">event_available</span>
+                <span>Présence</span>
                 <span class="tooltip">Présence</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('qr-presence')">
-                <span class="material-icons">qr_code</span>
-                <span class="tooltip">Présence QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('face-presence')">
-                <span class="material-icons">face</span>
-                <span class="tooltip">Pointage Facial</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('qr-codes')">
-                <span class="material-icons">qr_code_2</span>
-                <span class="tooltip">Codes QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('advances')">
-                <span class="material-icons">savings</span>
-                <span class="tooltip">Avances</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">payments</span>
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Paie</span>
                 <span class="tooltip">Paie</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('stc')">
-                <span class="material-icons">exit_to_app</span>
-                <span class="tooltip">Solde de Tout Compte</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payments')">
-                <span class="material-icons">history</span>
-                <span class="tooltip">Paiements</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">analytics</span>
+                <span class="material-icons">bar_chart</span>
+                <span>Rapports</span>
                 <span class="tooltip">Rapports</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('estimation')">
-                <span class="material-icons">request_quote</span>
-                <span class="tooltip">Estimation</span>
-            </div>
         </nav>
+
         <div class="sidebar-bottom">
             <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">brightness_4</span>
+                <span class="material-icons">dark_mode</span>
+                <span>Thème</span>
                 <span class="tooltip">Thème</span>
             </div>
             <div class="sidebar-item">
                 <span class="material-icons">settings</span>
-                <span class="tooltip">Paramètres</span>
+                <span>Settings</span>
+                <span class="tooltip">Settings</span>
             </div>
         </div>
     </aside>
-    <main class="main-content">
+    <main id="manus-main">
     
     <div class="container">
         <div class="header">
@@ -3974,78 +4013,64 @@
     </style>
                         </head>
                         <body>
-    <aside class="sidebar">
-        <div class="sidebar-logo">RH</div>
+    <aside id="manus-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="logo-icon"><span class="material-icons">bolt</span></div>
+                <span class="sidebar-logo-text">Manus RH</span>
+            </div>
+            <div class="toggle-btn" onclick="manusToggleSidebar()">
+                <span class="material-icons">menu</span>
+            </div>
+        </div>
+        
         <nav class="sidebar-nav">
             <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">dashboard</span>
-                <span class="tooltip">Tableau de Bord</span>
+                <span class="material-icons">grid_view</span>
+                <span>Dashboard</span>
+                <span class="tooltip">Dashboard</span>
             </div>
             <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">people</span>
+                <span class="material-icons">badge</span>
+                <span>Employés</span>
                 <span class="tooltip">Employés</span>
             </div>
             <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">groups</span>
+                <span class="material-icons">hub</span>
+                <span>Groupes</span>
                 <span class="tooltip">Groupes</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('employee-stats')">
-                <span class="material-icons">person_search</span>
-                <span class="tooltip">Statut Employé</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">schedule</span>
+                <span class="material-icons">event_available</span>
+                <span>Présence</span>
                 <span class="tooltip">Présence</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('qr-presence')">
-                <span class="material-icons">qr_code</span>
-                <span class="tooltip">Présence QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('face-presence')">
-                <span class="material-icons">face</span>
-                <span class="tooltip">Pointage Facial</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('qr-codes')">
-                <span class="material-icons">qr_code_2</span>
-                <span class="tooltip">Codes QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('advances')">
-                <span class="material-icons">savings</span>
-                <span class="tooltip">Avances</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">payments</span>
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Paie</span>
                 <span class="tooltip">Paie</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('stc')">
-                <span class="material-icons">exit_to_app</span>
-                <span class="tooltip">Solde de Tout Compte</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payments')">
-                <span class="material-icons">history</span>
-                <span class="tooltip">Paiements</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">analytics</span>
+                <span class="material-icons">bar_chart</span>
+                <span>Rapports</span>
                 <span class="tooltip">Rapports</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('estimation')">
-                <span class="material-icons">request_quote</span>
-                <span class="tooltip">Estimation</span>
-            </div>
         </nav>
+
         <div class="sidebar-bottom">
             <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">brightness_4</span>
+                <span class="material-icons">dark_mode</span>
+                <span>Thème</span>
                 <span class="tooltip">Thème</span>
             </div>
             <div class="sidebar-item">
                 <span class="material-icons">settings</span>
-                <span class="tooltip">Paramètres</span>
+                <span>Settings</span>
+                <span class="tooltip">Settings</span>
             </div>
         </div>
     </aside>
-    <main class="main-content">
+    <main id="manus-main">
     
                             <div class="qr-print-card">
                                 <h2>${employee.name}</h2>
@@ -4162,78 +4187,64 @@
     </style>
                         </head>
                         <body>
-    <aside class="sidebar">
-        <div class="sidebar-logo">RH</div>
+    <aside id="manus-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="logo-icon"><span class="material-icons">bolt</span></div>
+                <span class="sidebar-logo-text">Manus RH</span>
+            </div>
+            <div class="toggle-btn" onclick="manusToggleSidebar()">
+                <span class="material-icons">menu</span>
+            </div>
+        </div>
+        
         <nav class="sidebar-nav">
             <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">dashboard</span>
-                <span class="tooltip">Tableau de Bord</span>
+                <span class="material-icons">grid_view</span>
+                <span>Dashboard</span>
+                <span class="tooltip">Dashboard</span>
             </div>
             <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">people</span>
+                <span class="material-icons">badge</span>
+                <span>Employés</span>
                 <span class="tooltip">Employés</span>
             </div>
             <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">groups</span>
+                <span class="material-icons">hub</span>
+                <span>Groupes</span>
                 <span class="tooltip">Groupes</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('employee-stats')">
-                <span class="material-icons">person_search</span>
-                <span class="tooltip">Statut Employé</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">schedule</span>
+                <span class="material-icons">event_available</span>
+                <span>Présence</span>
                 <span class="tooltip">Présence</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('qr-presence')">
-                <span class="material-icons">qr_code</span>
-                <span class="tooltip">Présence QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('face-presence')">
-                <span class="material-icons">face</span>
-                <span class="tooltip">Pointage Facial</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('qr-codes')">
-                <span class="material-icons">qr_code_2</span>
-                <span class="tooltip">Codes QR</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('advances')">
-                <span class="material-icons">savings</span>
-                <span class="tooltip">Avances</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">payments</span>
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Paie</span>
                 <span class="tooltip">Paie</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('stc')">
-                <span class="material-icons">exit_to_app</span>
-                <span class="tooltip">Solde de Tout Compte</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payments')">
-                <span class="material-icons">history</span>
-                <span class="tooltip">Paiements</span>
-            </div>
             <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">analytics</span>
+                <span class="material-icons">bar_chart</span>
+                <span>Rapports</span>
                 <span class="tooltip">Rapports</span>
             </div>
-            <div class="sidebar-item" onclick="showSection('estimation')">
-                <span class="material-icons">request_quote</span>
-                <span class="tooltip">Estimation</span>
-            </div>
         </nav>
+
         <div class="sidebar-bottom">
             <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">brightness_4</span>
+                <span class="material-icons">dark_mode</span>
+                <span>Thème</span>
                 <span class="tooltip">Thème</span>
             </div>
             <div class="sidebar-item">
                 <span class="material-icons">settings</span>
-                <span class="tooltip">Paramètres</span>
+                <span>Settings</span>
+                <span class="tooltip">Settings</span>
             </div>
         </div>
     </aside>
-    <main class="main-content">
+    <main id="manus-main">
     
                             <h1 style="text-align: center; margin-bottom: 20px;">QR CODES - BEHAVANA HR SYSTEM</h1>
                             <div class="page-container">
