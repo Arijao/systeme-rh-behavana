@@ -1873,7 +1873,7 @@
         }
 
         /* ========================================
-        HAMBURGER MENU NAVIGATION
+        HAMBURGER MENU - GLASSMORPHISM STYLE
         ======================================== */
 
         /* Bouton hamburger */
@@ -1882,11 +1882,12 @@
             top: 24px;
             left: 24px;
             z-index: 3001;
-            background: linear-gradient(135deg, rgba(129, 140, 248, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+            background: rgba(51, 65, 85, 0.7);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.3);
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 12px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -1895,24 +1896,25 @@
             height: 50px;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.4);
             transition: all 0.3s ease;
         }
 
         .hamburger-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(129, 140, 248, 0.6);
+            background: rgba(51, 65, 85, 0.85);
+            box-shadow: 0 12px 48px rgba(15, 23, 42, 0.6);
         }
 
         .hamburger-btn span {
             width: 24px;
             height: 3px;
-            background: white;
+            background: #e2e8f0;
             border-radius: 2px;
             transition: all 0.3s ease;
         }
 
-        /* Animation quand ouvert */
+        /* Animation hamburger */
         .hamburger-btn.active span:nth-child(1) {
             transform: rotate(45deg) translateY(8px);
         }
@@ -1925,24 +1927,21 @@
             transform: rotate(-45deg) translateY(-8px);
         }
 
-        /* Menu latéral */
+        /* Menu latéral - GLASSMORPHISM */
         .nav-menu {
             position: fixed;
             top: 0;
-            left: -300px;
-            width: 280px;
+            left: -320px;
+            width: 300px;
             height: 100vh;
-            background: linear-gradient(
-                165deg,
-                rgba(51, 65, 85, 0.95) 0%,
-                rgba(30, 41, 59, 0.98) 100%
-            );
-            backdrop-filter: blur(30px);
-            border-right: 1px solid rgba(148, 163, 184, 0.2);
-            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.5);
+            background: rgba(51, 65, 85, 0.75);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-right: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 8px 0 32px rgba(15, 23, 42, 0.5);
             z-index: 3000;
             transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 80px 0 20px 0;
+            padding: 90px 16px 20px 16px;
             overflow-y: auto;
         }
 
@@ -1950,7 +1949,7 @@
             left: 0;
         }
 
-        /* Overlay fond sombre */
+        /* Overlay */
         .nav-overlay {
             position: fixed;
             top: 0;
@@ -1959,6 +1958,7 @@
             height: 100%;
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 2999;
             display: none;
             transition: opacity 0.3s ease;
@@ -1968,111 +1968,107 @@
             display: block;
         }
 
-        /* Items menu */
+        /* Menu item - AVEC TEXTE */
         .nav-menu-item {
             display: flex;
             align-items: center;
-            padding: 16px 24px;
+            gap: 16px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border-left: 4px solid transparent;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.2);
             position: relative;
+            overflow: hidden;
         }
 
+        /* Hover effect */
         .nav-menu-item:hover {
-            background: rgba(129, 140, 248, 0.15);
-            border-left-color: rgba(129, 140, 248, 0.8);
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(129, 140, 248, 0.5);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
+        /* Active state */
         .nav-menu-item.active {
-            background: rgba(129, 140, 248, 0.25);
-            border-left-color: #818cf8;
+            background: rgba(99, 102, 241, 0.35);
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
         }
 
+        /* Active indicator line */
+        .nav-menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Icon */
         .nav-menu-item .material-icons {
-            font-size: 28px;
-            color: #93c5fd;
+            font-size: 26px;
+            color: #cbd5e1;
             transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
         .nav-menu-item:hover .material-icons,
         .nav-menu-item.active .material-icons {
-            color: #60a5fa;
+            color: #a5b4fc;
             transform: scale(1.1);
         }
 
-        /* Tooltip - VERSION RESPONSIVE */
-        .nav-tooltip {
-            position: absolute;
-            left: 70px;
-            background: rgba(30, 41, 59, 0.98);
-            color: #f1f5f9;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
+        /* Label text */
+        .nav-menu-label {
+            font-size: 15px;
             font-weight: 600;
+            color: #e2e8f0;
             white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(148, 163, 184, 0.5);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-            z-index: 10;
-            backdrop-filter: blur(10px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* Hiseho rehefa hover */
-        .nav-menu-item:hover .nav-tooltip {
-            opacity: 1;
-            transform: translateX(0);
+        .nav-menu-item:hover .nav-menu-label,
+        .nav-menu-item.active .nav-menu-label {
+            color: #f1f5f9;
         }
 
-        /* FANAMPIANA: Active state ho an'ny mobile */
-        .nav-menu-item.show-tooltip .nav-tooltip {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* Mobile: aneho ny tooltip eo amin'ny ambany */
-        @media (max-width: 768px) {
-            .nav-tooltip {
-                left: 60px;
-                top: 50%;
-                transform: translateY(-50%) translateX(-10px);
-                font-size: 13px;
-                padding: 8px 14px;
-            }
-            
-            .nav-menu-item:hover .nav-tooltip,
-            .nav-menu-item.show-tooltip .nav-tooltip {
-                transform: translateY(-50%) translateX(0);
-            }
-        }
-
-        /* ALTERNATIVE: Raha tsy miseho hatrany, ampio active class */
-        @media (max-width: 768px) {
-            /* Aseho foana ny tooltip amin'ny mobile */
-            .nav-menu-item:active .nav-tooltip,
-            .nav-menu-item:focus .nav-tooltip {
-                opacity: 1;
-                transform: translateY(-50%) translateX(0);
-            }
-        }
-
-
-        /* Scrollbar menu */
+        /* Scrollbar custom */
         .nav-menu::-webkit-scrollbar {
             width: 6px;
         }
 
         .nav-menu::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.3);
+            border-radius: 3px;
         }
 
         .nav-menu::-webkit-scrollbar-thumb {
-            background: rgba(129, 140, 248, 0.4);
+            background: rgba(129, 140, 248, 0.5);
             border-radius: 3px;
+        }
+
+        .nav-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(129, 140, 248, 0.7);
+        }
+
+        /* Dark mode adjustments */
+        [data-theme="dark"] .nav-menu {
+            background: rgba(30, 41, 59, 0.85);
+        }
+
+        [data-theme="dark"] .nav-menu-item {
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        [data-theme="dark"] .hamburger-btn {
+            background: rgba(30, 41, 59, 0.8);
         }
 
         /* Cacher l'ancien nav-tabs */
@@ -2085,14 +2081,37 @@
             .hamburger-btn {
                 top: 16px;
                 left: 16px;
-                width: 45px;
-                height: 45px;
+                width: 48px;
+                height: 48px;
             }
             
             .nav-menu {
-                width: 250px;
+                width: 280px;
+                left: -280px;
+                padding-top: 80px;
+            }
+            
+            .nav-menu-item {
+                padding: 12px 14px;
+                gap: 14px;
+            }
+            
+            .nav-menu-item .material-icons {
+                font-size: 24px;
+            }
+            
+            .nav-menu-label {
+                font-size: 14px;
             }
         }
+
+        @media (max-width: 480px) {
+            .nav-menu {
+                width: 260px;
+                left: -260px;
+            }
+        }
+
 
         /* ========================================
         CONTRASTE TSARA - RÉSUMÉ & RAPPORTS
@@ -2215,75 +2234,74 @@
             <div class="nav-menu-item active" onclick="navigateToSection('dashboard')">
                 <span class="material-icons">dashboard</span>
                 <span class="nav-menu-label">Tableau de Bord</span>
-                <div class="nav-tooltip">Tableau de Bord</div>
             </div>
-
             
             <div class="nav-menu-item" onclick="navigateToSection('employees')">
                 <span class="material-icons">people</span>
-                <div class="nav-tooltip">Employés</div>
+                <span class="nav-menu-label">Employés</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('groups')">
                 <span class="material-icons">groups</span>
-                <div class="nav-tooltip">Groupes</div>
+                <span class="nav-menu-label">Groupes</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('employee-stats')">
                 <span class="material-icons">person_search</span>
-                <div class="nav-tooltip">Statut Employé</div>
+                <span class="nav-menu-label">Statut Employé</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('attendance')">
                 <span class="material-icons">schedule</span>
-                <div class="nav-tooltip">Présence</div>
+                <span class="nav-menu-label">Présence</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('qr-presence')">
                 <span class="material-icons">qr_code</span>
-                <div class="nav-tooltip">Présence QR</div>
+                <span class="nav-menu-label">Présence QR</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('face-presence')">
                 <span class="material-icons">face</span>
-                <div class="nav-tooltip">Pointage Facial</div>
+                <span class="nav-menu-label">Pointage Facial</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('qr-codes')">
                 <span class="material-icons">qr_code_2</span>
-                <div class="nav-tooltip">Codes QR</div>
+                <span class="nav-menu-label">Codes QR</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('advances')">
                 <span class="material-icons">savings</span>
-                <div class="nav-tooltip">Avances</div>
+                <span class="nav-menu-label">Avances</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('payroll')">
                 <span class="material-icons">payments</span>
-                <div class="nav-tooltip">Paie</div>
+                <span class="nav-menu-label">Paie</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('stc')">
                 <span class="material-icons">exit_to_app</span>
-                <div class="nav-tooltip">Solde de Tout Compte</div>
+                <span class="nav-menu-label">Solde Tout Compte</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('payments')">
                 <span class="material-icons">history</span>
-                <div class="nav-tooltip">Paiements</div>
+                <span class="nav-menu-label">Paiements</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('reports')">
                 <span class="material-icons">analytics</span>
-                <div class="nav-tooltip">Rapports</div>
+                <span class="nav-menu-label">Rapports</span>
             </div>
             
             <div class="nav-menu-item" onclick="navigateToSection('estimation')">
                 <span class="material-icons">request_quote</span>
-                <div class="nav-tooltip">Estimation</div>
+                <span class="nav-menu-label">Estimation</span>
             </div>
         </div>
+
 
 
         <div class="nav-tabs">
@@ -10234,6 +10252,7 @@
             // Hiantso ny showSection fonction
             showSection(sectionId);
         }
+
 
         // Mobile: ahafahana mitsindry ny menu item hamoaka tooltip
         if (window.innerWidth <= 768) {
