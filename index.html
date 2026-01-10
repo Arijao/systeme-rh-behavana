@@ -8848,9 +8848,7 @@
                             .withFaceLandmarks();
 
                         const ctx = canvas.getContext('2d');
-                        ctx.save();
-                        ctx.scale(-1, 1);
-                        ctx.translate(-canvas.width, 0);
+                        
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                         if (detections) {
@@ -8864,7 +8862,7 @@
                             ctx.lineWidth = 2;
                             ctx.strokeRect(box.x, box.y, box.width, box.height);
                         }
-                        ctx.restore();
+                    
                         animationId = requestAnimationFrame(drawLandmarks);
                     }
                     drawLandmarks();
