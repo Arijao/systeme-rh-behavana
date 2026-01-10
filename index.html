@@ -297,6 +297,19 @@
         }
 
 
+        /* Indicator tsara ho an'ny active tab */
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%;
+            height: 3px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 2px;
+        }
+
         .section {
             display: none;
             animation: fadeIn 0.5s ease;
