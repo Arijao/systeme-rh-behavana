@@ -21,44 +21,34 @@
 
     <style>
         :root {
-            /* Dribbble Dark Base (overrides MD3 for full app) */
-            --md-sys-color-primary: #FF6B35; /* Orange accent */
+            --md-sys-color-primary: #8B5CF6; /* Violet principal */
             --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: rgba(255, 107, 53, 0.2);
-            --md-sys-color-on-primary-container: #FF8C60;
-            --md-sys-color-secondary: #E8E8FF; /* Light purple text */
+            --md-sys-color-primary-container: rgba(139, 92, 246, 0.2);
+            --md-sys-color-on-primary-container: #C084FC;
+            --md-sys-color-secondary: #E8E8FF;
             --md-sys-color-on-secondary: #1A0D2E;
             --md-sys-color-secondary-container: rgba(26, 13, 46, 0.8);
             --md-sys-color-on-secondary-container: #E8E8FF;
-            --md-sys-color-surface: rgba(15, 15, 35, 0.9); /* Dark gradient base */
+            --md-sys-color-surface: rgba(15, 15, 35, 0.9);
             --md-sys-color-on-surface: #FFFFFF;
-            --md-sys-color-surface-variant: rgba(255, 255, 255, 0.05); /* Glass cards */
+            --md-sys-color-surface-variant: rgba(255, 255, 255, 0.05);
             --md-sys-color-on-surface-variant: #E8E8FF;
             --md-sys-color-outline: rgba(255, 255, 255, 0.1);
             --md-sys-color-outline-variant: rgba(255, 255, 255, 0.2);
-            --md-sys-color-error: #FF6B35; /* Reuse orange for warnings */
+            --md-sys-color-error: #EF4444; /* Rouge soft */
             --md-sys-color-on-error: #FFFFFF;
-            --md-sys-color-success: #FF8C60;
-            --md-sys-color-warning: #FF6B35;
+            --md-sys-color-success: #10B981; /* Vert */
+            --md-sys-color-warning: #F59E0B; /* Jaune */
         }
 
         [data-theme="dark"] {
-            /* Enhanced Dark (locked for Dribbble style) */
-            --md-sys-color-primary: #FF6B35;
+            --md-sys-color-primary: #8B5CF6;
             --md-sys-color-on-primary: #0F0F23;
-            --md-sys-color-primary-container: linear-gradient(135deg, #FF6B35, #FF8C60);
+            --md-sys-color-primary-container: linear-gradient(135deg, #8B5CF6, #C084FC);
             --md-sys-color-on-primary-container: #FFFFFF;
-            --md-sys-color-secondary: #D0BCFF;
-            --md-sys-color-on-secondary: #2A1B4D;
-            --md-sys-color-secondary-container: rgba(42, 27, 77, 0.7);
-            --md-sys-color-on-secondary-container: #E8E8FF;
-            --md-sys-color-surface: linear-gradient(135deg, #0F0F23 0%, #1A0D2E 50%, #2A1B4D 100%);
-            --md-sys-color-on-surface: #FFFFFF;
-            --md-sys-color-surface-variant: rgba(255, 255, 255, 0.08);
-            --md-sys-color-on-surface-variant: #CAC4D0;
-            --md-sys-color-outline: rgba(232, 232, 255, 0.2);
-            --md-sys-color-outline-variant: rgba(73, 69, 79, 0.5);
+            /* Autres vars inchangées */
         }
+
 
         body {
             background: var(--md-sys-color-surface) !important;
@@ -154,7 +144,7 @@
             margin-bottom: 12px;
             position: relative;
             z-index: 2;
-            background: linear-gradient(135deg, #FFFFFF 0%, #FF8C60 50%, #FF6B35 100%);
+            background: linear-gradient(135deg, #FFFFFF 0%, #C084FC 50%, #8B5CF6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -266,7 +256,7 @@
 
         .nav-tab.active,
         .nav-tab.active:hover {
-            background: linear-gradient(135deg, #FF6B35, #FF8C60);
+            background: linear-gradient(135deg, #8B5CF6, #C084FC);
             color: #FFFFFF;
             transform: translateY(-4px);
             box-shadow: 0 20px 40px rgba(255, 107, 53, 0.4), 0 0 30px rgba(255, 107, 53, 0.3);
@@ -375,7 +365,7 @@
         }
 
         .stat-icon {
-            background: linear-gradient(135deg, #FF6B35, #FF8C60);
+            background: linear-gradient(135deg, #8B5CF6, #C084FC);
             color: #FFFFFF;
             width: 72px;
             height: 72px;
@@ -395,7 +385,7 @@
         .stat-content h3 {
             font-size: 3.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #FF6B35, #FFFFFF);
+            background: linear-gradient(135deg, #8B5CF6, #FFFFFF);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -471,7 +461,7 @@
         }
 
         .btn {
-            background: linear-gradient(135deg, var(--md-sys-color-primary), #FF8C60);
+            background: linear-gradient(135deg, var(--md-sys-color-primary), #C084FC);
             color: var(--md-sys-color-on-primary);
             border: none;
             padding: 16px 32px;
@@ -529,7 +519,7 @@
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #FF6B35, #FF4757);
+            background: linear-gradient(135deg, #8B5CF6, #FF4757);
             color: #FFFFFF;
             box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
         }
@@ -539,7 +529,7 @@
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #FF8C60, #4CAF50);
+            background: linear-gradient(135deg, #C084FC, #4CAF50);
             color: #FFFFFF;
             box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
         }
