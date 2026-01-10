@@ -2001,13 +2001,13 @@
             transform: scale(1.1);
         }
 
-        /* Tooltip */
+        /* Tooltip - VERSION RESPONSIVE */
         .nav-tooltip {
             position: absolute;
             left: 70px;
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(30, 41, 59, 0.98);
             color: #f1f5f9;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -2016,15 +2016,50 @@
             pointer-events: none;
             transform: translateX(-10px);
             transition: all 0.3s ease;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
             z-index: 10;
+            backdrop-filter: blur(10px);
         }
 
+        /* Hiseho rehefa hover */
         .nav-menu-item:hover .nav-tooltip {
             opacity: 1;
             transform: translateX(0);
         }
+
+        /* FANAMPIANA: Active state ho an'ny mobile */
+        .nav-menu-item.show-tooltip .nav-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Mobile: aneho ny tooltip eo amin'ny ambany */
+        @media (max-width: 768px) {
+            .nav-tooltip {
+                left: 60px;
+                top: 50%;
+                transform: translateY(-50%) translateX(-10px);
+                font-size: 13px;
+                padding: 8px 14px;
+            }
+            
+            .nav-menu-item:hover .nav-tooltip,
+            .nav-menu-item.show-tooltip .nav-tooltip {
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
+        /* ALTERNATIVE: Raha tsy miseho hatrany, ampio active class */
+        @media (max-width: 768px) {
+            /* Aseho foana ny tooltip amin'ny mobile */
+            .nav-menu-item:active .nav-tooltip,
+            .nav-menu-item:focus .nav-tooltip {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
 
         /* Scrollbar menu */
         .nav-menu::-webkit-scrollbar {
@@ -2056,6 +2091,81 @@
             
             .nav-menu {
                 width: 250px;
+            }
+        }
+
+        /* ========================================
+        CONTRASTE TSARA - RÉSUMÉ & RAPPORTS
+        ======================================== */
+
+        /* Résumé du Mois - fond mazava */
+        .card > div[style*="background"] p,
+        .card > div[style*="padding"] p {
+            color: #1e293b !important;
+            text-shadow: none !important;
+            font-weight: 700 !important;
+        }
+
+        /* Titre "Résumé du Mois" */
+        .card > div h3:first-child,
+        .card > div p:first-child {
+            color: #1e293b !important;
+            font-weight: 800 !important;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+        }
+
+        /* Table dans les rapports */
+        table {
+            background: rgba(30, 41, 59, 0.6) !important;
+        }
+
+        table th {
+            background: rgba(51, 65, 85, 0.9) !important;
+            color: #f1f5f9 !important;
+            font-weight: 700 !important;
+        }
+
+        table td {
+            color: #e2e8f0 !important;
+            font-weight: 500 !important;
+        }
+
+        /* Statut "Absent" rouge */
+        table td[style*="color: red"],
+        td:contains("Absent") {
+            color: #fca5a5 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Labels généraux dans les cards */
+        .card label,
+        .card strong {
+            color: #e2e8f0 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Text label ao anatin'ny menu */
+        .nav-menu-label {
+            display: none;
+            margin-left: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            /* Hanisa ny menu rehefa mobile */
+            .nav-menu {
+                width: 200px;
+            }
+            
+            .nav-menu-label {
+                display: block;
+            }
+            
+            /* Afeno ny tooltip rehefa mobile */
+            .nav-tooltip {
+                display: none;
             }
         }
 
@@ -2104,8 +2214,10 @@
         <div class="nav-menu" id="navMenu">
             <div class="nav-menu-item active" onclick="navigateToSection('dashboard')">
                 <span class="material-icons">dashboard</span>
+                <span class="nav-menu-label">Tableau de Bord</span>
                 <div class="nav-tooltip">Tableau de Bord</div>
             </div>
+
             
             <div class="nav-menu-item" onclick="navigateToSection('employees')">
                 <span class="material-icons">people</span>
@@ -10121,6 +10233,23 @@
             
             // Hiantso ny showSection fonction
             showSection(sectionId);
+        }
+
+        // Mobile: ahafahana mitsindry ny menu item hamoaka tooltip
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.nav-menu-item').forEach(item => {
+                item.addEventListener('touchstart', function(e) {
+                    // Toggle show-tooltip class
+                    this.classList.toggle('show-tooltip');
+                    
+                    // Esorina amin'ny hafa
+                    document.querySelectorAll('.nav-menu-item').forEach(other => {
+                        if (other !== this) {
+                            other.classList.remove('show-tooltip');
+                        }
+                    });
+                });
+            });
         }
 
     </script>
