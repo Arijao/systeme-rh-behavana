@@ -64,205 +64,134 @@
             box-sizing: border-box;
         }
 
-        
-        :root {
-            --sidebar-width: 280px;
-            --sidebar-collapsed-width: 85px;
-            --dribbble-dark: #0d0d12;
-            --dribbble-glass: rgba(20, 20, 25, 0.7);
-            --dribbble-accent: #7c4dff;
-            --dribbble-text: #e0e0e0;
-            --dribbble-border: rgba(255, 255, 255, 0.08);
-        }
-
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #08080a;
-            color: var(--dribbble-text);
-            margin: 0;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            line-height: 1.6;
+            transition: all 0.3s ease;
         }
 
-        #manus-sidebar {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            bottom: 20px;
-            width: var(--sidebar-width);
-            background: var(--dribbble-glass);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--dribbble-border);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-primary-container));
+            color: var(--md-sys-color-on-primary);
+            padding: 24px;
             border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            padding: 25px 15px;
-            z-index: 9999;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        #manus-sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            padding: 0 10px;
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: 800;
-            font-size: 22px;
-            color: #fff;
-            white-space: nowrap;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--dribbble-accent), #448aff);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(124, 77, 255, 0.4);
-        }
-
-        #manus-sidebar.collapsed .sidebar-logo-text {
-            display: none;
-        }
-
-        .toggle-btn {
-            cursor: pointer;
-            color: #888;
-            background: rgba(255, 255, 255, 0.05);
-            width: 35px;
-            height: 35px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar { width: 0; }
-
-        .sidebar-item {
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .theme-toggle, .settings-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
-            padding: 14px 18px;
-            border-radius: 16px;
+            justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
-            color: #999;
-            text-decoration: none;
-            gap: 18px;
-            border: 1px solid transparent;
+            color: var(--md-sys-color-on-primary);
+            transition: all 0.3s ease;
+            z-index: 2;
         }
 
-        .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.05);
+        .settings-btn {
+            right: 80px;
         }
 
-        .sidebar-item.active {
-            background: rgba(124, 77, 255, 0.15);
-            color: var(--dribbble-accent);
-            border-color: rgba(124, 77, 255, 0.2);
+        .theme-toggle:hover, .settings-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
         }
 
-        .sidebar-item .material-icons {
-            font-size: 26px;
-        }
-
-        .sidebar-item span:not(.material-icons):not(.tooltip) {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        #manus-sidebar.collapsed .sidebar-item span:not(.material-icons):not(.tooltip) {
-            display: none;
-        }
-
-        .tooltip {
-            position: absolute;
-            left: 100px;
-            background: #1a1a24;
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: none;
-        }
-
-        #manus-sidebar.collapsed .sidebar-item:hover .tooltip {
-            opacity: 1;
-            visibility: visible;
-            left: 85px;
-        }
-
-        .sidebar-bottom {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--dribbble-border);
+        .nav-tabs {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            background: var(--md-sys-color-surface-variant);
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
 
-        #manus-main {
-            margin-left: calc(var(--sidebar-width) + 40px);
-            flex: 1;
-            padding: 40px;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            width: 100%;
+        .nav-tabs::-webkit-scrollbar {
+            display: none; 
         }
 
-        #manus-sidebar.collapsed ~ #manus-main {
-            margin-left: calc(var(--sidebar-collapsed-width) + 40px);
+        .nav-tab {
+            
+            background: none;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--md-sys-color-on-surface-variant);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
-        .nav-tabs { display: none !important; }
+        .nav-tab.active {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
 
-        @media (max-width: 1024px) {
-            #manus-sidebar { left: 0; top: 0; bottom: 0; border-radius: 0; }
-            #manus-main { padding: 20px; }
+        .nav-tab:hover:not(.active) {
+            background: var(--md-sys-color-outline-variant);
         }
 
         .section {
-    
             display: none;
             animation: fadeIn 0.5s ease;
         }
@@ -1272,65 +1201,6 @@
 
 </head>
 <body>
-    <aside id="manus-sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon"><span class="material-icons">bolt</span></div>
-                <span class="sidebar-logo-text">Manus RH</span>
-            </div>
-            <div class="toggle-btn" onclick="manusToggleSidebar()">
-                <span class="material-icons">menu</span>
-            </div>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">grid_view</span>
-                <span>Dashboard</span>
-                <span class="tooltip">Dashboard</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">badge</span>
-                <span>Employés</span>
-                <span class="tooltip">Employés</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">hub</span>
-                <span>Groupes</span>
-                <span class="tooltip">Groupes</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">event_available</span>
-                <span>Présence</span>
-                <span class="tooltip">Présence</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">account_balance_wallet</span>
-                <span>Paie</span>
-                <span class="tooltip">Paie</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">bar_chart</span>
-                <span>Rapports</span>
-                <span class="tooltip">Rapports</span>
-            </div>
-        </nav>
-
-        <div class="sidebar-bottom">
-            <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">dark_mode</span>
-                <span>Thème</span>
-                <span class="tooltip">Thème</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="material-icons">settings</span>
-                <span>Settings</span>
-                <span class="tooltip">Settings</span>
-            </div>
-        </div>
-    </aside>
-    <main id="manus-main">
-    
     <div class="container">
         <div class="header">
             <button class="settings-btn" onclick="toggleSettings()">
@@ -4013,65 +3883,6 @@
     </style>
                         </head>
                         <body>
-    <aside id="manus-sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon"><span class="material-icons">bolt</span></div>
-                <span class="sidebar-logo-text">Manus RH</span>
-            </div>
-            <div class="toggle-btn" onclick="manusToggleSidebar()">
-                <span class="material-icons">menu</span>
-            </div>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">grid_view</span>
-                <span>Dashboard</span>
-                <span class="tooltip">Dashboard</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">badge</span>
-                <span>Employés</span>
-                <span class="tooltip">Employés</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">hub</span>
-                <span>Groupes</span>
-                <span class="tooltip">Groupes</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">event_available</span>
-                <span>Présence</span>
-                <span class="tooltip">Présence</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">account_balance_wallet</span>
-                <span>Paie</span>
-                <span class="tooltip">Paie</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">bar_chart</span>
-                <span>Rapports</span>
-                <span class="tooltip">Rapports</span>
-            </div>
-        </nav>
-
-        <div class="sidebar-bottom">
-            <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">dark_mode</span>
-                <span>Thème</span>
-                <span class="tooltip">Thème</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="material-icons">settings</span>
-                <span>Settings</span>
-                <span class="tooltip">Settings</span>
-            </div>
-        </div>
-    </aside>
-    <main id="manus-main">
-    
                             <div class="qr-print-card">
                                 <h2>${employee.name}</h2>
                                 <p><strong>Poste:</strong> ${employee.position}</p>
@@ -4079,7 +3890,7 @@
                                 <p><strong>BEHAVANA HR SYSTEM</strong></p>
                                 <p>Scanner pour marquer la présence</p>
                             </div>
-                        </main></body>
+                        </body>
                     </html>
                 `;
 
@@ -4187,65 +3998,6 @@
     </style>
                         </head>
                         <body>
-    <aside id="manus-sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon"><span class="material-icons">bolt</span></div>
-                <span class="sidebar-logo-text">Manus RH</span>
-            </div>
-            <div class="toggle-btn" onclick="manusToggleSidebar()">
-                <span class="material-icons">menu</span>
-            </div>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <div class="sidebar-item active" onclick="showSection('dashboard')">
-                <span class="material-icons">grid_view</span>
-                <span>Dashboard</span>
-                <span class="tooltip">Dashboard</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('employees')">
-                <span class="material-icons">badge</span>
-                <span>Employés</span>
-                <span class="tooltip">Employés</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('groups')">
-                <span class="material-icons">hub</span>
-                <span>Groupes</span>
-                <span class="tooltip">Groupes</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('attendance')">
-                <span class="material-icons">event_available</span>
-                <span>Présence</span>
-                <span class="tooltip">Présence</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('payroll')">
-                <span class="material-icons">account_balance_wallet</span>
-                <span>Paie</span>
-                <span class="tooltip">Paie</span>
-            </div>
-            <div class="sidebar-item" onclick="showSection('reports')">
-                <span class="material-icons">bar_chart</span>
-                <span>Rapports</span>
-                <span class="tooltip">Rapports</span>
-            </div>
-        </nav>
-
-        <div class="sidebar-bottom">
-            <div class="sidebar-item" onclick="toggleTheme()">
-                <span class="material-icons">dark_mode</span>
-                <span>Thème</span>
-                <span class="tooltip">Thème</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="material-icons">settings</span>
-                <span>Settings</span>
-                <span class="tooltip">Settings</span>
-            </div>
-        </div>
-    </aside>
-    <main id="manus-main">
-    
                             <h1 style="text-align: center; margin-bottom: 20px;">QR CODES - BEHAVANA HR SYSTEM</h1>
                             <div class="page-container">
                 `;
@@ -4267,7 +4019,7 @@
 
                 printContent += `
                             </div>
-                        </main></body>
+                        </body>
                     </html>
                 `;
 
@@ -9397,5 +9149,5 @@
         }
 
     </script>
-</main></body>
+</body>
 </html>
