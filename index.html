@@ -2188,6 +2188,154 @@
             }
         }
 
+        /* ========================================
+        CORRECTION FORCÉE - RÉSUMÉ & LABELS
+        Version FINALE avec !important partout
+        ======================================== */
+
+        /* === 1. RÉSUMÉ DU MOIS - Background blanc/rose === */
+
+        /* Titre "Résumé du Mois" */
+        div[style*="background"] h3:first-child,
+        div[style*="background"] p:first-child {
+            color: #1e293b !important;
+            font-weight: 800 !important;
+            text-shadow: none !important;
+            font-size: 1.3rem !important;
+        }
+
+        /* TOUS les paragraphes dans les divs avec background */
+        div[style*="background"] p,
+        div[style*="background"] span,
+        div[style*="background"] strong,
+        div[style*="background"] div {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            text-shadow: none !important;
+        }
+
+        /* Labels spécifiques */
+        div[style*="background"] p:contains("Jours"),
+        div[style*="background"] p:contains("Total"),
+        div[style*="background"] p:contains("Avance"),
+        div[style*="background"] p:contains("Salaire") {
+            color: #334155 !important;
+            font-weight: 600 !important;
+        }
+
+        /* === 2. INLINE STYLES - Override TOUS === */
+
+        /* Force TOUS les éléments avec inline style */
+        [style*="color: var("],
+        [style*="color:var("] {
+            color: #1e293b !important;
+        }
+
+        /* === 3. RAPPORT MENSUEL - Section entière === */
+
+        /* Titre principal du rapport */
+        #employeeStatusResults h3,
+        #employeeStatusResults h2,
+        .card h2,
+        .card h3 {
+            color: #f1f5f9 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Groupe label */
+        #employeeStatusResults p[style],
+        #employeeStatusResults strong {
+            color: #e2e8f0 !important;
+        }
+
+        /* === 4. OVERRIDE SPÉCIFIQUE PAR POSITION === */
+
+        /* Tous les enfants directs d'un div avec background clair */
+        div[style*="background: #"],
+        div[style*="background:#"],
+        div[style*="background: rgb"],
+        div[style*="background:rgb"] {
+            color: #1e293b !important;
+        }
+
+        div[style*="background: #"] *,
+        div[style*="background:#"] *,
+        div[style*="background: rgb"] *,
+        div[style*="background:rgb"] * {
+            color: #1e293b !important;
+            text-shadow: none !important;
+        }
+
+        /* === 5. TABLE HEADERS & CELLS === */
+
+        table th {
+            background: rgba(51, 65, 85, 0.95) !important;
+            color: #f1f5f9 !important;
+            font-weight: 800 !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        table td {
+            color: #e2e8f0 !important;
+            font-weight: 600 !important;
+        }
+
+        /* === 6. STATUT "Absent" rouge === */
+        td:contains("Absent"),
+        span:contains("Absent") {
+            color: #ef4444 !important;
+            font-weight: 700 !important;
+        }
+
+        /* === 7. CHIFFRES & MONTANTS === */
+
+        /* Tous les spans contenant "Ar" ou des heures */
+        span:contains("Ar"),
+        span:contains("h"),
+        strong:contains("Ar"),
+        strong:contains("h") {
+            font-weight: 800 !important;
+        }
+
+        /* Dans fond blanc - chiffres en dark */
+        div[style*="background"] span:contains("Ar"),
+        div[style*="background"] span:contains("h") {
+            color: #1e293b !important;
+        }
+
+        /* === 8. MENU LABELS (bonus fix) === */
+
+        .nav-menu-label {
+            color: #e2e8f0 !important;
+            font-weight: 600 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* === 9. FORME GÉNÉRALE - Si rien ne marche === */
+
+        /* Target direct par ID */
+        #employeeStatusResults p {
+            color: #e2e8f0 !important;
+        }
+
+        #employeeStatusResults div[style] p {
+            color: #1e293b !important;
+        }
+
+        /* === 10. UTILITY CLASS - Ajoutez ceci si besoin === */
+
+        .text-dark-force {
+            color: #1e293b !important;
+            text-shadow: none !important;
+            font-weight: 700 !important;
+        }
+
+        .text-light-force {
+            color: #f1f5f9 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+            font-weight: 600 !important;
+        }
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -7384,6 +7532,30 @@
             container.innerHTML = tableHTML;
         }
 
+        function fixTextVisibility() {
+            // Target tous les divs avec background clair
+            const lightBgDivs = document.querySelectorAll('[style*="background"]');
+            
+            lightBgDivs.forEach(div => {
+                const bgColor = window.getComputedStyle(div).backgroundColor;
+                
+                // Si le background est clair (rgb > 200)
+                if (bgColor) {
+                    const rgb = bgColor.match(/\d+/g);
+                    if (rgb && parseInt(rgb[0]) > 200) {
+                        // Force tous les enfants en dark
+                        div.querySelectorAll('*').forEach(el => {
+                            el.style.color = '#1e293b';
+                            el.style.textShadow = 'none';
+                            el.style.fontWeight = '700';
+                        });
+                    }
+                }
+            });
+        }
+
+        // Appeler après l'affichage
+        setTimeout(fixTextVisibility, 100);
 
 
 
@@ -7665,6 +7837,7 @@
         // ===============================
         document.addEventListener('DOMContentLoaded', function() {
             displayPayments();
+            setInterval(fixTextVisibility, 1000); // Check toutes les secondes
             // Set current date for advance form
             const today = new Date().toISOString().split('T')[0];
             const advanceDateEl = document.getElementById('advanceDate');
