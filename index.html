@@ -1872,6 +1872,193 @@
             color: #6750A4 !important;
         }
 
+        /* ========================================
+        HAMBURGER MENU NAVIGATION
+        ======================================== */
+
+        /* Bouton hamburger */
+        .hamburger-btn {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 3001;
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 50px;
+            height: 50px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(129, 140, 248, 0.6);
+        }
+
+        .hamburger-btn span {
+            width: 24px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Animation quand ouvert */
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translateY(8px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translateY(-8px);
+        }
+
+        /* Menu latéral */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(
+                165deg,
+                rgba(51, 65, 85, 0.95) 0%,
+                rgba(30, 41, 59, 0.98) 100%
+            );
+            backdrop-filter: blur(30px);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.5);
+            z-index: 3000;
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 80px 0 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-menu.active {
+            left: 0;
+        }
+
+        /* Overlay fond sombre */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2999;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-overlay.active {
+            display: block;
+        }
+
+        /* Items menu */
+        .nav-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+        }
+
+        .nav-menu-item:hover {
+            background: rgba(129, 140, 248, 0.15);
+            border-left-color: rgba(129, 140, 248, 0.8);
+        }
+
+        .nav-menu-item.active {
+            background: rgba(129, 140, 248, 0.25);
+            border-left-color: #818cf8;
+        }
+
+        .nav-menu-item .material-icons {
+            font-size: 28px;
+            color: #93c5fd;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu-item:hover .material-icons,
+        .nav-menu-item.active .material-icons {
+            color: #60a5fa;
+            transform: scale(1.1);
+        }
+
+        /* Tooltip */
+        .nav-tooltip {
+            position: absolute;
+            left: 70px;
+            background: rgba(30, 41, 59, 0.95);
+            color: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .nav-menu-item:hover .nav-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Scrollbar menu */
+        .nav-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .nav-menu::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: rgba(129, 140, 248, 0.4);
+            border-radius: 3px;
+        }
+
+        /* Cacher l'ancien nav-tabs */
+        .nav-tabs {
+            display: none !important;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                top: 16px;
+                left: 16px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .nav-menu {
+                width: 250px;
+            }
+        }
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -1902,6 +2089,89 @@
             <!-- Ho fenoina amin'ny alalan'ny JavaScript ity fizarana ity -->
         </div>
         <!-- ======================================================================= -->
+
+        <!-- Hamburger Menu Button -->
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleNavMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- Overlay -->
+        <div class="nav-overlay" id="navOverlay" onclick="toggleNavMenu()"></div>
+
+        <!-- Menu Navigation -->
+        <div class="nav-menu" id="navMenu">
+            <div class="nav-menu-item active" onclick="navigateToSection('dashboard')">
+                <span class="material-icons">dashboard</span>
+                <div class="nav-tooltip">Tableau de Bord</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('employees')">
+                <span class="material-icons">people</span>
+                <div class="nav-tooltip">Employés</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('groups')">
+                <span class="material-icons">groups</span>
+                <div class="nav-tooltip">Groupes</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('employee-stats')">
+                <span class="material-icons">person_search</span>
+                <div class="nav-tooltip">Statut Employé</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('attendance')">
+                <span class="material-icons">schedule</span>
+                <div class="nav-tooltip">Présence</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('qr-presence')">
+                <span class="material-icons">qr_code</span>
+                <div class="nav-tooltip">Présence QR</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('face-presence')">
+                <span class="material-icons">face</span>
+                <div class="nav-tooltip">Pointage Facial</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('qr-codes')">
+                <span class="material-icons">qr_code_2</span>
+                <div class="nav-tooltip">Codes QR</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('advances')">
+                <span class="material-icons">savings</span>
+                <div class="nav-tooltip">Avances</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('payroll')">
+                <span class="material-icons">payments</span>
+                <div class="nav-tooltip">Paie</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('stc')">
+                <span class="material-icons">exit_to_app</span>
+                <div class="nav-tooltip">Solde de Tout Compte</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('payments')">
+                <span class="material-icons">history</span>
+                <div class="nav-tooltip">Paiements</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('reports')">
+                <span class="material-icons">analytics</span>
+                <div class="nav-tooltip">Rapports</div>
+            </div>
+            
+            <div class="nav-menu-item" onclick="navigateToSection('estimation')">
+                <span class="material-icons">request_quote</span>
+                <div class="nav-tooltip">Estimation</div>
+            </div>
+        </div>
 
 
         <div class="nav-tabs">
@@ -9825,6 +10095,32 @@
                 console.error('❌ Erreur:', error);
                 alert('Erreur: ' + error.message);
             }
+        }
+
+        // Toggle hamburger menu
+        function toggleNavMenu() {
+            const menu = document.getElementById('navMenu');
+            const overlay = document.getElementById('navOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            btn.classList.toggle('active');
+        }
+
+        // Navigate to section
+        function navigateToSection(sectionId) {
+            // Hanakatona ny menu
+            toggleNavMenu();
+            
+            // Hanova ny active item
+            document.querySelectorAll('.nav-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Hiantso ny showSection fonction
+            showSection(sectionId);
         }
 
     </script>
