@@ -1972,7 +1972,7 @@
         .nav-menu-item {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             padding: 14px 16px;
             margin-bottom: 8px;
             cursor: pointer;
@@ -2013,7 +2013,7 @@
 
         /* Icon */
         .nav-menu-item .material-icons {
-            font-size: 26px;
+            font-size: 24px;
             color: #cbd5e1;
             transition: all 0.3s ease;
             flex-shrink: 0;
@@ -2029,10 +2029,13 @@
         .nav-menu-label {
             font-size: 15px;
             font-weight: 600;
-            color: #e2e8f0;
+            color: #e2e8f0 !important;
             white-space: nowrap;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            display: block;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            display: inline-block !important;
+            opacity: 1 !important;         
+            visibility: visible !important;  
+            margin-left: 12px;
         }
 
         .nav-menu-item:hover .nav-menu-label,
