@@ -4488,6 +4488,10 @@
             }
         }
 
+        // =====================================================
+        // === AUDIO FUNCTIONS - VERSION FINALE ===
+        // =====================================================
+
         // Ity no mamorona sy mandefa ny feo "Tritone"
         function playSuccessSound() {
             if (!audioContext) {
@@ -4531,57 +4535,104 @@
             }
         }
 
+        // =====================================================
+        // PLAY ERROR SOUND - efateo.mp3
+        // =====================================================
         function playErrorSound() {
             try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
+                // ✅ FANITSIANA 1: Hampiasa audio player miaraka amin'ny error handling
+                let audioPlayer = document.getElementById('audioPlayerError');
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
+                if (!audioPlayer) {
+                    audioPlayer = new Audio('efateo.mp3');
+                    audioPlayer.id = 'audioPlayerError';
+                    audioPlayer.style.display = 'none';
+                    audioPlayer.volume = 0.7; // 70% volume
+                    document.body.appendChild(audioPlayer);
+                }
                 
-                oscillator.frequency.value = 300;
-                oscillator.type = 'sawtooth';
+                // Reset position
+                audioPlayer.currentTime = 0;
                 
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                // Play with promise handling
+                const playPromise = audioPlayer.play();
                 
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn('⚠️ Erreur lecture efateo.mp3:', error);
+                        
+                        // Fallback: Son error synthétique
+                        if (audioContext && audioContext.state === 'running') {
+                            const now = audioContext.currentTime;
+                            const oscillator = audioContext.createOscillator();
+                            const gainNode = audioContext.createGain();
+                            
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioContext.destination);
+                            
+                            oscillator.frequency.value = 300;
+                            oscillator.type = 'sawtooth';
+                            
+                            gainNode.gain.setValueAtTime(0.3, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                            
+                            oscillator.start(now);
+                            oscillator.stop(now + 0.5);
+                        }
+                    });
+                }
+                
             } catch (e) {
-                console.log('Audio non supporté');
+                console.error('❌ Audio error:', e);
             }
         }
 
+        // =====================================================
+        // PLAY AU SUIVANT SOUND - suivant.mp3
+        // =====================================================
         function playAuSuivantSound() {
-            // Hamarino aloha raha efa noforonina ilay singa audio
-            let audioPlayer = document.getElementById('audioPlayerAuSuivant');
-            
-            if (!audioPlayer) {
-                // Raha mbola tsy misy dia amboary izy ary afeno.
-                // Ovaina eto ny anaran'ilay rakitra feo mba hifanaraka amin'ny anao.
-                audioPlayer = new Audio('suivant.mp3'); 
-                audioPlayer.id = 'audioPlayerAuSuivant';
-                audioPlayer.style.display = 'none'; // Afenina tsy ho hitan'ny maso
-                document.body.appendChild(audioPlayer);
-            }
+            try {
+                // Hamarino aloha raha efa noforonina ilay singa audio
+                let audioPlayer = document.getElementById('audioPlayerAuSuivant');
+                
+                if (!audioPlayer) {
+                    // Raha mbola tsy misy dia amboary izy ary afeno.
+                    audioPlayer = new Audio('suivant.mp3'); 
+                    audioPlayer.id = 'audioPlayerAuSuivant';
+                    audioPlayer.style.display = 'none';
+                    audioPlayer.volume = 0.8; // 80% volume
+                    document.body.appendChild(audioPlayer);
+                }
 
-            // Mba hahafahana mamerina mandefa azy avy hatrany raha vao avy nandeha teo
-            audioPlayer.currentTime = 0; 
-            
-            // Alefa ny feo
-            const playPromise = audioPlayer.play();
+                // Mba hahafahana mamerina mandefa azy avy hatrany raha vao avy nandeha teo
+                audioPlayer.currentTime = 0; 
+                
+                // Alefa ny feo
+                const playPromise = audioPlayer.play();
 
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.error("Tsy afaka nandefa ny feo 'suivant.mp3':", error);
-                    // Ity dia fomba iray hamahana ny olan'ny navigateur izay manakana ny feo mandeha ho azy
-                    if (typeof audioContext !== 'undefined' && audioContext.state === 'suspended') {
-                        audioContext.resume().then(() => {
-                            audioPlayer.play();
-                        });
-                    }
-                });
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn("⚠️ Tsy afaka nandefa ny feo 'suivant.mp3':", error);
+                        
+                        // Fallback: Tritone sound
+                        if (audioContext && audioContext.state === 'suspended') {
+                            audioContext.resume().then(() => {
+                                audioPlayer.play().catch(() => {
+                                    // Si toujours erreur, utiliser playSuccessSound
+                                    playSuccessSound();
+                                });
+                            });
+                        } else {
+                            // Utiliser le son synthétique
+                            playSuccessSound();
+                        }
+                    });
+                }
+                
+            } catch (e) {
+                console.error('❌ Audio error:', e);
+                // Fallback final
+                playSuccessSound();
             }
         }
 
@@ -6023,26 +6074,35 @@
                     
                     // ===== SI < 30 MINUTES → REFUSER =====
                     else {
-                        playErrorSound();
+                        console.log('❌ < 30 min → Refusé');
+                        
+                        playErrorSound(); // ← AMPIANA
                         
                         showScanResult(
-                            `<strong>❌ DÉJÀ ENREGISTRÉ</strong><br>
+                            `<strong>❌ POINTAGE TROP RAPPROCHÉ</strong><br>
                             <span style="font-size: 1.1em; font-weight: 600;">${employee.name}</span><br>
-                            <div style="font-size: 0.9em; margin-top: 8px; line-height: 1.5;">
-                                Arrivée: <strong>${existingAttendance.arrivee}</strong><br>
-                                Départ: <strong>${existingAttendance.depart}</strong>
+                            <div style="font-size: 0.9em; margin-top: 12px; line-height: 1.6;">
+                                <div style="color: #cbd5e1;">Derniers pointages:</div>
+                                <div style="margin: 6px 0;">
+                                    Arrivée: <strong style="color: #10b981;">${existingAttendance.arrivee}</strong><br>
+                                    Départ: <strong style="color: #ef4444;">${existingAttendance.depart}</strong>
+                                </div>
                             </div>
-                            <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; font-size: 0.85em;">
-                                ⏱️ Trop tôt pour modifier<br>
-                                <strong>${minutesSinceDeparture} min</strong> depuis le départ<br>
-                                (30 min minimum requis)
+                            <div style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; border-left: 3px solid #ef4444;">
+                                <div style="font-size: 0.85em; color: #fca5a5;">
+                                    ⏱️ <strong>Seulement ${minutesSinceDeparture} min</strong> depuis le départ
+                                </div>
+                                <div style="font-size: 0.8em; color: #fca5a5; margin-top: 4px;">
+                                    Minimum requis: <strong>30 minutes</strong>
+                                </div>
                             </div>`,
                             'error'
                         );
                         
-                        setTimeout(() => stopQRScan(), 3500);
+                        setTimeout(() => stopQRScan(), 4000);
                         return false;
                     }
+
                 }
                 
             } catch (error) {
@@ -12369,21 +12429,176 @@
                         }
                     }
                     
-                    // ===== SI < 30 MINUTES → REFUSER =====
+                    // ===== SI < 30 MINUTES → REFUSER AVEC MODAL ROUGE =====
                     else {
                         console.log('❌ < 30 min → Refusé');
                         
-                        showAlert(
-                            `❌ POINTAGE TROP RAPPROCHÉ\n${employee.name}\n\n` +
-                            `Arrivée: ${existingAttendance.arrivee}\n` +
-                            `Départ: ${existingAttendance.depart}\n\n` +
-                            `⏱️ Seulement ${minutesSinceDeparture} min depuis le départ\n` +
-                            `(Minimum requis: 30 minutes)`,
-                            'error'
-                        );
+                        // ===== PLAY ERROR SOUND efateo.mp3 =====
+                        playErrorSound();
+                        
+                        // ===== AFFICHER MODAL ROUGE CUSTOM =====
+                        const errorModal = document.createElement('div');
+                        errorModal.style.cssText = `
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: rgba(0, 0, 0, 0.85);
+                            z-index: 99999;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 20px;
+                            animation: fadeIn 0.3s ease;
+                        `;
+                        
+                        errorModal.innerHTML = `
+                            <style>
+                                @keyframes fadeIn {
+                                    from { opacity: 0; }
+                                    to { opacity: 1; }
+                                }
+                                @keyframes shake {
+                                    0%, 100% { transform: translateX(0); }
+                                    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+                                    20%, 40%, 60%, 80% { transform: translateX(10px); }
+                                }
+                                .error-modal-content {
+                                    animation: shake 0.5s ease;
+                                }
+                            </style>
+                            <div class="error-modal-content" style="
+                                background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+                                border: 3px solid #fca5a5;
+                                padding: 32px;
+                                border-radius: 20px;
+                                max-width: 450px;
+                                width: 90%;
+                                text-align: center;
+                                box-shadow: 0 20px 60px rgba(220, 38, 38, 0.6),
+                                            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+                            ">
+                                <!-- Icône warning animée -->
+                                <div style="
+                                    width: 80px;
+                                    height: 80px;
+                                    margin: 0 auto 20px;
+                                    background: rgba(254, 202, 202, 0.2);
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    animation: pulse 2s infinite;
+                                ">
+                                    <span class="material-icons" style="
+                                        font-size: 48px;
+                                        color: #fef2f2;
+                                    ">error</span>
+                                </div>
+                                
+                                <style>
+                                    @keyframes pulse {
+                                        0%, 100% { transform: scale(1); opacity: 1; }
+                                        50% { transform: scale(1.1); opacity: 0.8; }
+                                    }
+                                </style>
+                                
+                                <!-- Titre -->
+                                <h2 style="
+                                    color: #fef2f2;
+                                    font-size: 1.5rem;
+                                    font-weight: 800;
+                                    margin: 0 0 16px 0;
+                                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                                ">⚠️ POINTAGE TROP RAPPROCHÉ</h2>
+                                
+                                <!-- Employé -->
+                                <div style="
+                                    background: rgba(254, 202, 202, 0.15);
+                                    padding: 16px;
+                                    border-radius: 12px;
+                                    margin-bottom: 20px;
+                                    border: 1px solid rgba(254, 202, 202, 0.3);
+                                ">
+                                    <div style="
+                                        color: #fef2f2;
+                                        font-size: 1.3rem;
+                                        font-weight: 700;
+                                        margin-bottom: 12px;
+                                    ">${employee.name}</div>
+                                    
+                                    <div style="
+                                        color: #fecaca;
+                                        font-size: 0.95rem;
+                                        line-height: 1.8;
+                                    ">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span>Arrivée:</span>
+                                            <strong style="color: #fef2f2;">${existingAttendance.arrivee}</strong>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Départ:</span>
+                                            <strong style="color: #fef2f2;">${existingAttendance.depart}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Message timing -->
+                                <div style="
+                                    background: rgba(153, 27, 27, 0.4);
+                                    padding: 16px;
+                                    border-radius: 12px;
+                                    border-left: 4px solid #fca5a5;
+                                    margin-bottom: 24px;
+                                ">
+                                    <div style="
+                                        color: #fef2f2;
+                                        font-size: 1.1rem;
+                                        font-weight: 700;
+                                        margin-bottom: 8px;
+                                    ">
+                                        ⏱️ Seulement ${minutesSinceDeparture} minute${minutesSinceDeparture > 1 ? 's' : ''}
+                                    </div>
+                                    <div style="
+                                        color: #fecaca;
+                                        font-size: 0.9rem;
+                                    ">
+                                        Minimum requis: <strong style="color: #fef2f2;">30 minutes</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bouton fermer -->
+                                <button onclick="this.closest('[style*=fixed]').remove();" style="
+                                    background: rgba(254, 202, 202, 0.2);
+                                    color: #fef2f2;
+                                    border: 2px solid #fca5a5;
+                                    padding: 14px 32px;
+                                    border-radius: 12px;
+                                    font-size: 1rem;
+                                    font-weight: 700;
+                                    cursor: pointer;
+                                    transition: all 0.3s ease;
+                                    width: 100%;
+                                " onmouseover="this.style.background='rgba(254, 202, 202, 0.3)'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='rgba(254, 202, 202, 0.2)'; this.style.transform='scale(1)';">
+                                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">close</span>
+                                    Fermer
+                                </button>
+                            </div>
+                        `;
+                        
+                        document.body.appendChild(errorModal);
+                        
+                        // Auto-fermer après 5 secondes
+                        setTimeout(() => {
+                            if (errorModal.parentNode) {
+                                errorModal.remove();
+                            }
+                        }, 5000);
                         
                         return false;
                     }
+
                 }
                 
             } catch (error) {
