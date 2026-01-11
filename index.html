@@ -2687,6 +2687,33 @@
             }
         }
 
+        /*========CARD STAT PRÉSENCE========*/
+        /* Stat card 3 dots button hover */
+        .stat-card {
+            position: relative;
+        }
+
+        /* Transition smooth pour count */
+        .stat-content h3 {
+            transition: transform 0.2s ease;
+        }
+
+        /* Dropdown menu animation */
+        #scanMethodMenu {
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /*=========================================*/
     </style>
 
     <!-- Face Recognition Library -->
@@ -2904,16 +2931,78 @@
                     </div>
                 </div>
                 
-                <!-- ... Ny tohin'ny stat-card hafa ... -->
+                <!-- Card Scans avec Menu Dropdown -->
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <span class="material-icons">qr_code</span>
+                        <span class="material-icons" id="scanMethodIcon">qr_code_scanner</span>
                     </div>
                     <div class="stat-content">
                         <h3 id="qrScansToday">0</h3>
-                        <p>Scans QR Aujourd'hui</p>
+                        <p id="scanMethodLabel">Scans Aujourd'hui</p>
+                    </div>
+                    
+                    <!-- 3 DOTS MENU -->
+                    <div style="position: absolute; top: 12px; right: 12px;">
+                        <button onclick="toggleScanMethodMenu(event)" 
+                                style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;"
+                                onmouseover="this.style.background='rgba(0,0,0,0.1)'"
+                                onmouseout="this.style.background='none'">
+                            <span class="material-icons" style="color: var(--md-sys-color-on-surface); font-size: 20px;">more_vert</span>
+                        </button>
+                        
+                        <!-- DROPDOWN MENU -->
+                        <div id="scanMethodMenu" 
+                            style="display: none; position: absolute; top: 32px; right: 0; 
+                                    background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                    min-width: 200px; z-index: 1000; overflow: hidden;">
+                            
+                            <div onclick="filterScanMethod('all')" 
+                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
+                                onmouseover="this.style.background='#f3f4f6'"
+                                onmouseout="this.style.background='white'">
+                                <span class="material-icons" style="color: #6750A4; font-size: 20px;">apps</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 14px;">Tous</div>
+                                    <div style="font-size: 11px; color: #6b7280;" id="allCount">0 pointages</div>
+                                </div>
+                            </div>
+                            
+                            <div onclick="filterScanMethod('qr')" 
+                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
+                                onmouseover="this.style.background='#f3f4f6'"
+                                onmouseout="this.style.background='white'">
+                                <span class="material-icons" style="color: #6750A4; font-size: 20px;">qr_code_scanner</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 14px;">QR Code</div>
+                                    <div style="font-size: 11px; color: #6b7280;" id="qrCount">0 scans</div>
+                                </div>
+                            </div>
+                            
+                            <div onclick="filterScanMethod('manual')" 
+                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
+                                onmouseover="this.style.background='#f3f4f6'"
+                                onmouseout="this.style.background='white'">
+                                <span class="material-icons" style="color: #f59e0b; font-size: 20px;">edit</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 14px;">Manuel</div>
+                                    <div style="font-size: 11px; color: #6b7280;" id="manualCount">0 entrées</div>
+                                </div>
+                            </div>
+                            
+                            <div onclick="filterScanMethod('facial')" 
+                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
+                                onmouseover="this.style.background='#f3f4f6'"
+                                onmouseout="this.style.background='white'">
+                                <span class="material-icons" style="color: #0ea5e9; font-size: 20px;">face</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 14px;">Facial</div>
+                                    <div style="font-size: 11px; color: #6b7280;" id="facialCount">0 reconnaissances</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
                 <div class="stat-card">
                     <div class="stat-icon">
                         <span class="material-icons">payments</span>
@@ -6395,46 +6484,44 @@
         // ===============================
         // STATS MODIFIÉES POUR QR
         // ===================================================
-        //  UPDATESTATS (VERSION 5 - KAJY MARINA MIARAKA AMIN'NY FAHARETANA)
-        // ===================================================
-        // ===================================================
-        //  UPDATESTATS (VERSION 6 - FANITSIANA ARAKA NY NANGATAHINA)
-        // ===================================================
+        
         function updateStats() {
             const today = new Date().toISOString().split('T')[0];
             const currentMonth = new Date().toISOString().slice(0, 7);
 
-            // --- Fizarana 1: Fandraisana Elements (Misy fanampiny) ---
+            // --- Fizarana 1: Fandraisana Elements ---
             const totalEmployeesEl = document.getElementById('totalEmployees');
-            const checkedInTodayEl = document.getElementById('checkedInToday'); // Element vaovao
+            const checkedInTodayEl = document.getElementById('checkedInToday');
             const presentTodayEl = document.getElementById('presentToday');
             const totalSalariesEl = document.getElementById('totalSalaries');
             const qrScansTodayEl = document.getElementById('qrScansToday');
 
-            // --- Fizarana 2: Kajy Statistika Fototra (Tsy miova) ---
+            // --- Fizarana 2: Kajy Statistika Fototra ---
             const totalEmployeeCount = employees.length;
-            if (totalEmployeesEl) totalEmployeesEl.textContent = totalEmployeeCount;
+            if (totalEmployeesEl) {
+                totalEmployeesEl.textContent = totalEmployeeCount;
+            }
 
-            // --- Fizarana 3: KAJY VAOVAO ARAKA NY FEPETRA ---
+            // --- Fizarana 3: KAJY PRÉSENCE ---
             const dayAttendance = attendance[today] || {};
             
-            // 3.1: Isaina ny mpiasa rehetra nanao "pointage" (nahavita arrivée sy départ)
+            // 3.1: Isaina ny mpiasa rehetra nanao pointage (arrivée sy départ)
             const checkedInCount = Object.values(dayAttendance).filter(att => {
                 return att && att.arrivee && att.depart;
             }).length;
 
-            // 3.2: Isaina ny mpiasa nahavita "journée complète" (>= 4 ora)
+            // 3.2: Isaina ny mpiasa nahavita journée complète (>= 4 ora)
             const MINIMUM_HOURS_FOR_FULL_DAY = 4;
             const completedPresenceCount = Object.values(dayAttendance).filter(att => {
                 if (!att || !att.arrivee || !att.depart) {
-                    return false; // Tsy isaina raha tsy feno
+                    return false;
                 }
                 const duration = calculateWorkDuration(att.arrivee, att.depart);
                 const durationInHours = duration.totalMinutes / 60;
                 return durationInHours >= MINIMUM_HOURS_FOR_FULL_DAY;
             }).length;
 
-            // --- Fizarana 4: Fampisehoana ny valiny eo amin'ny Dashboard ---
+            // Affichage
             if (checkedInTodayEl) {
                 checkedInTodayEl.textContent = checkedInCount;
             }
@@ -6442,23 +6529,70 @@
                 presentTodayEl.textContent = completedPresenceCount;
             }
 
-            // --- Fizarana 5: Kajy ny Scans QR (Tsy miova) ---
-            let qrScanCountToday = 0;
-            if (dayAttendance) {
-                qrScanCountToday = Object.values(dayAttendance).filter(att => att && att.method === 'QR').length;
-            }
+            // =====================================================
+            // FIZARANA VAOVAO: COUNT BY METHOD (QR/MANUEL/FACIAL)
+            // =====================================================
+            let qrCount = 0;
+            let manualCount = 0;
+            let facialCount = 0;
+            
+            Object.values(dayAttendance).forEach(att => {
+                if (!att || !att.arrivee) return; // Tsy isaina raha tsy misy arrivée
+                
+                const method = att.method || 'MANUAL'; // Default = MANUAL
+                
+                if (method === 'QR') {
+                    qrCount++;
+                } else if (method === 'FACIAL') {
+                    facialCount++;
+                } else {
+                    manualCount++;
+                }
+            });
+            
+            // Stockage global pour usage amin'ny dropdown menu
+            window.attendanceMethodCounts = {
+                qr: qrCount,
+                manual: manualCount,
+                facial: facialCount,
+                total: qrCount + manualCount + facialCount
+            };
+            
+            // =====================================================
+            // AFFICHAGE: Selon filtre actif
+            // =====================================================
             if (qrScansTodayEl) {
-                qrScansTodayEl.textContent = qrScanCountToday;
+                const currentFilter = window.currentMethodFilter || 'all';
+                
+                let displayCount = 0;
+                switch(currentFilter) {
+                    case 'qr':
+                        displayCount = qrCount;
+                        break;
+                    case 'manual':
+                        displayCount = manualCount;
+                        break;
+                    case 'facial':
+                        displayCount = facialCount;
+                        break;
+                    case 'all':
+                    default:
+                        displayCount = qrCount + manualCount + facialCount;
+                        break;
+                }
+                
+                qrScansTodayEl.textContent = displayCount;
             }
+            
+            // Update counts ao @ dropdown menu (raha misokatra)
+            updateMethodCounts();
 
-            // --- Fizarana 6: Kajy vola sy grafika (Tsy miova, fa mampiasa ny kajy vaovao) ---
-            // Ny tohin'ny fonction dia tsy misy fiovana lehibe, fa efa miankina amin'ny `countPresenceDays` izay hamboarintsika manaraka.
+            // --- Fizarana 6: Kajy Salaires ---
             let totalNetSalariesThisMonth = 0;
             const [year, month] = currentMonth.split('-');
             const daysInMonth = getDaysInMonth(parseInt(year), parseInt(month));
             
             employees.forEach(employee => {
-                // Ity fonction ity no hamboarintsika manaraka mba hanaraka ny lojika vaovao
                 const workDays = countPresenceDays(employee.id, currentMonth); 
                 const dailySalary = employee.salary / daysInMonth;
                 const grossSalary = dailySalary * workDays;
@@ -6474,10 +6608,11 @@
             }
 
             // Havaozina ny grafika raha eo amin'ny dashboard
-            if (document.getElementById('dashboard').classList.contains('active')) {
+            if (document.getElementById('dashboard')?.classList.contains('active')) {
                 displayDashboardCharts();
             }
         }
+
 
 
 
@@ -11669,6 +11804,107 @@
         function clearQRSearch() {
             document.getElementById('qrSearchInput').value = '';
             filterQRCodes();
+        }
+
+        // =====================================================
+        // === FONCTIONS FILTRE MÉTHODE SCAN ===
+        // =====================================================
+
+        // Variable globale
+        window.currentMethodFilter = 'all';
+
+        // Toggle menu
+        function toggleScanMethodMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('scanMethodMenu');
+            
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                updateMethodCounts();
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // Close menu si click ailleurs
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('scanMethodMenu');
+            if (menu && menu.style.display === 'block') {
+                if (!e.target.closest('.stat-card')) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
+
+        // Update counts dans le menu
+        function updateMethodCounts() {
+            const counts = window.attendanceMethodCounts || {qr: 0, manual: 0, facial: 0, total: 0};
+            
+            const allEl = document.getElementById('allCount');
+            const qrEl = document.getElementById('qrCount');
+            const manualEl = document.getElementById('manualCount');
+            const facialEl = document.getElementById('facialCount');
+            
+            if (allEl) allEl.textContent = `${counts.total} pointage${counts.total > 1 ? 's' : ''}`;
+            if (qrEl) qrEl.textContent = `${counts.qr} scan${counts.qr > 1 ? 's' : ''}`;
+            if (manualEl) manualEl.textContent = `${counts.manual} entrée${counts.manual > 1 ? 's' : ''}`;
+            if (facialEl) facialEl.textContent = `${counts.facial} reconnaissance${counts.facial > 1 ? 's' : ''}`;
+        }
+
+        // Filtrer selon méthode
+        function filterScanMethod(method) {
+            window.currentMethodFilter = method;
+            
+            const counts = window.attendanceMethodCounts || {qr: 0, manual: 0, facial: 0, total: 0};
+            const countEl = document.getElementById('qrScansToday');
+            const iconEl = document.getElementById('scanMethodIcon');
+            const labelEl = document.getElementById('scanMethodLabel');
+            
+            // Update count
+            if (countEl) {
+                if (method === 'all') {
+                    countEl.textContent = counts.total;
+                } else if (method === 'qr') {
+                    countEl.textContent = counts.qr;
+                } else if (method === 'manual') {
+                    countEl.textContent = counts.manual;
+                } else if (method === 'facial') {
+                    countEl.textContent = counts.facial;
+                }
+            }
+            
+            // Update icon & label
+            if (iconEl && labelEl) {
+                if (method === 'all') {
+                    iconEl.textContent = 'apps';
+                    iconEl.style.color = '#6750A4';
+                    labelEl.textContent = 'Tous Pointages';
+                } else if (method === 'qr') {
+                    iconEl.textContent = 'qr_code_scanner';
+                    iconEl.style.color = '#6750A4';
+                    labelEl.textContent = 'Scans QR';
+                } else if (method === 'manual') {
+                    iconEl.textContent = 'edit';
+                    iconEl.style.color = '#f59e0b';
+                    labelEl.textContent = 'Entrées Manuel';
+                } else if (method === 'facial') {
+                    iconEl.textContent = 'face';
+                    iconEl.style.color = '#0ea5e9';
+                    labelEl.textContent = 'Reconnaissance Facial';
+                }
+            }
+            
+            // Close menu
+            const menu = document.getElementById('scanMethodMenu');
+            if (menu) menu.style.display = 'none';
+            
+            // Animation feedback
+            if (countEl) {
+                countEl.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    countEl.style.transform = 'scale(1)';
+                }, 200);
+            }
         }
 
     </script>
