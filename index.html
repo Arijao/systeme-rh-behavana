@@ -7402,7 +7402,8 @@
             });
         }
 
-
+        const MINIMUM_HOURS_IN_MINUTES = 8 * 60;
+        const HALF_DAY_IN_MINUTES = 4 * 60;
 
         // 🔍 Statut employé par jour
         // ===================================================
@@ -7427,8 +7428,7 @@
             const [year, monthNum] = month.split('-');
             const daysInMonth = getDaysInMonth(parseInt(year), parseInt(monthNum));
 
-            const MINIMUM_HOURS_IN_MINUTES = 8 * 60;
-            const HALF_DAY_IN_MINUTES = 4 * 60;
+            
 
             let totalMonthlyMinutes = 0;
             let dailyDetails = [];
