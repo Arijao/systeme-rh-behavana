@@ -2585,6 +2585,53 @@
             font-weight: 600 !important;
         }
 
+        /* Badge Méthode Présence */
+        .method-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .method-badge.qr {
+            background: #6750A420;
+            color: #6750A4;
+        }
+
+        .method-badge.facial {
+            background: #0ea5e920;
+            color: #0ea5e9;
+        }
+
+        .method-badge.manual {
+            background: #f59e0b20;
+            color: #f59e0b;
+        }
+
+        .method-badge .material-icons {
+            font-size: 16px;
+        }
+
+        /* Animation fade-in pour les nouveaux items */
+        .attendance-item {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -6864,8 +6911,6 @@
             const container = document.getElementById('attendanceList');
             const selectedDate = document.getElementById('attendanceDate').value;
             const searchTerm = document.getElementById('attendanceEmployeeSearch').value.toLowerCase();
-            
-            // --- DINGANA VAOVAO: Alaina ny sandan'ny sivana vondrona ---
             const groupFilter = document.getElementById('attendanceGroupFilter').value;
 
             if (!selectedDate) {
@@ -6880,7 +6925,7 @@
 
             let activeEmployees = employees.filter(e => e.status !== 'inactif');
 
-            // --- DINGANA VAOVAO: Ampiharina ny sivana vondrona ---
+            // Sivana vondrona
             if (groupFilter && groupFilter !== 'all') {
                 activeEmployees = activeEmployees.filter(emp => emp.groupId === groupFilter);
             }
@@ -6890,15 +6935,43 @@
                 emp.position.toLowerCase().includes(searchTerm)
             );
 
-            const totalItems = filteredEmployees.length;
+            // ============================================
+            // === TRI FIFO: Voalohany tonga eo ambony ===
+            // ============================================
+            const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+                const aPresence = attendance[selectedDate][a.id];
+                const bPresence = attendance[selectedDate][b.id];
+                
+                // Hamarino raha misy arrivée (na boolean na object)
+                const aHasArrival = aPresence && (typeof aPresence === 'object' ? aPresence.arrivee : true);
+                const bHasArrival = bPresence && (typeof bPresence === 'object' ? bPresence.arrivee : true);
+                
+                // 1. Présents eo ambony
+                if (aHasArrival && !bHasArrival) return -1;
+                if (!aHasArrival && bHasArrival) return 1;
+                
+                // 2. Raha samy présent → Tri par heure (voalohany tonga eo ambony)
+                if (aHasArrival && bHasArrival) {
+                    if (typeof aPresence === 'object' && aPresence.arrivee && 
+                        typeof bPresence === 'object' && bPresence.arrivee) {
+                        return aPresence.arrivee.localeCompare(bPresence.arrivee);
+                    }
+                }
+                
+                // 3. Raha samy absent → Tri par nom
+                return a.name.localeCompare(b.name);
+            });
+
+            const totalItems = sortedEmployees.length;
             const totalPages = Math.ceil(totalItems / attendanceItemsPerPage);
 
             if (attendanceCurrentPage > totalPages) {
                 attendanceCurrentPage = totalPages > 0 ? totalPages : 1;
             }
+            
             const startIndex = (attendanceCurrentPage - 1) * attendanceItemsPerPage;
             const endIndex = startIndex + attendanceItemsPerPage;
-            const paginatedEmployees = filteredEmployees.slice(startIndex, endIndex);
+            const paginatedEmployees = sortedEmployees.slice(startIndex, endIndex);
 
             if (paginatedEmployees.length === 0) {
                 container.innerHTML = `<p style="text-align: center; padding: 20px;">Aucun employé trouvé pour les filtres sélectionnés.</p>`;
@@ -6910,6 +6983,22 @@
                     const isDetailedPresence = (typeof presenceData === 'object' && presenceData !== null && presenceData.arrivee);
                     const group = groups.find(g => g.id === employee.groupId);
                     const groupName = group ? group.name : "<i>Sans groupe</i>";
+
+                    // ============================================
+                    // === BADGE MÉTHODE (Vaovao) ===
+                    // ============================================
+                    let methodBadge = '';
+                    if (isDetailedPresence) {
+                        const method = presenceData.method || 'MANUAL';
+                        
+                        if (method === 'QR') {
+                            methodBadge = '<span class="material-icons" style="font-size: 14px; vertical-align: middle; color: #6750A4; margin-left: 8px;">qr_code_scanner</span><span style="font-size: 12px; color: #6750A4; font-weight: 600;">QR</span>';
+                        } else if (method === 'FACIAL') {
+                            methodBadge = '<span class="material-icons" style="font-size: 14px; vertical-align: middle; color: #0ea5e9; margin-left: 8px;">face</span><span style="font-size: 12px; color: #0ea5e9; font-weight: 600;">FACIAL</span>';
+                        } else {
+                            methodBadge = '<span class="material-icons" style="font-size: 14px; vertical-align: middle; color: #f59e0b; margin-left: 8px;">edit</span><span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Manuel</span>';
+                        }
+                    }
 
                     return `
                         <div class="attendance-item">
@@ -6939,7 +7028,9 @@
                                 <div id="detailed-att-${employee.id}" style="display: ${isDetailedPresence ? 'block' : 'none'};">
                                     ${isDetailedPresence ? `
                                         <div style="font-size: 14px; margin-bottom: 8px;">
-                                            <span>Arrivée: <b>${formatDisplayTime(presenceData.arrivee)}</b></span> | <span>Départ: <b>${formatDisplayTime(presenceData.depart)}</b></span>
+                                            <span>Arrivée: <b>${formatDisplayTime(presenceData.arrivee)}</b></span> | 
+                                            <span>Départ: <b>${formatDisplayTime(presenceData.depart)}</b></span>
+                                            ${methodBadge}
                                         </div>
                                         ${!presenceData.depart ? `<button class="btn btn-warning" style="padding: 8px 12px;" onclick="recordTime('${employee.id}', 'depart', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">logout</span> Départ</button>` : ''}
                                         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="clearAttendance('${employee.id}', '${selectedDate}')"><span class="material-icons" style="font-size: 18px;">clear</span> Annuler</button>
@@ -7141,7 +7232,7 @@
 
 
                 // --- Fanitsiana ny recordTime ---
-        async function recordTime(employeeId, type, date) {
+        async function recordTime(employeeId, type, date, method = 'MANUAL') {
             const now = new Date();
             const currentTime = now.toLocaleTimeString('fr-FR', { hour12: false });
 
@@ -7155,7 +7246,11 @@
             }
 
             if (type === 'arrivee') {
-                attendance[date][employeeId] = { arrivee: currentTime, depart: null, method: 'MANUAL' };
+                attendance[date][employeeId] = { 
+                    arrivee: currentTime, 
+                    depart: null, 
+                    method: method  // ← MANDRAY METHOD AVY ANY IVELANY
+                };
                 showAlert(`${employees.find(e=>e.id===employeeId).name} marqué arrivé à ${currentTime}`, 'success');
             } else if (type === 'depart' && attendance[date][employeeId]) {
                 attendance[date][employeeId].depart = currentTime;
@@ -7166,6 +7261,7 @@
             displayAttendance();
             updateStats();
         }
+
 
         // --- Fanitsiana ny clearAttendance ---
         async function clearAttendance(employeeId, date) {
