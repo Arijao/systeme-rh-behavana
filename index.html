@@ -5538,38 +5538,28 @@
             try {
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
-                const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+                const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
                 
                 console.log(`📝 Traitement présence pour ${employee.name}`);
                 
-                // Charger les présences du jour
-                let attendanceData = await dbManager.get('attendance', today);
-                
-                if (!attendanceData) {
-                    attendanceData = {
-                        date: today,
-                        records: {}
-                    };
+                // === FANITSIANA ETO === 
+                // Charger depuis attendance directement (tsy IndexedDB)
+                if (!attendance[today]) {
+                    attendance[today] = {};
                 }
                 
-                // Vérifier l'état actuel
-                const existingAttendance = attendanceData.records[employee.id];
+                const existingAttendance = attendance[today][employee.id];
                 
                 // CAS 1: Première fois = ARRIVÉE
                 if (!existingAttendance) {
-                    attendanceData.records[employee.id] = {
-                        employeeId: employee.id,
-                        employeeName: employee.name,
+                    attendance[today][employee.id] = {
                         arrivee: currentTime,
                         depart: null,
-                        status: 'present',
                         method: 'QR'
                     };
                     
-                    await dbManager.put('attendance', attendanceData);
-                    
-                    // Enregistrer dans qr_attendance aussi
-                    await dbManager.put('qr_attendance', {
+                    // Enregistrer dans qr_attendance
+                    qrAttendance.push({
                         id: `${employee.id}_${now.getTime()}`,
                         employeeId: employee.id,
                         employeeName: employee.name,
@@ -5579,6 +5569,9 @@
                         time: currentTime
                     });
                     
+                    // Sauvegarder
+                    await saveAttendanceData();
+                    
                     playSuccessSound();
                     showScanResult(
                         `✅ <strong>ARRIVÉE ENREGISTRÉE</strong><br>
@@ -5587,7 +5580,7 @@
                         'success'
                     );
                     
-                    // Rafraîchir les affichages
+                    // Rafraîchir
                     if (document.getElementById('qr-presence').classList.contains('active')) {
                         displayQRAttendance();
                     }
@@ -5602,11 +5595,10 @@
                 }
                 // CAS 2: Deuxième fois = DÉPART
                 else if (existingAttendance && !existingAttendance.depart) {
-                    existingAttendance.depart = currentTime;
+                    attendance[today][employee.id].depart = currentTime;
                     
-                    await dbManager.put('attendance', attendanceData);
-                    
-                    await dbManager.put('qr_attendance', {
+                    // Enregistrer dans qr_attendance
+                    qrAttendance.push({
                         id: `${employee.id}_${now.getTime()}`,
                         employeeId: employee.id,
                         employeeName: employee.name,
@@ -5615,6 +5607,9 @@
                         type: 'departure',
                         time: currentTime
                     });
+                    
+                    // Sauvegarder
+                    await saveAttendanceData();
                     
                     playSuccessSound();
                     showScanResult(
@@ -5639,15 +5634,12 @@
                 }
                 // CAS 3: Déjà scanné 2 fois
                 else {
-                    const arrivalTime = existingAttendance.arrivee;
-                    const departureTime = existingAttendance.depart;
-                    
                     playErrorSound();
                     showScanResult(
                         `⚠️ <strong>DÉJÀ ENREGISTRÉ</strong><br>
                         ${employee.name}<br>
-                        Arrivée: <strong>${arrivalTime}</strong><br>
-                        Départ: <strong>${departureTime}</strong>`, 
+                        Arrivée: <strong>${existingAttendance.arrivee}</strong><br>
+                        Départ: <strong>${existingAttendance.depart}</strong>`, 
                         'error'
                     );
                     
@@ -5662,6 +5654,7 @@
                 return false;
             }
         }
+
 
 
 
