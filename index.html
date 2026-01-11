@@ -977,6 +977,109 @@
         }
         /* ======================================================================= */
 
+        /* === QR CARDS IMPROVED - LOKO MAZAVA === */
+        .qr-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.2);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        /* ANARANA - Mainty tsara mazava */
+        .qr-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a !important;
+            text-shadow: none !important;
+            letter-spacing: 0.3px;
+        }
+
+        /* POSTE - Gris mazava */
+        .qr-card p {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #334155 !important;
+            text-shadow: none !important;
+        }
+
+        /* Badge groupe */
+        .qr-card .group-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-dark) 100%);
+            color: white !important;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(103, 80, 164, 0.3);
+        }
+
+        /* QR Code container */
+        .qr-code-canvas {
+            margin: 16px 0;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 3px solid #e2e8f0;
+            display: inline-block;
+        }
+
+        .qr-code-canvas img {
+            display: block;
+            border-radius: 8px;
+        }
+
+        /* Buttons */
+        .qr-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .qr-actions .btn-icon {
+            background: var(--md-sys-color-primary);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(103, 80, 164, 0.3);
+        }
+
+        .qr-actions .btn-icon:hover {
+            background: var(--md-sys-color-primary-dark);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.4);
+        }
+
+        /* Animation fadeIn */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .qr-card {
+            animation: fadeIn 0.3s ease;
+        }
+
         /* QR Code Styles */
         .qr-container {
             display: grid;
@@ -2944,7 +3047,9 @@
         <div id="qr-codes" class="section">
             <div class="card">
                 <h2><span class="material-icons">qr_code_2</span>Codes QR des Employés</h2>
-                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                
+                <!-- Boutons actions -->
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
                     <button class="btn" onclick="generateAllQRCodes()">
                         <span class="material-icons">refresh</span>
                         Générer Tous les QR
@@ -2958,9 +3063,41 @@
                         Imprimer Tous
                     </button>
                 </div>
-                <div class="qr-container" id="qrContainer"></div>
+                
+                <!-- SEARCH BAR VAOVAO -->
+                <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="material-icons" style="color: var(--md-sys-color-primary); font-size: 24px;">search</span>
+                        <input 
+                            type="text" 
+                            id="qrSearchInput" 
+                            class="form-control" 
+                            placeholder="🔍 Rechercher par nom, poste ou groupe..."
+                            style="flex: 1; font-size: 15px; padding: 12px;"
+                            oninput="filterQRCodes()"
+                        >
+                        <button class="btn-icon" onclick="clearQRSearch()" title="Effacer la recherche" style="background: var(--md-sys-color-error); color: white;">
+                            <span class="material-icons">clear</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Compteur de résultats -->
+                    <div id="qrSearchResults" style="margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--md-sys-color-on-surface-variant); display: none;">
+                        <span class="material-icons" style="font-size: 18px; vertical-align: middle;">info</span>
+                        <span id="qrResultCount"></span>
+                    </div>
+                </div>
+                
+                <!-- Container QR Codes -->
+                <div class="qr-container" id="qrContainer">
+                    <p style="text-align: center; padding: 40px; color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons" style="font-size: 48px; opacity: 0.5;">qr_code_scanner</span><br>
+                        Cliquez sur "Générer Tous les QR" pour commencer
+                    </p>
+                </div>
             </div>
         </div>
+
 
         <!-- Attendance Section (Original) -->
         <div id="attendance" class="section">
@@ -4488,12 +4625,17 @@
                         });
 
                         // 3. Amboarina ny HTML mba hiseho eo amin'ny pejy
+                        // Ao anatin'ny loop for (const employee of employees)
+                        const group = groups.find(g => g.id === employee.groupId);
+                        const groupName = group ? group.name : 'Sans groupe';
+
                         qrCardsHTML.push(`
                             <div class="qr-card">
                                 <h4>${employee.name}</h4>
                                 <p>${employee.position}</p>
+                                <div class="group-badge">${groupName}</div>
                                 <div class="qr-code-canvas">
-                                    <img src="${dataURL}" alt="QR Code de ${employee.name}" width="${qrSettings.size}" height="${qrSettings.size}" />
+                                    <img src="${dataURL}" alt="QR Code de ${employee.name}" width="${qrSettings.size}" height="${qrSettings.size}">
                                 </div>
                                 <div class="qr-actions">
                                     <button class="btn-icon" onclick="downloadQRCode('${employee.id}')" title="Télécharger">
@@ -4505,6 +4647,7 @@
                                 </div>
                             </div>
                         `);
+
                     }
                 }
 
@@ -10539,6 +10682,51 @@
                     });
                 });
             });
+        }
+
+        // === FONCTION DE RECHERCHE INTELLIGENTE POUR QR CODES ===
+        function filterQRCodes() {
+            const searchTerm = document.getElementById('qrSearchInput').value.toLowerCase().trim();
+            const qrCards = document.querySelectorAll('.qr-card');
+            const resultsDiv = document.getElementById('qrSearchResults');
+            const countSpan = document.getElementById('qrResultCount');
+            
+            let visibleCount = 0;
+            
+            qrCards.forEach(card => {
+                const name = card.querySelector('h4')?.textContent.toLowerCase() || '';
+                const position = card.querySelector('p')?.textContent.toLowerCase() || '';
+                const groupBadge = card.querySelector('.group-badge')?.textContent.toLowerCase() || '';
+                
+                const matches = name.includes(searchTerm) || 
+                            position.includes(searchTerm) || 
+                            groupBadge.includes(searchTerm);
+                
+                if (matches) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.3s ease';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Afficher le compteur
+            if (searchTerm.length > 0) {
+                resultsDiv.style.display = 'block';
+                if (visibleCount === 0) {
+                    countSpan.innerHTML = `<span style="color: var(--md-sys-color-error);">❌ Aucun résultat trouvé pour "${searchTerm}"</span>`;
+                } else {
+                    countSpan.innerHTML = `✅ <strong>${visibleCount}</strong> résultat${visibleCount > 1 ? 's' : ''} trouvé${visibleCount > 1 ? 's' : ''}`;
+                }
+            } else {
+                resultsDiv.style.display = 'none';
+            }
+        }
+
+        function clearQRSearch() {
+            document.getElementById('qrSearchInput').value = '';
+            filterQRCodes();
         }
 
     </script>
