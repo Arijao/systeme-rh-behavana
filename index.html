@@ -2032,6 +2032,7 @@
             color: #e2e8f0;
             white-space: nowrap;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: block;
         }
 
         .nav-menu-item:hover .nav-menu-label,
@@ -7441,7 +7442,11 @@
                     duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
                     totalMonthlyMinutes += duration.totalMinutes;
                 }
-                dailyDetails.push({ dateStr, presenceData, duration });
+                dailyDetails.push({
+                    dateStr: dateStr,
+                    presenceData: presenceData,
+                    duration: duration
+                });
             }
 
             const totalMonthlyHours = Math.floor(totalMonthlyMinutes / 60);
@@ -7498,7 +7503,9 @@
 
 
             dailyDetails.forEach(detail => {
-                const [dateStr, presenceData, duration] = detail;
+                // OVANA: Destructure object fa tsy array
+                const { dateStr, presenceData, duration } = detail;
+                
                 const dayOfWeek = new Date(dateStr).getDay();
                 const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
                 
@@ -7533,6 +7540,7 @@
                     </tr>
                 `;
             });
+
 
             tableHTML += `
                         </tbody>
