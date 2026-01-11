@@ -12228,14 +12228,20 @@
         async function processFacialAttendance(employee) {
             try {
                 const now = new Date();
-                const today = now.toISOString().split('T')[0];
+                
+                // ===== FANITSIANA: LOCAL DATE (TSY UTC) =====
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const today = `${year}-${month}-${day}`; // ← LOCAL DATE!
+                
                 const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
                 
                 console.log('========================================');
                 console.log('👤 FACIAL - Traitement présence:', employee.name);
-                console.log('📅 DATE ACTUELLE:', today);
+                console.log('📅 DATE ACTUELLE:', today); // ← Tokony 2026-01-12
                 console.log('Date:', today, '| Heure:', currentTime);
-                
+        
                 // Initialiser si nécessaire
                 if (!attendance[today]) {
                     console.log('🆕 Création nouvelle entrée pour:', today);
