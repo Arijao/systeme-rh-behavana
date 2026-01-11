@@ -4706,6 +4706,8 @@
                             window.generatedQRCodes[employee.id] = {
                                 dataURL: blobURL,
                                 employeeName: employee.name,
+                                employeePosition: employee.position,
+                                employeeGroupId: employee.groupId,
                                 generated: new Date().toISOString(),
                                 size: qrSettings.size,
                                 color: qrSettings.color
@@ -4846,103 +4848,214 @@
         }
 
         // === PRINT DEPUIS MÉMOIRE ===
+        // === PRINT QR CODE - VERSION AMÉLIORÉE ===
         function printQRCodeMemory(employeeId) {
             try {
+                // 1. Vérifier que le QR code existe
                 if (!window.generatedQRCodes || !window.generatedQRCodes[employeeId]) {
                     showAlert('QR Code non trouvé. Veuillez régénérer les QR codes.', 'error');
                     return;
                 }
                 
+                // 2. Récupérer les infos employé
                 const employee = employees.find(emp => emp.id === employeeId);
                 if (!employee) {
                     showAlert('Employé non trouvé', 'error');
                     return;
                 }
                 
+                // 3. Récupérer les données QR et groupe
                 const qrData = window.generatedQRCodes[employeeId];
                 const group = groups.find(g => g.id === employee.groupId);
                 const groupName = group ? group.name : 'Sans groupe';
                 
+                // 4. Construire le HTML d'impression
                 const printContent = `
+                    <!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>QR Code - ${employee.name}</title>
                         <style>
-                            body {
+                            * {
                                 margin: 0;
-                                padding: 20px;
-                                font-family: Arial, sans-serif;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            
+                            body {
+                                font-family: 'Arial', sans-serif;
+                                background: #f8fafc;
+                                padding: 30px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                min-height: 100vh;
+                            }
+                            
+                            .qr-print-card {
+                                background: white;
+                                border: 3px solid #1e293b;
+                                padding: 35px;
+                                width: 420px;
+                                border-radius: 16px;
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                                 text-align: center;
                             }
-                            .qr-print-card {
-                                border: 2px solid #333;
+                            
+                            .header {
+                                border-bottom: 2px solid #e2e8f0;
+                                padding-bottom: 20px;
+                                margin-bottom: 25px;
+                            }
+                            
+                            h2 {
+                                font-size: 1.8em;
+                                color: #1e293b;
+                                margin-bottom: 10px;
+                                font-weight: 800;
+                                letter-spacing: 0.3px;
+                            }
+                            
+                            .position {
+                                font-size: 1.15em;
+                                color: #475569;
+                                font-weight: 600;
+                                margin-bottom: 15px;
+                            }
+                            
+                            .group-badge {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 8px;
+                                background: linear-gradient(135deg, #6750A4 0%, #5a4594 100%);
+                                color: white;
+                                padding: 10px 18px;
+                                border-radius: 25px;
+                                font-size: 1em;
+                                font-weight: 700;
+                                box-shadow: 0 2px 8px rgba(103, 80, 164, 0.3);
+                            }
+                            
+                            .qr-container {
+                                margin: 30px 0;
                                 padding: 20px;
-                                margin: 20px auto;
-                                width: 300px;
-                                display: inline-block;
+                                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
                                 border-radius: 12px;
                             }
-                            h2 {
-                                margin: 0 0 10px 0;
-                                font-size: 1.3em;
-                                color: #1e293b;
+                            
+                            .qr-container img {
+                                width: 300px;
+                                height: 300px;
+                                border: 4px solid #6750A4;
+                                border-radius: 12px;
+                                padding: 12px;
+                                background: white;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                             }
-                            p {
-                                margin: 5px 0;
-                                font-size: 0.95em;
-                                color: #475569;
-                            }
-                            .group-info {
-                                background: #6750A4;
-                                color: white;
-                                padding: 6px 12px;
-                                border-radius: 20px;
-                                display: inline-block;
-                                font-size: 0.85em;
-                                margin: 10px 0;
-                            }
-                            img {
-                                margin: 15px 0;
-                                width: 250px;
-                                height: 250px;
-                            }
+                            
                             .footer {
-                                margin-top: 15px;
-                                font-size: 0.85em;
+                                border-top: 2px solid #e2e8f0;
+                                padding-top: 20px;
+                                margin-top: 25px;
+                            }
+                            
+                            .company-name {
+                                font-size: 1.3em;
                                 color: #6750A4;
-                                font-weight: bold;
+                                font-weight: 800;
+                                margin-bottom: 10px;
+                                letter-spacing: 0.5px;
+                            }
+                            
+                            .instructions {
+                                font-size: 0.95em;
+                                color: #64748b;
+                                line-height: 1.6;
+                                margin-bottom: 12px;
+                            }
+                            
+                            .date-generated {
+                                font-size: 0.85em;
+                                color: #94a3b8;
+                                font-style: italic;
+                            }
+                            
+                            /* Print styles */
+                            @media print {
+                                body {
+                                    background: white;
+                                    padding: 0;
+                                }
+                                
+                                .qr-print-card {
+                                    border: 3px solid #1e293b;
+                                    box-shadow: none;
+                                    page-break-inside: avoid;
+                                }
                             }
                         </style>
                     </head>
                     <body>
                         <div class="qr-print-card">
-                            <h2>${employee.name}</h2>
-                            <p><strong>Poste:</strong> ${employee.position}</p>
-                            <div class="group-info">${groupName}</div>
-                            <img src="${qrData.dataURL}" alt="QR Code">
-                            <div class="footer">BEHAVANA HR SYSTEM</div>
-                            <p style="font-size: 0.8em; color: #94a3b8;">Scanner pour marquer la présence</p>
+                            <div class="header">
+                                <h2>${employee.name}</h2>
+                                <div class="position">${employee.position}</div>
+                                <div class="group-badge">
+                                    <span style="font-size: 1.1em;">👥</span>
+                                    <span>${groupName}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="qr-container">
+                                <img src="${qrData.dataURL}" alt="QR Code de ${employee.name}">
+                            </div>
+                            
+                            <div class="footer">
+                                <div class="company-name">🏢 BEHAVANA HR SYSTEM</div>
+                                <div class="instructions">
+                                    <strong>Scanner ce QR code pour marquer</strong><br>
+                                    votre présence (arrivée/départ)
+                                </div>
+                                <div class="date-generated">
+                                    Généré le ${new Date().toLocaleDateString('fr-FR', { 
+                                        day: '2-digit', 
+                                        month: 'long', 
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </body>
                     </html>
                 `;
                 
-                const printWindow = window.open('', '_blank');
+                // 5. Ouvrir la fenêtre d'impression
+                const printWindow = window.open('', '_blank', 'width=900,height=1000');
+                if (!printWindow) {
+                    showAlert('Veuillez autoriser les pop-ups pour imprimer', 'error');
+                    return;
+                }
+                
                 printWindow.document.write(printContent);
                 printWindow.document.close();
                 
-                setTimeout(() => {
-                    printWindow.focus();
-                    printWindow.print();
-                    printWindow.close();
-                }, 500);
+                // 6. Lancer l'impression après chargement complet
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                        // Ne pas fermer automatiquement
+                    }, 600);
+                };
                 
             } catch (error) {
                 console.error('Erreur impression:', error);
-                showAlert('Erreur lors de l\'impression', 'error');
+                showAlert('Erreur lors de l\'impression: ' + error.message, 'error');
             }
         }
-
 
 
         // Scanner QR Code
