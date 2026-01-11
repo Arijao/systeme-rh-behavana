@@ -11275,23 +11275,8 @@
                             status.style.color = '#155724';
                             
                             playAuSuivantSound();
+                            await processFacialAttendance(emp);
                             
-                            // Fandraiketana ny angona (mitovy amin'ny anao)
-                            const aujourdhui = new Date().toISOString().split('T')[0];
-                            const heure = new Date().toLocaleTimeString('fr-FR', { hour12: false }); // HH:MM
-                            
-                            if (!attendance[aujourdhui]) {
-                                attendance[aujourdhui] = {};
-                            }
-                            if (!attendance[aujourdhui][emp.id]) {
-                                attendance[aujourdhui][emp.id] = { arrivee: heure, depart: null, method: 'FACIAL' };
-                            } else {
-                                attendance[aujourdhui][emp.id].depart = heure;
-                            }
-                            
-                            await saveAttendanceData();
-                            updateStats();
-                            runSmartChecks();
                             // Fiatoana kely alohan'ny hahafahana manindry indray
                             setTimeout(() => {
                                 status.innerHTML = '🔹 Prêt pour le suivant...';
@@ -12174,6 +12159,222 @@
             
             html += '</div>';
             return html;
+        }
+
+        // =====================================================
+        // === PROCESS FACIAL ATTENDANCE - VERSION MULTIPLE CHECKS ===
+        // =====================================================
+
+        async function processFacialAttendance(employee) {
+            try {
+                const now = new Date();
+                const today = now.toISOString().split('T')[0];
+                const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+                
+                console.log('========================================');
+                console.log('👤 FACIAL - Traitement présence:', employee.name);
+                console.log('Date:', today, '| Heure:', currentTime);
+                
+                // Initialiser si nécessaire
+                if (!attendance[today]) {
+                    attendance[today] = {};
+                }
+                
+                const existingAttendance = attendance[today][employee.id];
+                console.log('Attendance existante:', existingAttendance);
+                console.log('========================================');
+                
+                // =====================================================
+                // CAS 1: PREMIÈRE FOIS → ARRIVÉE
+                // =====================================================
+                if (!existingAttendance) {
+                    console.log('✅ CAS 1: Première fois → Arrivée');
+                    
+                    attendance[today][employee.id] = {
+                        arrivee: currentTime,
+                        depart: null,
+                        method: 'FACIAL',
+                        checks: [{
+                            type: 'arrivee',
+                            time: currentTime,
+                            timestamp: now.toISOString()
+                        }]
+                    };
+                    
+                    await saveAttendanceData();
+                    playSuccessSound();
+                    
+                    showAlert(
+                        `✅ ARRIVÉE ENREGISTRÉE\n${employee.name}\nHeure: ${currentTime}`,
+                        'success'
+                    );
+                    
+                    updateStats();
+                    runSmartChecks();
+                    if (document.getElementById('attendance').classList.contains('active')) {
+                        displayAttendance();
+                    }
+                    
+                    return true;
+                }
+                
+                // =====================================================
+                // CAS 2: DEUXIÈME FOIS → DÉPART
+                // =====================================================
+                else if (!existingAttendance.depart) {
+                    console.log('✅ CAS 2: Deuxième fois → Départ');
+                    
+                    attendance[today][employee.id].depart = currentTime;
+                    
+                    if (!attendance[today][employee.id].checks) {
+                        attendance[today][employee.id].checks = [];
+                    }
+                    attendance[today][employee.id].checks.push({
+                        type: 'depart',
+                        time: currentTime,
+                        timestamp: now.toISOString()
+                    });
+                    
+                    await saveAttendanceData();
+                    playSuccessSound();
+                    
+                    showAlert(
+                        `✅ DÉPART ENREGISTRÉ\n${employee.name}\nHeure: ${currentTime}`,
+                        'success'
+                    );
+                    
+                    updateStats();
+                    runSmartChecks();
+                    if (document.getElementById('attendance').classList.contains('active')) {
+                        displayAttendance();
+                    }
+                    
+                    return true;
+                }
+                
+                // =====================================================
+                // CAS 3: DÉJÀ 2 CHECKS → VÉRIFIER TIMING
+                // =====================================================
+                else {
+                    console.log('========================================');
+                    console.log('🔍 CAS 3: Déjà 2 checks détectés');
+                    console.log('Arrivée:', existingAttendance.arrivee);
+                    console.log('Départ:', existingAttendance.depart);
+                    
+                    // Vérification sécurité
+                    if (!existingAttendance.depart) {
+                        console.error('❌ Erreur: depart est null!');
+                        showAlert('❌ Erreur: Départ non enregistré', 'error');
+                        return false;
+                    }
+                    
+                    // Calcul du temps
+                    const departureTimeString = `${today}T${existingAttendance.depart}:00`;
+                    const lastDeparture = new Date(departureTimeString);
+                    
+                    if (isNaN(lastDeparture.getTime())) {
+                        console.error('❌ Date invalide:', departureTimeString);
+                        showAlert('❌ Erreur format heure', 'error');
+                        return false;
+                    }
+                    
+                    const diffMs = now - lastDeparture;
+                    const minutesSinceDeparture = Math.floor(diffMs / 1000 / 60);
+                    
+                    console.log('🕐 lastDeparture:', lastDeparture);
+                    console.log('🕐 now:', now);
+                    console.log('⏱️ Minutes depuis départ:', minutesSinceDeparture);
+                    console.log('========================================');
+                    
+                    // ===== SI >= 30 MINUTES → PROPOSER UPDATE =====
+                    if (minutesSinceDeparture >= 30) {
+                        console.log('✅ >= 30 min → Proposition update');
+                        
+                        const heures = Math.floor(minutesSinceDeparture / 60);
+                        const minutes = minutesSinceDeparture % 60;
+                        let dureeTexte = heures > 0 ? `${heures}h${minutes}min` : `${minutesSinceDeparture} minutes`;
+                        
+                        const confirmMessage = 
+                            `⚠️ POINTAGE MULTIPLE DÉTECTÉ\n\n` +
+                            `Employé: ${employee.name}\n\n` +
+                            `Pointages existants:\n` +
+                            `• Arrivée: ${existingAttendance.arrivee}\n` +
+                            `• Départ: ${existingAttendance.depart}\n\n` +
+                            `🕐 Il y a ${dureeTexte}\n\n` +
+                            `Voulez-vous mettre à jour le départ avec:\n` +
+                            `${currentTime} ?`;
+                        
+                        const userConfirmed = confirm(confirmMessage);
+                        console.log('💬 User réponse:', userConfirmed);
+                        
+                        if (userConfirmed) {
+                            // ✅ UPDATE CONFIRMÉ
+                            console.log('✅ Mise à jour confirmée');
+                            
+                            const oldDepart = attendance[today][employee.id].depart;
+                            attendance[today][employee.id].depart = currentTime;
+                            
+                            if (!attendance[today][employee.id].checks) {
+                                attendance[today][employee.id].checks = [];
+                            }
+                            attendance[today][employee.id].checks.push({
+                                type: 'depart_update',
+                                time: currentTime,
+                                oldTime: oldDepart,
+                                timestamp: now.toISOString()
+                            });
+                            
+                            await saveAttendanceData();
+                            playSuccessSound();
+                            
+                            showAlert(
+                                `✅ DÉPART MIS À JOUR\n${employee.name}\nAncien: ${oldDepart}\nNouveau: ${currentTime}`,
+                                'success'
+                            );
+                            
+                            updateStats();
+                            runSmartChecks();
+                            if (document.getElementById('attendance').classList.contains('active')) {
+                                displayAttendance();
+                            }
+                            
+                            return true;
+                            
+                        } else {
+                            // ❌ ANNULÉ
+                            console.log('❌ Annulé par user');
+                            
+                            showAlert(
+                                `⚠️ ANNULÉ\n${employee.name}\nDépart maintenu: ${existingAttendance.depart}`,
+                                'warning'
+                            );
+                            
+                            return false;
+                        }
+                    }
+                    
+                    // ===== SI < 30 MINUTES → REFUSER =====
+                    else {
+                        console.log('❌ < 30 min → Refusé');
+                        
+                        showAlert(
+                            `❌ POINTAGE TROP RAPPROCHÉ\n${employee.name}\n\n` +
+                            `Arrivée: ${existingAttendance.arrivee}\n` +
+                            `Départ: ${existingAttendance.depart}\n\n` +
+                            `⏱️ Seulement ${minutesSinceDeparture} min depuis le départ\n` +
+                            `(Minimum requis: 30 minutes)`,
+                            'error'
+                        );
+                        
+                        return false;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur traitement facial:', error);
+                showAlert(`❌ Erreur: ${error.message}`, 'error');
+                return false;
+            }
         }
 
     </script>
