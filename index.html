@@ -4247,6 +4247,28 @@
             }
         }
 
+        function playErrorSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 300;
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('Audio non supporté');
+            }
+        }
+
         function playAuSuivantSound() {
             // Hamarino aloha raha efa noforonina ilay singa audio
             let audioPlayer = document.getElementById('audioPlayerAuSuivant');
@@ -5350,22 +5372,43 @@
                 clearInterval(scanInterval);
                 scanInterval = null;
             }
-
+            
             let employeeId = null;
-
+            
+            console.log('🔍 QR Code reçu:', qrData);
+            
             try {
-                // DINGANA 1: Hamarinina aloha raha endrika vaovao (haingana indrindra)
-                if (qrData.startsWith('BEHAVANA_HR::')) {
-                    employeeId = qrData.split('::')[1];
-                } 
-                // DINGANA 2: Raha tsy izany, hamarinina raha endrika JSON taloha
+                // ========================================
+                // FORMAT 1: BEHAVANAHR:id (VAOVAO)
+                // ========================================
+                if (qrData.startsWith('BEHAVANAHR:')) {
+                    employeeId = qrData.replace('BEHAVANAHR:', '');
+                    console.log('✅ Format BEHAVANAHR détecté, ID:', employeeId);
+                }
+                // ========================================
+                // FORMAT 2: BEHAVANA:id (TALOHA)
+                // ========================================
+                else if (qrData.startsWith('BEHAVANA:')) {
+                    employeeId = qrData.replace('BEHAVANA:', '');
+                    console.log('✅ Format BEHAVANA détecté, ID:', employeeId);
+                }
+                // ========================================
+                // FORMAT 3: JSON (TALOHA KOKOA)
+                // ========================================
                 else if (qrData.startsWith('{') && qrData.endsWith('}')) {
-                    const parsedData = JSON.parse(qrData);
-                    if (parsedData.type === 'BEHAVANA_ATTENDANCE' && parsedData.employeeId) {
-                        employeeId = parsedData.employeeId;
+                    try {
+                        const parsedData = JSON.parse(qrData);
+                        if (parsedData.type === 'BEHAVANA_ATTENDANCE' && parsedData.employeeId) {
+                            employeeId = parsedData.employeeId;
+                            console.log('✅ Format JSON détecté, ID:', employeeId);
+                        }
+                    } catch (jsonError) {
+                        console.warn('⚠️ Erreur parse JSON:', jsonError);
                     }
                 }
-                // DINGANA 3: Raha tsy izany, andramana vakiana ho toy ny Base64 (ho an'ireo QR taloha indrindra)
+                // ========================================
+                // FORMAT 4: Base64 (TALOHA INDRINDRA)
+                // ========================================
                 else {
                     try {
                         const decodedString = decodeURIComponent(escape(atob(qrData)));
@@ -5373,159 +5416,252 @@
                             const parsedData = JSON.parse(decodedString);
                             if (parsedData.type === 'BEHAVANA_ATTENDANCE' && parsedData.employeeId) {
                                 employeeId = parsedData.employeeId;
+                                console.log('✅ Format Base64 détecté, ID:', employeeId);
                             }
                         }
                     } catch (base64Error) {
-                        // Tsy manao na inona na inona raha tsy Base64 ilay izy, fa mandeha any amin'ny fanamarinana farany
-                        console.log("Tsy Base64 ilay QR Code, mandroso...");
+                        console.log('ℹ️ Pas en Base64, format non reconnu');
                     }
                 }
-            } catch (e) {
-                console.error("Erreur famakiana QR Data:", e);
-                showScanResult('QR Code illisible na simba.', 'error');
-                return;
-            }
-
-            // Fanamarinana farany alohan'ny handrosoana
-            if (!employeeId) {
-                showScanResult('QRCode non valide pour ce système.', 'error');
-                return;
-            }
-
-            const employee = employees.find(emp => emp.id === employeeId);
-            if (!employee) {
-                showScanResult(`Employé tsy hita (ID: ${employeeId})`, 'error');
-                return;
-            }
-
-            // Ny tohin'ny function dia tsy miova...
-            if (purpose === 'attendance') {
-                const success = await processAttendanceScan(employee);
-                if (success) {
-                    setTimeout(() => { stopQRScan(false); }, 800);
+                
+                // ========================================
+                // VALIDATION FINALE
+                // ========================================
+                if (!employeeId) {
+                    console.error('❌ Format QR invalide:', qrData);
+                    showScanResult('QRCode non valide pour ce système.', 'error');
+                    playErrorSound();
+                    return false;
                 }
-            } else {
-                if (purpose === 'advance') {
-                    const advanceEmployeeSelect = document.getElementById('advanceEmployee');
-                    advanceEmployeeSelect.value = employee.id;
-                    advanceEmployeeSelect.dispatchEvent(new Event('change'));
-                    showAlert(`Employé sélectionné: ${employee.name}`, 'success');
-                } else if (purpose === 'payroll') {
-                    const payrollEmployeeSelect = document.getElementById('payrollEmployeeSelect');
-                    populatePayrollEmployeeSelect('all');
-                    payrollEmployeeSelect.value = employee.id;
-                    handlePayrollEmployeeChange();
-                    showAlert(`Employé sélectionné: ${employee.name}`, 'success');
-                } else if (purpose === 'advances-search') {
-                    const searchInput = document.getElementById('advanceSearchInput');
-                    if (searchInput) {
-                        searchInput.value = employee.name;
-                        advancesCurrentPage = 1;
-                        displayAdvances();
-                        showAlert(`🔍 Recherche effectuée pour: ${employee.name}`, 'success');
-                    }
+                
+                // Vérifier que l'employé existe
+                const employee = employees.find(emp => emp.id === employeeId);
+                
+                if (!employee) {
+                    console.error('❌ Employé non trouvé, ID:', employeeId);
+                    showScanResult(`Employé non trouvé (ID: ${employeeId})`, 'error');
+                    playErrorSound();
+                    return false;
                 }
-                stopQRScan(false);
+                
+                console.log('✅ Employé trouvé:', employee.name);
+                
+                // ========================================
+                // TRAITEMENT SELON LE PURPOSE
+                // ========================================
+                switch (purpose) {
+                    case 'attendance':
+                        return await processAttendanceScan(employee);
+                        
+                    case 'payroll':
+                        document.getElementById('payrollEmployeeSelect').value = employeeId;
+                        if (typeof handlePayrollEmployeeChange === 'function') {
+                            handlePayrollEmployeeChange();
+                        }
+                        showScanResult(`✅ Employé sélectionné: ${employee.name}`, 'success');
+                        setTimeout(() => stopQRScan(), 1500);
+                        return true;
+                        
+                    case 'advance':
+                        document.getElementById('advanceEmployee').value = employeeId;
+                        showScanResult(`✅ Employé sélectionné: ${employee.name}`, 'success');
+                        setTimeout(() => stopQRScan(), 1500);
+                        return true;
+                        
+                    case 'advances-search':
+                        if (typeof handleAdvancesSearchQRScan === 'function') {
+                            handleAdvancesSearchQRScan(employee);
+                        }
+                        return true;
+                        
+                    default:
+                        console.warn('⚠️ Purpose non géré:', purpose);
+                        return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur traitement QR:', error);
+                showScanResult('Erreur lors du traitement du QR Code', 'error');
+                playErrorSound();
+                return false;
             }
         }
 
 
 
+        // === RECHERCHE AVANCE PAR QR ===
         function handleAdvancesSearchQRScan(employee) {
             try {
-                // Apetraka ilay anaran'ny mpiasa ao amin'ny search input
+                console.log(`🔍 Recherche avances pour ${employee.name}`);
+                
+                // Remplir le champ de recherche avec le nom
                 const searchInput = document.getElementById('advanceSearchInput');
                 if (searchInput) {
                     searchInput.value = employee.name;
-                    
-                    // Mandeha avy hatrany ny fonction displayAdvances()
-                    displayAdvances();
-                    
-                    showAlert(`🔍 Recherche effectuée pour: ${employee.name}`, 'success');
-                    
-                    // Hidio ny modal scanner
-                    setTimeout(() => {
-                        stopQRScan();
-                    }, 1000);
+                    searchInput.dispatchEvent(new Event('input'));
                 }
+                
+                playSuccessSound();
+                showScanResult(
+                    `✅ <strong>RECHERCHE</strong><br>
+                    Affichage des avances de:<br>
+                    <strong>${employee.name}</strong>`, 
+                    'success'
+                );
+                
+                // Fermer le scanner
+                setTimeout(() => {
+                    stopQRScan();
+                    
+                    // Scroller vers les résultats
+                    const advancesList = document.getElementById('advancesList');
+                    if (advancesList) {
+                        advancesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 1500);
+                
             } catch (error) {
-                console.error('Erreur lors de la recherche QR:', error);
-                showAlert('Erreur lors de la recherche', 'error');
+                console.error('❌ Erreur recherche avances:', error);
+                showScanResult('Erreur lors de la recherche', 'error');
             }
         }
+
 
 
 
         // =================================================================
         //  processAttendanceScan (VERSION FARANY - MAMERINA SANDA MARINA)
         // =================================================================
+        // === TRAITEMENT SCAN PRÉSENCE ===
         async function processAttendanceScan(employee) {
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            const currentTime = now.toLocaleTimeString('fr-FR', { hour12: false }); //HH:MM:SS
-
-            if (!attendance[today]) {
-                attendance[today] = {};
-            }
-
-            const existingAttendance = attendance[today][employee.id];
-
-            // CAS 1: Scan voalohany (Arrivée)
-            if (!existingAttendance) {
-                attendance[today][employee.id] = { status: 'journee', arrivee: currentTime, depart: null, method: 'QR' };
-                showScanResult(`✅ Arrivée enregistrée pour ${employee.name} à ${currentTime}`, 'success');
+            try {
+                const now = new Date();
+                const today = now.toISOString().split('T')[0];
+                const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
                 
-                // Tehirizina ny angona
-                await saveAttendanceData();
-                updateStats();
-                runSmartChecks();
-                if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
-                if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
-
-                // --- FANITSIANA LEHIBE 1: Averina ny TRUE ---
-                return true;
-
-            // CAS 2: Scan faharoa (Départ)
-            } else if (existingAttendance && !existingAttendance.depart) {
-                existingAttendance.depart = currentTime;
-                showScanResult(`✅ Départ enregistré pour ${employee.name} à ${currentTime}`, 'success');
-
-                // Tehirizina ny angona
-                await saveAttendanceData();
-                updateStats();
-                runSmartChecks();
-                if (document.getElementById('qr-presence').classList.contains('active')) { displayQRAttendance(); }
-                if (document.getElementById('attendance').classList.contains('active')) { displayAttendance(); }
-
-                // --- FANITSIANA LEHIBE 2: Averina ny TRUE ---
-                return true;
-
-            // CAS 3: Scan fahatelo (Efa feno)
-            } else {
-                const arrivalTime = existingAttendance.arrivee;
-                const departureTime = existingAttendance.depart;
-
-                const errorMessageHTML = `
-                    <div style="text-align: center;">
-                        <span class="material-icons" style="font-size: 36px; margin-bottom: 8px;">error</span>
-                        <h4 style="margin: 0; font-size: 1.1rem;">DÉJÀ ENREGISTRÉ</h4>
-                        <p style="margin: 8px 0 0 0;">
-                            <strong>${employee.name}</strong> a déjà pointé pour la journée.
-                        </p>
-                        <div style="margin-top: 12px; padding: 8px; background-color: rgba(0,0,0,0.1); border-radius: 8px;">
-                            Heure d'arrivée: <strong style="font-size: 1.1em;">${arrivalTime}</strong>  
-
-                            Heure de départ: <strong style="font-size: 1.1em;">${departureTime}</strong>
-                        </div>
-                    </div>
-                `;
+                console.log(`📝 Traitement présence pour ${employee.name}`);
                 
-                showScanResult(errorMessageHTML, 'error');
-
-                // --- FANITSIANA LEHIBE 3: Averina ny FALSE ---
+                // Charger les présences du jour
+                let attendanceData = await dbManager.get('attendance', today);
+                
+                if (!attendanceData) {
+                    attendanceData = {
+                        date: today,
+                        records: {}
+                    };
+                }
+                
+                // Vérifier l'état actuel
+                const existingAttendance = attendanceData.records[employee.id];
+                
+                // CAS 1: Première fois = ARRIVÉE
+                if (!existingAttendance) {
+                    attendanceData.records[employee.id] = {
+                        employeeId: employee.id,
+                        employeeName: employee.name,
+                        arrivee: currentTime,
+                        depart: null,
+                        status: 'present',
+                        method: 'QR'
+                    };
+                    
+                    await dbManager.put('attendance', attendanceData);
+                    
+                    // Enregistrer dans qr_attendance aussi
+                    await dbManager.put('qr_attendance', {
+                        id: `${employee.id}_${now.getTime()}`,
+                        employeeId: employee.id,
+                        employeeName: employee.name,
+                        date: today,
+                        timestamp: now.toISOString(),
+                        type: 'arrival',
+                        time: currentTime
+                    });
+                    
+                    playSuccessSound();
+                    showScanResult(
+                        `✅ <strong>ARRIVÉE ENREGISTRÉE</strong><br>
+                        ${employee.name}<br>
+                        Heure: <strong>${currentTime}</strong>`, 
+                        'success'
+                    );
+                    
+                    // Rafraîchir les affichages
+                    if (document.getElementById('qr-presence').classList.contains('active')) {
+                        displayQRAttendance();
+                    }
+                    if (document.getElementById('attendance').classList.contains('active')) {
+                        displayAttendance();
+                    }
+                    updateStats();
+                    runSmartChecks();
+                    
+                    setTimeout(() => stopQRScan(), 2000);
+                    return true;
+                }
+                // CAS 2: Deuxième fois = DÉPART
+                else if (existingAttendance && !existingAttendance.depart) {
+                    existingAttendance.depart = currentTime;
+                    
+                    await dbManager.put('attendance', attendanceData);
+                    
+                    await dbManager.put('qr_attendance', {
+                        id: `${employee.id}_${now.getTime()}`,
+                        employeeId: employee.id,
+                        employeeName: employee.name,
+                        date: today,
+                        timestamp: now.toISOString(),
+                        type: 'departure',
+                        time: currentTime
+                    });
+                    
+                    playSuccessSound();
+                    showScanResult(
+                        `✅ <strong>DÉPART ENREGISTRÉ</strong><br>
+                        ${employee.name}<br>
+                        Heure: <strong>${currentTime}</strong>`, 
+                        'success'
+                    );
+                    
+                    // Rafraîchir
+                    if (document.getElementById('qr-presence').classList.contains('active')) {
+                        displayQRAttendance();
+                    }
+                    if (document.getElementById('attendance').classList.contains('active')) {
+                        displayAttendance();
+                    }
+                    updateStats();
+                    runSmartChecks();
+                    
+                    setTimeout(() => stopQRScan(), 2000);
+                    return true;
+                }
+                // CAS 3: Déjà scanné 2 fois
+                else {
+                    const arrivalTime = existingAttendance.arrivee;
+                    const departureTime = existingAttendance.depart;
+                    
+                    playErrorSound();
+                    showScanResult(
+                        `⚠️ <strong>DÉJÀ ENREGISTRÉ</strong><br>
+                        ${employee.name}<br>
+                        Arrivée: <strong>${arrivalTime}</strong><br>
+                        Départ: <strong>${departureTime}</strong>`, 
+                        'error'
+                    );
+                    
+                    setTimeout(() => stopQRScan(), 2500);
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur traitement présence:', error);
+                playErrorSound();
+                showScanResult('Erreur lors de l\'enregistrement', 'error');
                 return false;
             }
         }
+
 
 
 
@@ -5535,14 +5671,46 @@
         //  showScanResult (FANITSARANA: Mampiasa innerHTML)
         //  showScanResult (VERSION FARANY - TSY MANAFINA INTSONY)
         // ===================================================
+        // === AFFICHAGE RÉSULTAT SCAN - VERSION AMÉLIORÉE ===
         function showScanResult(message, type) {
             const scanResult = document.getElementById('scanResult');
+            
             if (!scanResult) return;
-
-            scanResult.innerHTML = message;
-            scanResult.className = `scan-result ${type}`;
+            
+            // Icon selon le type
+            let icon = '';
+            let bgColor = '';
+            
+            switch(type) {
+                case 'success':
+                    icon = '<span class="material-icons" style="font-size: 48px; color: #10b981;">check_circle</span>';
+                    bgColor = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+                    break;
+                case 'error':
+                    icon = '<span class="material-icons" style="font-size: 48px; color: #ef4444;">error</span>';
+                    bgColor = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+                    break;
+                case 'warning':
+                    icon = '<span class="material-icons" style="font-size: 48px; color: #f59e0b;">warning</span>';
+                    bgColor = 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
+                    break;
+                default:
+                    icon = '<span class="material-icons" style="font-size: 48px; color: #6750A4;">info</span>';
+                    bgColor = 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)';
+            }
+            
+            scanResult.innerHTML = `
+                <div style="background: ${bgColor}; padding: 20px; border-radius: 12px; text-align: center;">
+                    ${icon}
+                    <div style="margin-top: 12px; font-size: 15px; line-height: 1.6; color: #1e293b;">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
             scanResult.style.display = 'block';
         }
+
 
 
 
