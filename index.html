@@ -12233,15 +12233,17 @@
                 
                 console.log('========================================');
                 console.log('👤 FACIAL - Traitement présence:', employee.name);
+                console.log('📅 DATE ACTUELLE:', today);
                 console.log('Date:', today, '| Heure:', currentTime);
                 
                 // Initialiser si nécessaire
                 if (!attendance[today]) {
+                    console.log('🆕 Création nouvelle entrée pour:', today);
                     attendance[today] = {};
                 }
                 
                 const existingAttendance = attendance[today][employee.id];
-                console.log('Attendance existante:', existingAttendance);
+                console.log('📋 Attendance existante @ ' + today + ':', existingAttendance);
                 console.log('========================================');
                 
                 // =====================================================
