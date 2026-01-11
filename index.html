@@ -2763,6 +2763,36 @@
             color: #f3f4f6 !important;
         }
 
+        /* =====================================================
+        SCAN RESULT - MESSAGES AMÉLIORÉS
+        ===================================================== */
+        #scanResult {
+            animation: slideInUp 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #scanResult strong {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        #scanResult s {
+            color: #ef4444;
+            text-decoration: line-through;
+        }
+
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -5782,37 +5812,41 @@
         }
 
 
+        // =====================================================
+        // === PROCESS ATTENDANCE SCAN - VERSION MULTIPLE CHECKS ===
+        // =====================================================
 
-
-        // =================================================================
-        //  processAttendanceScan (VERSION FARANY - MAMERINA SANDA MARINA)
-        // =================================================================
-        // === TRAITEMENT SCAN PRÉSENCE ===
         async function processAttendanceScan(employee) {
             try {
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
                 const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
                 
-                console.log(`📝 Traitement présence pour ${employee.name}`);
+                console.log('✅ Traitement présence pour', employee.name);
                 
-                // === FANITSIANA ETO === 
-                // Charger depuis attendance directement (tsy IndexedDB)
+                // Initialiser si nécessaire
                 if (!attendance[today]) {
                     attendance[today] = {};
                 }
                 
                 const existingAttendance = attendance[today][employee.id];
                 
-                // CAS 1: Première fois = ARRIVÉE
+                // =====================================================
+                // CAS 1: PREMIÈRE FOIS → ARRIVÉE
+                // =====================================================
                 if (!existingAttendance) {
                     attendance[today][employee.id] = {
                         arrivee: currentTime,
                         depart: null,
-                        method: 'QR'
+                        method: 'FACIAL',
+                        checks: [{
+                            type: 'arrivee',
+                            time: currentTime,
+                            timestamp: now.toISOString()
+                        }]
                     };
                     
-                    // Enregistrer dans qr_attendance
+                    // Enregistrer dans qrAttendance
                     qrAttendance.push({
                         id: `${employee.id}_${now.getTime()}`,
                         employeeId: employee.id,
@@ -5823,14 +5857,13 @@
                         time: currentTime
                     });
                     
-                    // Sauvegarder
                     await saveAttendanceData();
-                    
                     playSuccessSound();
+                    
                     showScanResult(
-                        `✅ <strong>ARRIVÉE ENREGISTRÉE</strong><br>
-                        ${employee.name}<br>
-                        Heure: <strong>${currentTime}</strong>`, 
+                        `<strong>✅ ARRIVÉE ENREGISTRÉE</strong><br>
+                        <span style="font-size: 1.2em; font-weight: 700;">${employee.name}</span><br>
+                        <span style="font-size: 0.95em;">Heure: <strong>${currentTime}</strong></span>`,
                         'success'
                     );
                     
@@ -5847,11 +5880,24 @@
                     setTimeout(() => stopQRScan(), 2000);
                     return true;
                 }
-                // CAS 2: Deuxième fois = DÉPART
+                
+                // =====================================================
+                // CAS 2: DEUXIÈME FOIS → DÉPART
+                // =====================================================
                 else if (existingAttendance && !existingAttendance.depart) {
                     attendance[today][employee.id].depart = currentTime;
                     
-                    // Enregistrer dans qr_attendance
+                    // Ajouter dans checks
+                    if (!attendance[today][employee.id].checks) {
+                        attendance[today][employee.id].checks = [];
+                    }
+                    attendance[today][employee.id].checks.push({
+                        type: 'depart',
+                        time: currentTime,
+                        timestamp: now.toISOString()
+                    });
+                    
+                    // Enregistrer dans qrAttendance
                     qrAttendance.push({
                         id: `${employee.id}_${now.getTime()}`,
                         employeeId: employee.id,
@@ -5862,14 +5908,13 @@
                         time: currentTime
                     });
                     
-                    // Sauvegarder
                     await saveAttendanceData();
-                    
                     playSuccessSound();
+                    
                     showScanResult(
-                        `✅ <strong>DÉPART ENREGISTRÉ</strong><br>
-                        ${employee.name}<br>
-                        Heure: <strong>${currentTime}</strong>`, 
+                        `<strong>✅ DÉPART ENREGISTRÉ</strong><br>
+                        <span style="font-size: 1.2em; font-weight: 700;">${employee.name}</span><br>
+                        <span style="font-size: 0.95em;">Heure: <strong>${currentTime}</strong></span>`,
                         'success'
                     );
                     
@@ -5886,33 +5931,127 @@
                     setTimeout(() => stopQRScan(), 2000);
                     return true;
                 }
-                // CAS 3: Déjà scanné 2 fois
+                
+                // =====================================================
+                // CAS 3: DÉJÀ 2 CHECKS → VÉRIFIER TIMING
+                // =====================================================
                 else {
-                    playErrorSound();
-                    showScanResult(
-                        `⚠️ <strong>DÉJÀ ENREGISTRÉ</strong><br>
-                        ${employee.name}<br>
-                        Arrivée: <strong>${existingAttendance.arrivee}</strong><br>
-                        Départ: <strong>${existingAttendance.depart}</strong>`, 
-                        'error'
-                    );
+                    // Calculer le temps depuis le dernier départ
+                    const lastDeparture = new Date(`${today}T${existingAttendance.depart}:00`);
+                    const minutesSinceDeparture = Math.floor((now - lastDeparture) / 1000 / 60);
                     
-                    setTimeout(() => stopQRScan(), 2500);
-                    return false;
+                    console.log(`⏱️ Minutes depuis départ: ${minutesSinceDeparture}`);
+                    
+                    // ===== SI > 30 MINUTES → PROPOSER UPDATE =====
+                    if (minutesSinceDeparture >= 30) {
+                        // Message de confirmation
+                        const confirmMessage = `⚠️ ${employee.name} a déjà pointé:\n\n` +
+                            `• Arrivée: ${existingAttendance.arrivee}\n` +
+                            `• Départ: ${existingAttendance.depart}\n\n` +
+                            `🕐 Il y a ${minutesSinceDeparture} minutes\n\n` +
+                            `Mettre à jour le départ avec ${currentTime}?`;
+                        
+                        if (confirm(confirmMessage)) {
+                            // ✅ USER A CONFIRMÉ → UPDATE
+                            const oldDepart = attendance[today][employee.id].depart;
+                            attendance[today][employee.id].depart = currentTime;
+                            
+                            // Ajouter dans historique
+                            if (!attendance[today][employee.id].checks) {
+                                attendance[today][employee.id].checks = [];
+                            }
+                            attendance[today][employee.id].checks.push({
+                                type: 'depart_update',
+                                time: currentTime,
+                                oldTime: oldDepart,
+                                timestamp: now.toISOString()
+                            });
+                            
+                            // Enregistrer dans qrAttendance
+                            qrAttendance.push({
+                                id: `${employee.id}_${now.getTime()}`,
+                                employeeId: employee.id,
+                                employeeName: employee.name,
+                                date: today,
+                                timestamp: now.toISOString(),
+                                type: 'departure_update',
+                                time: currentTime,
+                                oldTime: oldDepart
+                            });
+                            
+                            await saveAttendanceData();
+                            playSuccessSound();
+                            
+                            showScanResult(
+                                `<strong>✅ DÉPART MIS À JOUR</strong><br>
+                                <span style="font-size: 1.2em; font-weight: 700;">${employee.name}</span><br>
+                                <span style="font-size: 0.9em;">
+                                    Ancien: <s>${oldDepart}</s><br>
+                                    Nouveau: <strong style="color: #10b981;">${currentTime}</strong>
+                                </span>`,
+                                'success'
+                            );
+                            
+                            // Rafraîchir
+                            if (document.getElementById('qr-presence').classList.contains('active')) {
+                                displayQRAttendance();
+                            }
+                            if (document.getElementById('attendance').classList.contains('active')) {
+                                displayAttendance();
+                            }
+                            updateStats();
+                            runSmartChecks();
+                            
+                            setTimeout(() => stopQRScan(), 2500);
+                            return true;
+                            
+                        } else {
+                            // ❌ USER A ANNULÉ
+                            playErrorSound();
+                            
+                            showScanResult(
+                                `<strong>⚠️ ANNULÉ</strong><br>
+                                <span style="font-size: 1.1em; font-weight: 600;">${employee.name}</span><br>
+                                <span style="font-size: 0.9em;">Départ non modifié: <strong>${existingAttendance.depart}</strong></span>`,
+                                'warning'
+                            );
+                            
+                            setTimeout(() => stopQRScan(), 2000);
+                            return false;
+                        }
+                    }
+                    
+                    // ===== SI < 30 MINUTES → REFUSER =====
+                    else {
+                        playErrorSound();
+                        
+                        showScanResult(
+                            `<strong>❌ DÉJÀ ENREGISTRÉ</strong><br>
+                            <span style="font-size: 1.1em; font-weight: 600;">${employee.name}</span><br>
+                            <div style="font-size: 0.9em; margin-top: 8px; line-height: 1.5;">
+                                Arrivée: <strong>${existingAttendance.arrivee}</strong><br>
+                                Départ: <strong>${existingAttendance.depart}</strong>
+                            </div>
+                            <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; font-size: 0.85em;">
+                                ⏱️ Trop tôt pour modifier<br>
+                                <strong>${minutesSinceDeparture} min</strong> depuis le départ<br>
+                                (30 min minimum requis)
+                            </div>`,
+                            'error'
+                        );
+                        
+                        setTimeout(() => stopQRScan(), 3500);
+                        return false;
+                    }
                 }
                 
             } catch (error) {
                 console.error('❌ Erreur traitement présence:', error);
                 playErrorSound();
-                showScanResult('Erreur lors de l\'enregistrement', 'error');
+                showScanResult(`Erreur lors de l'enregistrement`, 'error');
                 return false;
             }
         }
-
-
-
-
-
 
 
         // ===================================================
@@ -11999,6 +12138,42 @@
                     countEl.style.transform = 'scale(1)';
                 }, 200);
             }
+        }
+
+        // =====================================================
+        // === AFFICHER HISTORIQUE CHECKS ===
+        // =====================================================
+
+        function displayAttendanceHistory(employeeId, date) {
+            if (!attendance[date] || !attendance[date][employeeId]) {
+                return '<p style="color: #94a3b8;">Aucun historique</p>';
+            }
+            
+            const record = attendance[date][employeeId];
+            const checks = record.checks || [];
+            
+            if (checks.length === 0) {
+                return '<p style="color: #94a3b8;">Aucun historique</p>';
+            }
+            
+            let html = '<div style="margin-top: 12px; padding: 12px; background: rgba(51, 65, 85, 0.3); border-radius: 8px;">';
+            html += '<h4 style="margin: 0 0 8px 0; font-size: 0.9em; color: #cbd5e1;">📋 Historique des pointages</h4>';
+            
+            checks.forEach((check, index) => {
+                const icon = check.type === 'arrivee' ? '🟢' : 
+                            check.type === 'depart' ? '🔴' : '🔄';
+                const label = check.type === 'arrivee' ? 'Arrivée' :
+                            check.type === 'depart' ? 'Départ' : 'Mise à jour départ';
+                
+                html += `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.85em;">
+                    <span>${icon}</span>
+                    <span style="color: #e2e8f0;"><strong>${label}</strong>: ${check.time}</span>
+                    ${check.oldTime ? `<span style="color: #94a3b8;">(ancien: ${check.oldTime})</span>` : ''}
+                </div>`;
+            });
+            
+            html += '</div>';
+            return html;
         }
 
     </script>
