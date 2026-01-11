@@ -1131,7 +1131,7 @@
         }
 
         /*======================================*/
-        
+
         /* Animation fadeIn */
         @keyframes fadeIn {
             from {
@@ -4670,6 +4670,7 @@
         //  NOUVELLE FONCTION generateAllQRCodes NOHAMARININA
         // =================================================================
         // === GÉNÉRATION DES QR CODES - VERSION COMPLÈTE AMÉLIORÉE ===
+        // === GÉNÉRATION QR CODES - VERSION MEMORY STORAGE ===
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
             
@@ -4689,21 +4690,26 @@
                 let successCount = 0;
                 let errorCount = 0;
                 
+                // Initialiser le stockage en mémoire
+                if (!window.generatedQRCodes) {
+                    window.generatedQRCodes = {};
+                }
+                
                 // Boucle sur tous les employés
                 for (const employee of employees) {
                     try {
-                        // 1. Génération du QR code
-                        const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
+                        // 1. Génération du QR code (blob URL)
+                        const blobURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                         
-                        if (dataURL) {
-                            // 2. Sauvegarde dans IndexedDB
-                            await dbManager.put('qrcodes', {
-                                employeeId: employee.id,
-                                dataURL: dataURL,
+                        if (blobURL) {
+                            // 2. STOCKAGE EN MÉMOIRE (pas de database)
+                            window.generatedQRCodes[employee.id] = {
+                                dataURL: blobURL,
+                                employeeName: employee.name,
                                 generated: new Date().toISOString(),
                                 size: qrSettings.size,
                                 color: qrSettings.color
-                            });
+                            };
                             
                             // 3. Récupération des informations
                             const group = groups.find(g => g.id === employee.groupId);
@@ -4711,7 +4717,7 @@
                             
                             // 4. Construction de la carte QR
                             qrCardsHTML.push(`
-                                <div class="qr-card" data-employee-name="${employee.name.toLowerCase()}" data-employee-position="${employee.position.toLowerCase()}" data-employee-group="${groupName.toLowerCase()}">
+                                <div class="qr-card" data-employee-id="${employee.id}">
                                     <div class="qr-card-header">
                                         <h4>${employee.name}</h4>
                                         <p class="qr-position">${employee.position}</p>
@@ -4722,21 +4728,22 @@
                                     </div>
                                     
                                     <div class="qr-code-canvas">
-                                        <img src="${dataURL}" 
-                                            alt="QR Code de ${employee.name}" 
+                                        <img src="${blobURL}" 
+                                            alt="QR Code ${employee.name}" 
                                             width="${qrSettings.size}" 
                                             height="${qrSettings.size}"
-                                            style="max-width: 100%; height: auto;">
+                                            loading="lazy"
+                                            style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto;">
                                     </div>
                                     
                                     <div class="qr-actions">
                                         <button class="btn-icon" 
-                                                onclick="downloadQRCode('${employee.id}')" 
+                                                onclick="downloadQRCodeMemory('${employee.id}')" 
                                                 title="Télécharger le QR code">
                                             <span class="material-icons">download</span>
                                         </button>
                                         <button class="btn-icon" 
-                                                onclick="printQRCode('${employee.id}')" 
+                                                onclick="printQRCodeMemory('${employee.id}')" 
                                                 title="Imprimer le QR code">
                                             <span class="material-icons">print</span>
                                         </button>
@@ -4804,6 +4811,138 @@
                 showAlert('Erreur critique lors de la génération des QR codes', 'error');
             }
         }
+
+        // === DOWNLOAD DEPUIS MÉMOIRE ===
+        function downloadQRCodeMemory(employeeId) {
+            try {
+                if (!window.generatedQRCodes || !window.generatedQRCodes[employeeId]) {
+                    showAlert('QR Code non trouvé. Veuillez régénérer les QR codes.', 'error');
+                    return;
+                }
+                
+                const employee = employees.find(emp => emp.id === employeeId);
+                if (!employee) {
+                    showAlert('Employé non trouvé', 'error');
+                    return;
+                }
+                
+                const qrData = window.generatedQRCodes[employeeId];
+                
+                // Créer un lien de téléchargement
+                const link = document.createElement('a');
+                link.href = qrData.dataURL;
+                link.download = `qr-${employee.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert(`✅ QR Code de ${employee.name} téléchargé`, 'success');
+                
+            } catch (error) {
+                console.error('Erreur téléchargement:', error);
+                showAlert('Erreur lors du téléchargement', 'error');
+            }
+        }
+
+        // === PRINT DEPUIS MÉMOIRE ===
+        function printQRCodeMemory(employeeId) {
+            try {
+                if (!window.generatedQRCodes || !window.generatedQRCodes[employeeId]) {
+                    showAlert('QR Code non trouvé. Veuillez régénérer les QR codes.', 'error');
+                    return;
+                }
+                
+                const employee = employees.find(emp => emp.id === employeeId);
+                if (!employee) {
+                    showAlert('Employé non trouvé', 'error');
+                    return;
+                }
+                
+                const qrData = window.generatedQRCodes[employeeId];
+                const group = groups.find(g => g.id === employee.groupId);
+                const groupName = group ? group.name : 'Sans groupe';
+                
+                const printContent = `
+                    <html>
+                    <head>
+                        <title>QR Code - ${employee.name}</title>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 20px;
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                            }
+                            .qr-print-card {
+                                border: 2px solid #333;
+                                padding: 20px;
+                                margin: 20px auto;
+                                width: 300px;
+                                display: inline-block;
+                                border-radius: 12px;
+                            }
+                            h2 {
+                                margin: 0 0 10px 0;
+                                font-size: 1.3em;
+                                color: #1e293b;
+                            }
+                            p {
+                                margin: 5px 0;
+                                font-size: 0.95em;
+                                color: #475569;
+                            }
+                            .group-info {
+                                background: #6750A4;
+                                color: white;
+                                padding: 6px 12px;
+                                border-radius: 20px;
+                                display: inline-block;
+                                font-size: 0.85em;
+                                margin: 10px 0;
+                            }
+                            img {
+                                margin: 15px 0;
+                                width: 250px;
+                                height: 250px;
+                            }
+                            .footer {
+                                margin-top: 15px;
+                                font-size: 0.85em;
+                                color: #6750A4;
+                                font-weight: bold;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="qr-print-card">
+                            <h2>${employee.name}</h2>
+                            <p><strong>Poste:</strong> ${employee.position}</p>
+                            <div class="group-info">${groupName}</div>
+                            <img src="${qrData.dataURL}" alt="QR Code">
+                            <div class="footer">BEHAVANA HR SYSTEM</div>
+                            <p style="font-size: 0.8em; color: #94a3b8;">Scanner pour marquer la présence</p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+                
+            } catch (error) {
+                console.error('Erreur impression:', error);
+                showAlert('Erreur lors de l\'impression', 'error');
+            }
+        }
+
 
 
         // Scanner QR Code
