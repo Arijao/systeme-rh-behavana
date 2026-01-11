@@ -977,26 +977,30 @@
         }
         /* ======================================================================= */
 
-        /* === QR CARDS IMPROVED - LOKO MAZAVA === */
+        /* === QR CARDS IMPROVED === */
         .qr-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-            border: 2px solid #cbd5e1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #e2e8f0;
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .qr-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.2);
+            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.15);
             border-color: var(--md-sys-color-primary);
         }
 
-        /* ANARANA - Mainty tsara mazava */
+        /* HEADER avec infos */
+        .qr-card-header {
+            margin-bottom: 16px;
+        }
+
         .qr-card h4 {
-            margin: 0 0 8px 0;
+            margin: 0 0 6px 0;
             font-size: 20px;
             font-weight: 800;
             color: #0f172a !important;
@@ -1004,25 +1008,24 @@
             letter-spacing: 0.3px;
         }
 
-        /* POSTE - Gris mazava */
-        .qr-card p {
-            margin: 0 0 12px 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: #334155 !important;
+        .qr-position {
+            margin: 0 0 10px 0 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
             text-shadow: none !important;
         }
 
-        /* Badge groupe */
-        .qr-card .group-badge {
-            display: inline-block;
+        .qr-group-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary-dark) 100%);
             color: white !important;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
-            margin-bottom: 16px;
             box-shadow: 0 2px 6px rgba(103, 80, 164, 0.3);
         }
 
@@ -1030,9 +1033,9 @@
         .qr-code-canvas {
             margin: 16px 0;
             background: white;
-            padding: 16px;
+            padding: 12px;
             border-radius: 12px;
-            border: 3px solid #e2e8f0;
+            border: 2px solid #e2e8f0;
             display: inline-block;
         }
 
@@ -1041,7 +1044,7 @@
             border-radius: 8px;
         }
 
-        /* Buttons */
+        /* Actions buttons */
         .qr-actions {
             display: flex;
             gap: 10px;
@@ -1052,10 +1055,12 @@
         .qr-actions .btn-icon {
             background: var(--md-sys-color-primary);
             color: white;
-            padding: 12px;
+            padding: 10px;
             border-radius: 10px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(103, 80, 164, 0.3);
+            border: none;
+            cursor: pointer;
         }
 
         .qr-actions .btn-icon:hover {
@@ -1064,6 +1069,69 @@
             box-shadow: 0 4px 12px rgba(103, 80, 164, 0.4);
         }
 
+        .qr-actions .btn-icon .material-icons {
+            font-size: 20px;
+        }
+        /*======================================*/
+
+
+        /* === SEARCH BAR MODERN === */
+        .search-input-modern {
+            width: 100%;
+            padding: 14px 50px 14px 50px;
+            font-size: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-input-modern:focus {
+            outline: none;
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(103, 80, 164, 0.2);
+        }
+
+        .search-icon-modern {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--md-sys-color-primary);
+            font-size: 22px;
+            pointer-events: none;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--md-sys-color-error);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-clear-btn:hover {
+            background: #dc2626;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .search-clear-btn .material-icons {
+            font-size: 18px;
+        }
+
+        /*======================================*/
+        
         /* Animation fadeIn */
         @keyframes fadeIn {
             from {
@@ -3065,28 +3133,27 @@
                 </div>
                 
                 <!-- SEARCH BAR VAOVAO -->
-                <div style="background: var(--md-sys-color-surface-variant); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="material-icons" style="color: var(--md-sys-color-primary); font-size: 24px;">search</span>
+                <div style="margin-bottom: 24px;">
+                    <div style="position: relative; max-width: 600px; margin: 0 auto;">
                         <input 
                             type="text" 
                             id="qrSearchInput" 
-                            class="form-control" 
-                            placeholder="🔍 Rechercher par nom, poste ou groupe..."
-                            style="flex: 1; font-size: 15px; padding: 12px;"
+                            class="search-input-modern" 
+                            placeholder="Rechercher un employé..."
                             oninput="filterQRCodes()"
                         >
-                        <button class="btn-icon" onclick="clearQRSearch()" title="Effacer la recherche" style="background: var(--md-sys-color-error); color: white;">
-                            <span class="material-icons">clear</span>
+                        <span class="material-icons search-icon-modern">search</span>
+                        <button class="search-clear-btn" onclick="clearQRSearch()" id="qrClearBtn" style="display: none;">
+                            <span class="material-icons">close</span>
                         </button>
                     </div>
                     
                     <!-- Compteur de résultats -->
-                    <div id="qrSearchResults" style="margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--md-sys-color-on-surface-variant); display: none;">
-                        <span class="material-icons" style="font-size: 18px; vertical-align: middle;">info</span>
+                    <div id="qrSearchResults" style="text-align: center; margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--md-sys-color-primary); display: none;">
                         <span id="qrResultCount"></span>
                     </div>
                 </div>
+
                 
                 <!-- Container QR Codes -->
                 <div class="qr-container" id="qrContainer">
@@ -4602,64 +4669,142 @@
         // =================================================================
         //  NOUVELLE FONCTION generateAllQRCodes NOHAMARININA
         // =================================================================
+        // === GÉNÉRATION DES QR CODES - VERSION COMPLÈTE AMÉLIORÉE ===
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
-            container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><p>Génération des QR codes en cours...</p></div>';
-
+            
+            // État de chargement
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div class="loading"></div>
+                    <h3 style="margin-top: 20px; color: var(--md-sys-color-primary);">Génération en cours...</h3>
+                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
+                        Veuillez patienter pendant la création des QR codes
+                    </p>
+                </div>
+            `;
+            
             try {
                 const qrCardsHTML = [];
+                let successCount = 0;
+                let errorCount = 0;
                 
+                // Boucle sur tous les employés
                 for (const employee of employees) {
-                    
-                    // 1. Antsoina ilay generateQRCode vaovao, izay mamerina Data URL mivantana
-                    const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
-                    
-                    if (dataURL) {
-                        // 2. Tehirizina ao amin'ny database ilay Data URL
-                        await dbManager.put('qr_codes', {
-                            employeeId: employee.id,
-                            dataURL: dataURL,
-                            generated: new Date().toISOString(),
-                            size: qrSettings.size,
-                            color: qrSettings.color
-                        });
-
-                        // 3. Amboarina ny HTML mba hiseho eo amin'ny pejy
-                        // Ao anatin'ny loop for (const employee of employees)
-                        const group = groups.find(g => g.id === employee.groupId);
-                        const groupName = group ? group.name : 'Sans groupe';
-
-                        qrCardsHTML.push(`
-                            <div class="qr-card">
-                                <h4>${employee.name}</h4>
-                                <p>${employee.position}</p>
-                                <div class="group-badge">${groupName}</div>
-                                <div class="qr-code-canvas">
-                                    <img src="${dataURL}" alt="QR Code de ${employee.name}" width="${qrSettings.size}" height="${qrSettings.size}">
+                    try {
+                        // 1. Génération du QR code
+                        const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
+                        
+                        if (dataURL) {
+                            // 2. Sauvegarde dans IndexedDB
+                            await dbManager.put('qrcodes', {
+                                employeeId: employee.id,
+                                dataURL: dataURL,
+                                generated: new Date().toISOString(),
+                                size: qrSettings.size,
+                                color: qrSettings.color
+                            });
+                            
+                            // 3. Récupération des informations
+                            const group = groups.find(g => g.id === employee.groupId);
+                            const groupName = group ? group.name : 'Sans groupe';
+                            
+                            // 4. Construction de la carte QR
+                            qrCardsHTML.push(`
+                                <div class="qr-card" data-employee-name="${employee.name.toLowerCase()}" data-employee-position="${employee.position.toLowerCase()}" data-employee-group="${groupName.toLowerCase()}">
+                                    <div class="qr-card-header">
+                                        <h4>${employee.name}</h4>
+                                        <p class="qr-position">${employee.position}</p>
+                                        <span class="qr-group-badge">
+                                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">group</span>
+                                            ${groupName}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="qr-code-canvas">
+                                        <img src="${dataURL}" 
+                                            alt="QR Code de ${employee.name}" 
+                                            width="${qrSettings.size}" 
+                                            height="${qrSettings.size}"
+                                            style="max-width: 100%; height: auto;">
+                                    </div>
+                                    
+                                    <div class="qr-actions">
+                                        <button class="btn-icon" 
+                                                onclick="downloadQRCode('${employee.id}')" 
+                                                title="Télécharger le QR code">
+                                            <span class="material-icons">download</span>
+                                        </button>
+                                        <button class="btn-icon" 
+                                                onclick="printQRCode('${employee.id}')" 
+                                                title="Imprimer le QR code">
+                                            <span class="material-icons">print</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="qr-actions">
-                                    <button class="btn-icon" onclick="downloadQRCode('${employee.id}')" title="Télécharger">
-                                        <span class="material-icons">download</span>
-                                    </button>
-                                    <button class="btn-icon" onclick="printQRCode('${employee.id}')" title="Imprimer">
-                                        <span class="material-icons">print</span>
-                                    </button>
-                                </div>
-                            </div>
-                        `);
-
+                            `);
+                            
+                            successCount++;
+                        } else {
+                            console.warn(`Échec de génération du QR code pour ${employee.name}`);
+                            errorCount++;
+                        }
+                        
+                    } catch (employeeError) {
+                        console.error(`Erreur pour l'employé ${employee.name}:`, employeeError);
+                        errorCount++;
                     }
                 }
-
-                container.innerHTML = qrCardsHTML.join('');
-                showAlert(`${qrCardsHTML.length} QR codes générés avec succès!`, 'success');
+                
+                // 5. Affichage des résultats
+                if (qrCardsHTML.length > 0) {
+                    container.innerHTML = qrCardsHTML.join('');
+                    
+                    // Message de succès
+                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''} avec succès!`;
+                    if (errorCount > 0) {
+                        message += ` (${errorCount} erreur${errorCount > 1 ? 's' : ''})`;
+                    }
+                    showAlert(message, 'success');
+                    
+                } else {
+                    // Aucun QR code généré
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error); opacity: 0.5;">error_outline</span>
+                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Aucun QR code généré</h3>
+                            <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
+                                Vérifiez qu'il y a des employés dans le système
+                            </p>
+                            <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
+                                <span class="material-icons">refresh</span>
+                                Réessayer
+                            </button>
+                        </div>
+                    `;
+                    showAlert('Aucun QR code n\'a pu être généré', 'error');
+                }
                 
             } catch (error) {
+                // Gestion des erreurs globales
                 console.error('Erreur critique lors de la génération des QR codes:', error);
-                container.innerHTML = '<p style="text-align: center; color: var(--md-sys-color-error);">Une erreur inattendue est survenue.</p>';
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
+                        <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Erreur de génération</h3>
+                        <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
+                            ${error.message || 'Une erreur inattendue est survenue'}
+                        </p>
+                        <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
+                            <span class="material-icons">refresh</span>
+                            Réessayer
+                        </button>
+                    </div>
+                `;
                 showAlert('Erreur critique lors de la génération des QR codes', 'error');
             }
         }
+
 
         // Scanner QR Code
         // ===================================================
