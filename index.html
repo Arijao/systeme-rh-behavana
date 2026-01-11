@@ -5214,6 +5214,7 @@
 
         async function startQRScan(purpose) {
             if (isScanning) {
+                console.log('⚠️ Scan précédent arrêté');
                 stopQRScan(false);
             }
 
