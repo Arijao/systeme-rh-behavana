@@ -12261,30 +12261,46 @@
                     console.log('Arrivée:', existingAttendance.arrivee);
                     console.log('Départ:', existingAttendance.depart);
                     
+                    // =====================================================
+                    // CAS 3: CALCUL DU TEMPS - VERSION FIXED
+                    // =====================================================
+
                     // Vérification sécurité
                     if (!existingAttendance.depart) {
                         console.error('❌ Erreur: depart est null!');
                         showAlert('❌ Erreur: Départ non enregistré', 'error');
                         return false;
                     }
-                    
+
+                    // ===== FANITSIANA: Gestion HH:MM:SS et HH:MM =====
+                    let departTime = existingAttendance.depart;
+
+                    // Raha misy secondes (HH:MM:SS) → Esorina ny secondes
+                    if (departTime.split(':').length === 3) {
+                        departTime = departTime.substring(0, 5); // Mitahiry HH:MM fotsiny
+                        console.log('⚙️ Format converti de HH:MM:SS → HH:MM:', departTime);
+                    }
+
                     // Calcul du temps
-                    const departureTimeString = `${today}T${existingAttendance.depart}:00`;
+                    const departureTimeString = `${today}T${departTime}:00`;
+                    console.log('🕐 Departure string:', departureTimeString);
+
                     const lastDeparture = new Date(departureTimeString);
-                    
+
                     if (isNaN(lastDeparture.getTime())) {
                         console.error('❌ Date invalide:', departureTimeString);
                         showAlert('❌ Erreur format heure', 'error');
                         return false;
                     }
-                    
+
                     const diffMs = now - lastDeparture;
                     const minutesSinceDeparture = Math.floor(diffMs / 1000 / 60);
-                    
+
                     console.log('🕐 lastDeparture:', lastDeparture);
                     console.log('🕐 now:', now);
                     console.log('⏱️ Minutes depuis départ:', minutesSinceDeparture);
                     console.log('========================================');
+
                     
                     // ===== SI >= 30 MINUTES → PROPOSER UPDATE =====
                     if (minutesSinceDeparture >= 30) {
