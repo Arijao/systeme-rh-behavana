@@ -4545,75 +4545,58 @@
         //  NOUVELLE FONCTION generateQRCode AVEC LA LIBRAIRIE QRCode.js
         // =================================================================
         // === GÉNÉRATION QR CODE - ANDROID COMPATIBLE VERSION ===
-        async function generateQRCode(employee, size = 256, color = '#6750A4') {
-            const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none';
-            document.body.appendChild(tempDiv);
-            
-            try {
-                const qrDataString = `BEHAVANAHR:${employee.id}`;
-                
-                // Générer le QR code
-                const qrcode = new QRCode(tempDiv, {
-                    text: qrDataString,
-                    width: size,
-                    height: size,
-                    colorDark: color,
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-                
-                // Attendre la génération
-                await new Promise(resolve => setTimeout(resolve, 150));
-                
-                const canvas = tempDiv.querySelector('canvas');
-                if (!canvas) {
-                    throw new Error('Canvas non généré');
-                }
-                
-                // MÉTHODE 1: Essayer toBlob (moderne)
-                let imageURL = null;
-                
+        function generateQRCode(employee, size = 256, color = '#6750A4') {
+            return new Promise((resolve, reject) => {
                 try {
-                    if (canvas.toBlob) {
-                        const blob = await new Promise((resolve, reject) => {
-                            canvas.toBlob(
-                                (b) => b ? resolve(b) : reject(new Error('Blob null')),
-                                'image/png',
-                                1.0
-                            );
-                        });
-                        
-                        if (blob) {
-                            imageURL = URL.createObjectURL(blob);
+                    // Créer conteneur temporaire
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.display = 'none';
+                    tempDiv.id = `qr-temp-${employee.id}`;
+                    document.body.appendChild(tempDiv);
+                    
+                    // Données QR
+                    const qrDataString = `BEHAVANAHR:${employee.id}`;
+                    
+                    // Générer QR code
+                    new QRCode(tempDiv, {
+                        text: qrDataString,
+                        width: size,
+                        height: size,
+                        colorDark: color,
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    
+                    // Attendre et récupérer
+                    setTimeout(() => {
+                        try {
+                            const canvas = tempDiv.querySelector('canvas');
+                            
+                            if (canvas) {
+                                const dataURL = canvas.toDataURL('image/png', 0.9);
+                                document.body.removeChild(tempDiv);
+                                resolve(dataURL);
+                            } else {
+                                console.error('Canvas non trouvé pour', employee.name);
+                                document.body.removeChild(tempDiv);
+                                resolve(null);
+                            }
+                        } catch (err) {
+                            console.error('Erreur canvas:', err);
+                            if (document.body.contains(tempDiv)) {
+                                document.body.removeChild(tempDiv);
+                            }
+                            resolve(null);
                         }
-                    }
-                } catch (blobError) {
-                    console.warn('toBlob failed, using toDataURL fallback:', blobError);
+                    }, 300);
+                    
+                } catch (error) {
+                    console.error('Erreur QR pour', employee.name, ':', error);
+                    resolve(null);
                 }
-                
-                // MÉTHODE 2: Fallback toDataURL (Android compatible)
-                if (!imageURL) {
-                    try {
-                        imageURL = canvas.toDataURL('image/png', 1.0);
-                    } catch (dataURLError) {
-                        console.error('toDataURL failed:', dataURLError);
-                    }
-                }
-                
-                // Nettoyage
-                document.body.removeChild(tempDiv);
-                
-                return imageURL;
-                
-            } catch (error) {
-                console.error('Erreur génération QR pour', employee.name, error);
-                if (document.body.contains(tempDiv)) {
-                    document.body.removeChild(tempDiv);
-                }
-                return null;
-            }
+            });
         }
+
 
 
         // Alternative complète sans bibliothèque externe - QR Code simple
@@ -4690,43 +4673,65 @@
 
         // =================================================================
         
-        // === GÉNÉRATION QR CODES - SAFE VERSION ===
+        // === GÉNÉRATION TOUS LES QR - VERSION ROBUSTE ===
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
             
+            console.log('🚀 Début génération, Employés:', employees.length);
+            
+            // Vérification préalable
+            if (!employees || employees.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <span class="material-icons" style="font-size: 64px; color: #94a3b8; opacity: 0.5;">person_off</span>
+                        <h3 style="margin-top: 20px; color: #475569;">Aucun employé trouvé</h3>
+                        <p style="color: #94a3b8; margin-top: 10px;">Ajoutez des employés d'abord</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // État chargement
             container.innerHTML = `
                 <div style="text-align: center; padding: 60px 20px;">
                     <div class="loading"></div>
-                    <h3 style="margin-top: 20px; color: var(--md-sys-color-primary);">Génération en cours...</h3>
-                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                        📦 ${employees.length} QR codes à générer
+                    <h3 style="margin-top: 20px; color: var(--md-sys-color-primary); font-weight: 700;">
+                        Génération en cours...
+                    </h3>
+                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px; font-size: 15px;">
+                        ⏳ ${employees.length} employé${employees.length > 1 ? 's' : ''} à traiter
+                    </p>
+                    <p id="progressText" style="color: var(--md-sys-color-primary); margin-top: 8px; font-weight: 600;">
+                        0 / ${employees.length}
                     </p>
                 </div>
             `;
             
             try {
-                if (!employees || employees.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 60px 20px;">
-                            <span class="material-icons" style="font-size: 64px; opacity: 0.3;">person_off</span>
-                            <h3 style="margin-top: 20px;">Aucun employé trouvé</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
                 const qrCardsHTML = [];
                 let successCount = 0;
                 let errorCount = 0;
                 
-                // Générer chaque QR code
-                for (const employee of employees) {
+                // Générer un par un
+                for (let i = 0; i < employees.length; i++) {
+                    const employee = employees[i];
+                    
+                    // Mise à jour progrès
+                    const progressText = document.getElementById('progressText');
+                    if (progressText) {
+                        progressText.textContent = `${i + 1} / ${employees.length}`;
+                    }
+                    
                     try {
-                        // 1. Générer le QR code
+                        console.log(`📝 Génération QR pour: ${employee.name}`);
+                        
+                        // Générer QR
                         const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                         
                         if (dataURL && dataURL.startsWith('data:image')) {
-                            // 2. SAUVEGARDER dans 'qr_codes' (avec underscore)
+                            console.log(`✅ QR généré pour ${employee.name}`);
+                            
+                            // Sauvegarder dans DB
                             try {
                                 await dbManager.put('qr_codes', {
                                     employeeId: employee.id,
@@ -4738,17 +4743,16 @@
                                     size: qrSettings.size,
                                     color: qrSettings.color
                                 });
-                                console.log(`✅ QR sauvegardé: ${employee.name}`);
-                            } catch (dbError) {
-                                console.warn(`⚠️ Sauvegarde DB échouée pour ${employee.name}:`, dbError);
-                                // Continue quand même avec l'affichage
+                                console.log(`💾 QR sauvegardé pour ${employee.name}`);
+                            } catch (dbErr) {
+                                console.warn(`⚠️ Sauvegarde DB échouée pour ${employee.name}:`, dbErr);
                             }
                             
-                            // 3. Récupérer le groupe
+                            // Récupérer groupe
                             const group = groups.find(g => g.id === employee.groupId);
                             const groupName = group ? group.name : 'Sans groupe';
                             
-                            // 4. Construction HTML avec POSTE et GROUPE
+                            // HTML
                             qrCardsHTML.push(`
                                 <div class="qr-card" data-employee-id="${employee.id}">
                                     <div class="qr-card-header">
@@ -4765,8 +4769,7 @@
                                             alt="QR ${employee.name}" 
                                             width="${qrSettings.size}" 
                                             height="${qrSettings.size}"
-                                            loading="lazy"
-                                            style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto; border-radius: 8px;">
+                                            style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto;">
                                     </div>
                                     
                                     <div class="qr-actions">
@@ -4782,6 +4785,7 @@
                             
                             successCount++;
                         } else {
+                            console.error(`❌ QR invalide pour ${employee.name}`);
                             errorCount++;
                         }
                         
@@ -4791,26 +4795,27 @@
                     }
                 }
                 
-                // Affichage final
+                // Affichage résultats
+                console.log(`📊 Résultats: ${successCount} succès, ${errorCount} erreurs`);
+                
                 if (qrCardsHTML.length > 0) {
                     container.innerHTML = qrCardsHTML.join('');
-                    
-                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''}`;
-                    if (errorCount > 0) {
-                        message += ` | ⚠️ ${errorCount} erreur${errorCount > 1 ? 's' : ''}`;
-                    }
-                    showAlert(message, 'success');
+                    showAlert(`✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''}!`, 'success');
                 } else {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px 20px;">
                             <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
-                            <h3 style="margin-top: 20px;">Échec de génération</h3>
+                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Échec de génération</h3>
+                            <p style="margin-top: 10px; color: var(--md-sys-color-on-surface-variant);">
+                                ${errorCount} erreur${errorCount > 1 ? 's' : ''} survenue${errorCount > 1 ? 's' : ''}
+                            </p>
                             <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                                 <span class="material-icons">refresh</span>
                                 Réessayer
                             </button>
                         </div>
                     `;
+                    showAlert(`Échec: ${errorCount} erreurs`, 'error');
                 }
                 
             } catch (error) {
@@ -4818,7 +4823,7 @@
                 container.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
                         <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
-                        <h3 style="margin-top: 20px;">Erreur</h3>
+                        <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Erreur critique</h3>
                         <p style="margin-top: 10px;">${error.message}</p>
                         <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                             <span class="material-icons">refresh</span>
@@ -4828,6 +4833,7 @@
                 `;
             }
         }
+
 
         // === TÉLÉCHARGER QR depuis DB ===
         async function downloadQRCodeFromDB(employeeId) {
