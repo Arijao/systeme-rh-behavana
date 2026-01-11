@@ -455,7 +455,7 @@
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
-            overflow: hidden;
+            overflow: visible !important;
         }
 
         .stat-card::before {
@@ -2714,6 +2714,57 @@
             }
         }
         /*=========================================*/
+
+        /* =====================================================
+        STAT CARD - OVERFLOW VISIBLE
+        ===================================================== */
+        .stat-card {
+            position: relative;
+            overflow: visible !important; /* IMPORTANTE! */
+        }
+
+        /* =====================================================
+        DROPDOWN MENU - FIXED POSITION
+        ===================================================== */
+        #scanMethodMenu {
+            animation: menuSlideDown 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        @keyframes menuSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Hover effect items */
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+
+        /* Dark theme support */
+        body.dark-mode #scanMethodMenu {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        body.dark-mode .menu-item {
+            border-color: #374151 !important;
+        }
+
+        body.dark-mode .menu-item:hover {
+            background: #374151 !important;
+        }
+
+        body.dark-mode .menu-item div {
+            color: #f3f4f6 !important;
+        }
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -2932,7 +2983,7 @@
                 </div>
                 
                 <!-- Card Scans avec Menu Dropdown -->
-                <div class="stat-card">
+                <div class="stat-card" style="overflow: visible !important; position: relative;">
                     <div class="stat-icon">
                         <span class="material-icons" id="scanMethodIcon">qr_code_scanner</span>
                     </div>
@@ -2942,66 +2993,80 @@
                     </div>
                     
                     <!-- 3 DOTS MENU -->
-                    <div style="position: absolute; top: 12px; right: 12px;">
+                    <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
                         <button onclick="toggleScanMethodMenu(event)" 
-                                style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s;"
+                                style="background: none; border: none; cursor: pointer; padding: 4px; 
+                                    border-radius: 50%; transition: background 0.2s;"
                                 onmouseover="this.style.background='rgba(0,0,0,0.1)'"
                                 onmouseout="this.style.background='none'">
-                            <span class="material-icons" style="color: var(--md-sys-color-on-surface); font-size: 20px;">more_vert</span>
+                            <span class="material-icons" style="color: var(--md-sys-color-on-surface); font-size: 20px;">
+                                more_vert
+                            </span>
                         </button>
-                        
-                        <!-- DROPDOWN MENU -->
-                        <div id="scanMethodMenu" 
-                            style="display: none; position: absolute; top: 32px; right: 0; 
-                                    background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                                    min-width: 200px; z-index: 1000; overflow: hidden;">
-                            
-                            <div onclick="filterScanMethod('all')" 
-                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
-                                onmouseover="this.style.background='#f3f4f6'"
-                                onmouseout="this.style.background='white'">
-                                <span class="material-icons" style="color: #6750A4; font-size: 20px;">apps</span>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 14px;">Tous</div>
-                                    <div style="font-size: 11px; color: #6b7280;" id="allCount">0 pointages</div>
-                                </div>
-                            </div>
-                            
-                            <div onclick="filterScanMethod('qr')" 
-                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
-                                onmouseover="this.style.background='#f3f4f6'"
-                                onmouseout="this.style.background='white'">
-                                <span class="material-icons" style="color: #6750A4; font-size: 20px;">qr_code_scanner</span>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 14px;">QR Code</div>
-                                    <div style="font-size: 11px; color: #6b7280;" id="qrCount">0 scans</div>
-                                </div>
-                            </div>
-                            
-                            <div onclick="filterScanMethod('manual')" 
-                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e7eb;"
-                                onmouseover="this.style.background='#f3f4f6'"
-                                onmouseout="this.style.background='white'">
-                                <span class="material-icons" style="color: #f59e0b; font-size: 20px;">edit</span>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 14px;">Manuel</div>
-                                    <div style="font-size: 11px; color: #6b7280;" id="manualCount">0 entrées</div>
-                                </div>
-                            </div>
-                            
-                            <div onclick="filterScanMethod('facial')" 
-                                style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
-                                onmouseover="this.style.background='#f3f4f6'"
-                                onmouseout="this.style.background='white'">
-                                <span class="material-icons" style="color: #0ea5e9; font-size: 20px;">face</span>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 14px;">Facial</div>
-                                    <div style="font-size: 11px; color: #6b7280;" id="facialCount">0 reconnaissances</div>
-                                </div>
-                            </div>
+                    </div>
+                </div>
+
+                <!-- DROPDOWN EO IVELANY CARD -->
+                <div id="scanMethodMenu" 
+                    style="display: none; position: fixed; 
+                            background: white; border-radius: 12px; 
+                            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                            min-width: 220px; z-index: 9999; 
+                            overflow: hidden; border: 1px solid #e5e7eb;">
+                    
+                    <div onclick="filterScanMethod('all')" 
+                        class="menu-item"
+                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='white'">
+                        <span class="material-icons" style="color: #6b7280; font-size: 22px;">apps</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Tous</div>
+                            <div style="font-size: 12px; color: #6b7280;" id="allCount">0 pointages</div>
+                        </div>
+                    </div>
+                    
+                    <div onclick="filterScanMethod('qr')" 
+                        class="menu-item"
+                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='white'">
+                        <span class="material-icons" style="color: #6750A4; font-size: 22px;">qr_code_scanner</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">QR Code</div>
+                            <div style="font-size: 12px; color: #6b7280;" id="qrCount">0 scans</div>
+                        </div>
+                    </div>
+                    
+                    <div onclick="filterScanMethod('manual')" 
+                        class="menu-item"
+                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='white'">
+                        <span class="material-icons" style="color: #f59e0b; font-size: 22px;">edit</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Manuel</div>
+                            <div style="font-size: 12px; color: #6b7280;" id="manualCount">0 entrées</div>
+                        </div>
+                    </div>
+                    
+                    <div onclick="filterScanMethod('facial')" 
+                        class="menu-item"
+                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+                                transition: background 0.2s;"
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='white'">
+                        <span class="material-icons" style="color: #0ea5e9; font-size: 22px;">face</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Facial</div>
+                            <div style="font-size: 12px; color: #6b7280;" id="facialCount">0 reconnaissances</div>
                         </div>
                     </div>
                 </div>
+
 
                 <div class="stat-card">
                     <div class="stat-icon">
@@ -11813,13 +11878,43 @@
         // Variable globale
         window.currentMethodFilter = 'all';
 
-        // Toggle menu
+        // =====================================================
+        // === TOGGLE MENU 
+        // =====================================================
         function toggleScanMethodMenu(event) {
             event.stopPropagation();
+            
             const menu = document.getElementById('scanMethodMenu');
+            const button = event.currentTarget;
+            
+            if (!menu || !button) return;
             
             if (menu.style.display === 'none') {
+                // CALCULATION POSITION
+                const rect = button.getBoundingClientRect();
+                
+                // Position menu eo ambanin'ny button
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.style.right = (window.innerWidth - rect.right) + 'px';
+                
+                // Hamarino fa tsy hivoaka ny écran
                 menu.style.display = 'block';
+                
+                // Ajustement raha tsy mifanaraka
+                setTimeout(() => {
+                    const menuRect = menu.getBoundingClientRect();
+                    
+                    // Raha mivoaka eo ambany
+                    if (menuRect.bottom > window.innerHeight) {
+                        menu.style.top = (rect.top - menuRect.height - 8) + 'px';
+                    }
+                    
+                    // Raha mivoaka eo ankavanana
+                    if (menuRect.left < 0) {
+                        menu.style.right = '8px';
+                    }
+                }, 10);
+                
                 updateMethodCounts();
             } else {
                 menu.style.display = 'none';
@@ -11830,11 +11925,12 @@
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('scanMethodMenu');
             if (menu && menu.style.display === 'block') {
-                if (!e.target.closest('.stat-card')) {
+                if (!e.target.closest('#scanMethodMenu') && !e.target.closest('button')) {
                     menu.style.display = 'none';
                 }
             }
         });
+
 
         // Update counts dans le menu
         function updateMethodCounts() {
