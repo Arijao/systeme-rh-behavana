@@ -4544,54 +4544,77 @@
         // =================================================================
         //  NOUVELLE FONCTION generateQRCode AVEC LA LIBRAIRIE QRCode.js
         // =================================================================
+        // === GÉNÉRATION QR CODE - ANDROID COMPATIBLE VERSION ===
         async function generateQRCode(employee, size = 256, color = '#6750A4') {
-            
-            // 1. Mamorona DIV vonjimaika sy tsy hita maso isika
             const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none'; // Tsy hita maso
+            tempDiv.style.display = 'none';
             document.body.appendChild(tempDiv);
-
+            
             try {
-                // 2. Angonina ny data (ID an'ny mpiasa ihany)
-                const qrDataString = `BEHAVANA_HR::${employee.id}`;
-
-                // 3. Ampiasaina ilay tranomboky vaovao QRCode.js
+                const qrDataString = `BEHAVANAHR:${employee.id}`;
+                
+                // Générer le QR code
                 const qrcode = new QRCode(tempDiv, {
                     text: qrDataString,
                     width: size,
                     height: size,
                     colorDark: color,
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H // Error correction avo lenta
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
                 });
-
-                // 4. Miandry kely (50ms) mba ho vita tsara ilay sary
-                await new Promise(resolve => setTimeout(resolve, 50));
-
-                // 5. Alaina ilay sary <img> noforoniny ho azy
-                const imgElement = tempDiv.querySelector('img');
-                if (!imgElement) {
-                    throw new Error("Tsy voaforona ny sary QR Code.");
+                
+                // Attendre la génération
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
+                const canvas = tempDiv.querySelector('canvas');
+                if (!canvas) {
+                    throw new Error('Canvas non généré');
                 }
                 
-                // Alaina ny Data URL an'ilay sary
-                const dataURL = imgElement.src;
-
-                // 6. Fafana ilay DIV vonjimaika
+                // MÉTHODE 1: Essayer toBlob (moderne)
+                let imageURL = null;
+                
+                try {
+                    if (canvas.toBlob) {
+                        const blob = await new Promise((resolve, reject) => {
+                            canvas.toBlob(
+                                (b) => b ? resolve(b) : reject(new Error('Blob null')),
+                                'image/png',
+                                1.0
+                            );
+                        });
+                        
+                        if (blob) {
+                            imageURL = URL.createObjectURL(blob);
+                        }
+                    }
+                } catch (blobError) {
+                    console.warn('toBlob failed, using toDataURL fallback:', blobError);
+                }
+                
+                // MÉTHODE 2: Fallback toDataURL (Android compatible)
+                if (!imageURL) {
+                    try {
+                        imageURL = canvas.toDataURL('image/png', 1.0);
+                    } catch (dataURLError) {
+                        console.error('toDataURL failed:', dataURLError);
+                    }
+                }
+                
+                // Nettoyage
                 document.body.removeChild(tempDiv);
-
-                // 7. Averina ilay Data URL
-                return dataURL;
-
+                
+                return imageURL;
+                
             } catch (error) {
-                console.error(`Erreur critique avec QRCode.js pour ${employee.name}:`, error);
-                // Raha misy olana, fafana ilay div ary averina null
+                console.error('Erreur génération QR pour', employee.name, error);
                 if (document.body.contains(tempDiv)) {
                     document.body.removeChild(tempDiv);
                 }
-                return null; // Averina null mba hahafantarana fa nisy olana
+                return null;
             }
         }
+
 
         // Alternative complète sans bibliothèque externe - QR Code simple
         function generateSimpleQRCode(employee, size = 256, color = '#6750A4') {
@@ -4670,17 +4693,16 @@
         //  NOUVELLE FONCTION generateAllQRCodes NOHAMARININA
         // =================================================================
         // === GÉNÉRATION DES QR CODES - VERSION COMPLÈTE AMÉLIORÉE ===
-        // === GÉNÉRATION QR CODES - VERSION MEMORY STORAGE ===
+        // === GÉNÉRATION QR CODES - VERSION COMPLÈTE AVEC TOUTES LES INFOS ===
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
             
-            // État de chargement
             container.innerHTML = `
                 <div style="text-align: center; padding: 60px 20px;">
                     <div class="loading"></div>
                     <h3 style="margin-top: 20px; color: var(--md-sys-color-primary);">Génération en cours...</h3>
-                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                        Veuillez patienter pendant la création des QR codes
+                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px; font-size: 14px;">
+                        ${employees.length} employé${employees.length > 1 ? 's' : ''} à traiter
                     </p>
                 </div>
             `;
@@ -4690,21 +4712,34 @@
                 let successCount = 0;
                 let errorCount = 0;
                 
-                // Initialiser le stockage en mémoire
+                // Initialiser le stockage
                 if (!window.generatedQRCodes) {
                     window.generatedQRCodes = {};
                 }
                 
-                // Boucle sur tous les employés
+                // Vérifier qu'il y a des employés
+                if (!employees || employees.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error); opacity: 0.5;">person_off</span>
+                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Aucun employé</h3>
+                            <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
+                                Ajoutez des employés d'abord
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Boucle génération
                 for (const employee of employees) {
                     try {
-                        // 1. Génération du QR code (blob URL)
-                        const blobURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
+                        const imageURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                         
-                        if (blobURL) {
-                            // 2. STOCKAGE EN MÉMOIRE (pas de database)
+                        if (imageURL) {
+                            // Stockage en mémoire
                             window.generatedQRCodes[employee.id] = {
-                                dataURL: blobURL,
+                                dataURL: imageURL,
                                 employeeName: employee.name,
                                 employeePosition: employee.position,
                                 employeeGroupId: employee.groupId,
@@ -4713,11 +4748,11 @@
                                 color: qrSettings.color
                             };
                             
-                            // 3. Récupération des informations
+                            // Récupérer le groupe
                             const group = groups.find(g => g.id === employee.groupId);
                             const groupName = group ? group.name : 'Sans groupe';
                             
-                            // 4. Construction de la carte QR
+                            // CONSTRUCTION HTML AVEC TOUTES LES INFOS
                             qrCardsHTML.push(`
                                 <div class="qr-card" data-employee-id="${employee.id}">
                                     <div class="qr-card-header">
@@ -4730,23 +4765,20 @@
                                     </div>
                                     
                                     <div class="qr-code-canvas">
-                                        <img src="${blobURL}" 
-                                            alt="QR Code ${employee.name}" 
+                                        <img src="${imageURL}" 
+                                            alt="QR ${employee.name}" 
                                             width="${qrSettings.size}" 
                                             height="${qrSettings.size}"
                                             loading="lazy"
+                                            onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>Erreur QR</p>';"
                                             style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto;">
                                     </div>
                                     
                                     <div class="qr-actions">
-                                        <button class="btn-icon" 
-                                                onclick="downloadQRCodeMemory('${employee.id}')" 
-                                                title="Télécharger le QR code">
+                                        <button class="btn-icon" onclick="downloadQRCodeMemory('${employee.id}')" title="Télécharger">
                                             <span class="material-icons">download</span>
                                         </button>
-                                        <button class="btn-icon" 
-                                                onclick="printQRCodeMemory('${employee.id}')" 
-                                                title="Imprimer le QR code">
+                                        <button class="btn-icon" onclick="printQRCodeMemory('${employee.id}')" title="Imprimer">
                                             <span class="material-icons">print</span>
                                         </button>
                                     </div>
@@ -4755,35 +4787,33 @@
                             
                             successCount++;
                         } else {
-                            console.warn(`Échec de génération du QR code pour ${employee.name}`);
+                            console.warn(`QR non généré pour ${employee.name}`);
                             errorCount++;
                         }
                         
-                    } catch (employeeError) {
-                        console.error(`Erreur pour l'employé ${employee.name}:`, employeeError);
+                    } catch (err) {
+                        console.error(`Erreur pour ${employee.name}:`, err);
                         errorCount++;
                     }
                 }
                 
-                // 5. Affichage des résultats
+                // Affichage
                 if (qrCardsHTML.length > 0) {
                     container.innerHTML = qrCardsHTML.join('');
                     
-                    // Message de succès
-                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''} avec succès!`;
+                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''}!`;
                     if (errorCount > 0) {
-                        message += ` (${errorCount} erreur${errorCount > 1 ? 's' : ''})`;
+                        message += ` ⚠️ ${errorCount} erreur${errorCount > 1 ? 's' : ''}`;
                     }
                     showAlert(message, 'success');
                     
                 } else {
-                    // Aucun QR code généré
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px 20px;">
-                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error); opacity: 0.5;">error_outline</span>
-                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Aucun QR code généré</h3>
+                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error_outline</span>
+                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Échec de génération</h3>
                             <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                                Vérifiez qu'il y a des employés dans le système
+                                ${errorCount} erreur${errorCount > 1 ? 's' : ''} survenue${errorCount > 1 ? 's' : ''}
                             </p>
                             <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                                 <span class="material-icons">refresh</span>
@@ -4791,28 +4821,26 @@
                             </button>
                         </div>
                     `;
-                    showAlert('Aucun QR code n\'a pu être généré', 'error');
+                    showAlert(`${errorCount} erreur${errorCount > 1 ? 's' : ''} lors de la génération`, 'error');
                 }
                 
             } catch (error) {
-                // Gestion des erreurs globales
-                console.error('Erreur critique lors de la génération des QR codes:', error);
+                console.error('Erreur critique:', error);
                 container.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
                         <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
-                        <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Erreur de génération</h3>
-                        <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                            ${error.message || 'Une erreur inattendue est survenue'}
-                        </p>
+                        <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Erreur critique</h3>
+                        <p style="margin-top: 10px;">${error.message}</p>
                         <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                             <span class="material-icons">refresh</span>
                             Réessayer
                         </button>
                     </div>
                 `;
-                showAlert('Erreur critique lors de la génération des QR codes', 'error');
+                showAlert('Erreur: ' + error.message, 'error');
             }
         }
+
 
         // === DOWNLOAD DEPUIS MÉMOIRE ===
         function downloadQRCodeMemory(employeeId) {
