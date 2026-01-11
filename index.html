@@ -2632,6 +2632,41 @@
             }
         }
 
+        /*=====NOTIFICATION PRÉSENCE==========*/
+        /* Notification container */
+        #notificationsContainer {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Alert smooth appearance */
+        .alert {
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hover effect sur liste employés */
+        #notificationsContainer .alert div[style*="border-left: 3px solid"] {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #notificationsContainer .alert div[style*="border-left: 3px solid"]:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+
     </style>
 
     <!-- Face Recognition Library -->
@@ -7260,6 +7295,7 @@
             await saveAttendanceData();
             displayAttendance();
             updateStats();
+            runSmartChecks();
         }
 
 
@@ -7272,6 +7308,7 @@
                 await saveAttendanceData();
                 displayAttendance();
                 updateStats();
+                runSmartChecks();
                 showAlert("Présence annulée.", "success");
             }
         }
@@ -7308,6 +7345,7 @@
             
             // Havaozina ny statistika ankapobeny
             updateStats();
+            runSmartChecks();
         }
 
 
@@ -8813,45 +8851,133 @@
         }
 
         // ===================================================
-        //  FONCTION VAOVAO: Fanamarinana Hendry (Smart Checks)
+        // === SMART CHECKS - VERSION intelligent ===
         // ===================================================
         function runSmartChecks() {
             const container = document.getElementById('notificationsContainer');
             if (!container) return;
 
-            // Diovina aloha ny fampandrenesana taloha
+            // Diovina aloha ny notifications taloha
             container.innerHTML = '';
 
             const today = new Date().toISOString().split('T')[0];
-            const dayAttendance = attendance[today] || {};
+            const dayAttendance = attendance[today];
 
-            // --- Fanamarinana 1: Mpiasa tsy nanisy "Départ" ---
-            let missingDepartureCount = 0;
+            if (!dayAttendance) return;
+
+            // === FANAMARINANA: Employés tsy nanao départ ===
+            let missingDepartureEmployees = [];
+
             for (const empId in dayAttendance) {
                 const att = dayAttendance[empId];
-                // Raha misy 'arrivee' nefa tsy misy 'depart'
-                if (att && att.arrivee && !att.depart) {
-                    missingDepartureCount++;
+                
+                // HAMARINO: Objet misy arrivée fa tsy misy départ
+                if (typeof att === 'object' && att !== null) {
+                    if (att.arrivee && !att.depart) {
+                        const employee = employees.find(e => e.id === empId);
+                        if (employee) {
+                            missingDepartureEmployees.push({
+                                id: empId,
+                                name: employee.name,
+                                position: employee.position,
+                                arrivee: att.arrivee,
+                                method: att.method || 'MANUAL'
+                            });
+                        }
+                    }
                 }
             }
 
-            if (missingDepartureCount > 0) {
-                const message = `<strong>Attention:</strong> ${missingDepartureCount} employé(s) ont pointé leur arrivée mais n'ont pas encore pointé leur départ.`;
+            // === AFFICHAGE NY NOTIFICATION ===
+            if (missingDepartureEmployees.length > 0) {
+                // Alahatra araka ny ora arrivée
+                missingDepartureEmployees.sort((a, b) => a.arrivee.localeCompare(b.arrivee));
+                
+                // Icon selon méthode
+                const getMethodIcon = (method) => {
+                    if (method === 'QR') return 'qr_code_scanner';
+                    if (method === 'FACIAL') return 'face';
+                    return 'edit';
+                };
+                
+                const getMethodColor = (method) => {
+                    if (method === 'QR') return '#6750A4';
+                    if (method === 'FACIAL') return '#0ea5e9';
+                    return '#f59e0b';
+                };
+
+                const message = `
+                    <div class="alert alert-warning" style="margin: 0; padding: 16px; border-radius: 12px; border-left: 5px solid #f59e0b; background: rgba(245, 158, 11, 0.1);">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span class="material-icons" style="color: #f59e0b; font-size: 28px;">watch_later</span>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 16px; color: #92400e; display: block; margin-bottom: 8px;">
+                                    ⚠️ ${missingDepartureEmployees.length} employé(s) en attente de départ
+                                </strong>
+                                
+                                <!-- Liste des employés -->
+                                <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                    ${missingDepartureEmployees.map(emp => `
+                                        <div style="display: flex; align-items: center; justify-content: space-between; 
+                                                    padding: 10px; background: white; border-radius: 8px; 
+                                                    border-left: 3px solid ${getMethodColor(emp.method)};">
+                                            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                                                <span class="material-icons" style="color: ${getMethodColor(emp.method)}; font-size: 20px;">
+                                                    ${getMethodIcon(emp.method)}
+                                                </span>
+                                                <div>
+                                                    <strong style="display: block; font-size: 14px; color: #1e293b;">${emp.name}</strong>
+                                                    <span style="font-size: 12px; color: #64748b;">${emp.position}</span>
+                                                </div>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <div style="font-size: 13px; color: #64748b;">Arrivée</div>
+                                                <strong style="font-size: 15px; color: #0f172a;">${emp.arrivee}</strong>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <!-- Action rapide -->
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fde68a;">
+                                    <span style="font-size: 13px; color: #92400e;">
+                                        💡 <strong>Action:</strong> Marquez leur départ dans 
+                                        <a href="#" onclick="showSection('attendance'); return false;" 
+                                        style="color: #6750A4; text-decoration: underline; font-weight: 600;">
+                                            Gestion des Présences
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
                 displayNotification(message, 'warning', 'watch_later');
             }
 
-            // --- Fanamarinana 2 (Ohatra fanampiny): Mpiasa tsy tonga nefa tsy misy fanazavana ---
-            // (Ity dia azo ampidirina any aoriana rehefa misy fitantanana "Congés")
-            // const presentIds = new Set(Object.keys(dayAttendance));
-            // const absentCount = employees.filter(emp => !presentIds.has(emp.id)).length;
-            // if (absentCount > 0) {
-            //     const message = `<strong>Info:</strong> ${absentCount} employé(s) sont marqués absents aujourd'hui.`;
-            //     displayNotification(message, 'info', 'person_off');
-            // }
+            // === AUTRES VÉRIFICATIONS (Raha tianao ampiana) ===
             
-            // Azo ampiana fanamarinana hafa eto...
-            // Ohatra: Fanamarinana raha efa voakajy ny karama, sns.
+            // Exemple: Employés absents aujourd'hui
+            const presentIds = Object.keys(dayAttendance);
+            const absentEmployees = employees.filter(e => 
+                e.status === 'actif' && !presentIds.includes(e.id)
+            );
+            
+            if (absentEmployees.length > 0) {
+                // Notification fotsiny raha tena be loatra ny absent (ohatra > 5)
+                if (absentEmployees.length > 5) {
+                    const simpleMessage = `
+                        <div class="alert alert-info" style="margin: 0; padding: 12px; border-radius: 8px; border-left: 4px solid #0ea5e9; background: rgba(14, 165, 233, 0.08);">
+                            <span class="material-icons" style="color: #0ea5e9; vertical-align: middle; margin-right: 8px;">info</span>
+                            <strong>${absentEmployees.length} employé(s) absent(s) aujourd'hui</strong>
+                        </div>
+                    `;
+                    displayNotification(simpleMessage, 'info', 'info');
+                }
+            }
         }
+
 
 
         // ===============================
