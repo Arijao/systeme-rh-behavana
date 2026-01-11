@@ -4688,12 +4688,9 @@
             });
         }
 
-        // Modifier la fonction generateAllQRCodes pour utiliser la version simple
         // =================================================================
-        //  NOUVELLE FONCTION generateAllQRCodes NOHAMARININA
-        // =================================================================
-        // === GÉNÉRATION DES QR CODES - VERSION COMPLÈTE AMÉLIORÉE ===
-        // === GÉNÉRATION QR CODES - VERSION COMPLÈTE AVEC TOUTES LES INFOS ===
+        
+        // === GÉNÉRATION QR CODES - SAFE VERSION ===
         async function generateAllQRCodes() {
             const container = document.getElementById('qrContainer');
             
@@ -4701,58 +4698,57 @@
                 <div style="text-align: center; padding: 60px 20px;">
                     <div class="loading"></div>
                     <h3 style="margin-top: 20px; color: var(--md-sys-color-primary);">Génération en cours...</h3>
-                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px; font-size: 14px;">
-                        ${employees.length} employé${employees.length > 1 ? 's' : ''} à traiter
+                    <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
+                        📦 ${employees.length} QR codes à générer
                     </p>
                 </div>
             `;
             
             try {
-                const qrCardsHTML = [];
-                let successCount = 0;
-                let errorCount = 0;
-                
-                // Initialiser le stockage
-                if (!window.generatedQRCodes) {
-                    window.generatedQRCodes = {};
-                }
-                
-                // Vérifier qu'il y a des employés
                 if (!employees || employees.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px 20px;">
-                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error); opacity: 0.5;">person_off</span>
-                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Aucun employé</h3>
-                            <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                                Ajoutez des employés d'abord
-                            </p>
+                            <span class="material-icons" style="font-size: 64px; opacity: 0.3;">person_off</span>
+                            <h3 style="margin-top: 20px;">Aucun employé trouvé</h3>
                         </div>
                     `;
                     return;
                 }
                 
-                // Boucle génération
+                const qrCardsHTML = [];
+                let successCount = 0;
+                let errorCount = 0;
+                
+                // Générer chaque QR code
                 for (const employee of employees) {
                     try {
-                        const imageURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
+                        // 1. Générer le QR code
+                        const dataURL = await generateQRCode(employee, qrSettings.size, qrSettings.color);
                         
-                        if (imageURL) {
-                            // Stockage en mémoire
-                            window.generatedQRCodes[employee.id] = {
-                                dataURL: imageURL,
-                                employeeName: employee.name,
-                                employeePosition: employee.position,
-                                employeeGroupId: employee.groupId,
-                                generated: new Date().toISOString(),
-                                size: qrSettings.size,
-                                color: qrSettings.color
-                            };
+                        if (dataURL && dataURL.startsWith('data:image')) {
+                            // 2. SAUVEGARDER dans 'qr_codes' (avec underscore)
+                            try {
+                                await dbManager.put('qr_codes', {
+                                    employeeId: employee.id,
+                                    employeeName: employee.name,
+                                    employeePosition: employee.position,
+                                    employeeGroupId: employee.groupId,
+                                    dataURL: dataURL,
+                                    generated: new Date().toISOString(),
+                                    size: qrSettings.size,
+                                    color: qrSettings.color
+                                });
+                                console.log(`✅ QR sauvegardé: ${employee.name}`);
+                            } catch (dbError) {
+                                console.warn(`⚠️ Sauvegarde DB échouée pour ${employee.name}:`, dbError);
+                                // Continue quand même avec l'affichage
+                            }
                             
-                            // Récupérer le groupe
+                            // 3. Récupérer le groupe
                             const group = groups.find(g => g.id === employee.groupId);
                             const groupName = group ? group.name : 'Sans groupe';
                             
-                            // CONSTRUCTION HTML AVEC TOUTES LES INFOS
+                            // 4. Construction HTML avec POSTE et GROUPE
                             qrCardsHTML.push(`
                                 <div class="qr-card" data-employee-id="${employee.id}">
                                     <div class="qr-card-header">
@@ -4765,20 +4761,19 @@
                                     </div>
                                     
                                     <div class="qr-code-canvas">
-                                        <img src="${imageURL}" 
+                                        <img src="${dataURL}" 
                                             alt="QR ${employee.name}" 
                                             width="${qrSettings.size}" 
                                             height="${qrSettings.size}"
                                             loading="lazy"
-                                            onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>Erreur QR</p>';"
-                                            style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto;">
+                                            style="display: block; width: 100%; max-width: ${qrSettings.size}px; height: auto; margin: 0 auto; border-radius: 8px;">
                                     </div>
                                     
                                     <div class="qr-actions">
-                                        <button class="btn-icon" onclick="downloadQRCodeMemory('${employee.id}')" title="Télécharger">
+                                        <button class="btn-icon" onclick="downloadQRCodeFromDB('${employee.id}')" title="Télécharger">
                                             <span class="material-icons">download</span>
                                         </button>
-                                        <button class="btn-icon" onclick="printQRCodeMemory('${employee.id}')" title="Imprimer">
+                                        <button class="btn-icon" onclick="printQRCodeFromDB('${employee.id}')" title="Imprimer">
                                             <span class="material-icons">print</span>
                                         </button>
                                     </div>
@@ -4787,49 +4782,43 @@
                             
                             successCount++;
                         } else {
-                            console.warn(`QR non généré pour ${employee.name}`);
                             errorCount++;
                         }
                         
                     } catch (err) {
-                        console.error(`Erreur pour ${employee.name}:`, err);
+                        console.error(`❌ Erreur pour ${employee.name}:`, err);
                         errorCount++;
                     }
                 }
                 
-                // Affichage
+                // Affichage final
                 if (qrCardsHTML.length > 0) {
                     container.innerHTML = qrCardsHTML.join('');
                     
-                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''}!`;
+                    let message = `✅ ${successCount} QR code${successCount > 1 ? 's' : ''} généré${successCount > 1 ? 's' : ''}`;
                     if (errorCount > 0) {
-                        message += ` ⚠️ ${errorCount} erreur${errorCount > 1 ? 's' : ''}`;
+                        message += ` | ⚠️ ${errorCount} erreur${errorCount > 1 ? 's' : ''}`;
                     }
                     showAlert(message, 'success');
-                    
                 } else {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px 20px;">
-                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error_outline</span>
-                            <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Échec de génération</h3>
-                            <p style="color: var(--md-sys-color-on-surface-variant); margin-top: 10px;">
-                                ${errorCount} erreur${errorCount > 1 ? 's' : ''} survenue${errorCount > 1 ? 's' : ''}
-                            </p>
+                            <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
+                            <h3 style="margin-top: 20px;">Échec de génération</h3>
                             <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                                 <span class="material-icons">refresh</span>
                                 Réessayer
                             </button>
                         </div>
                     `;
-                    showAlert(`${errorCount} erreur${errorCount > 1 ? 's' : ''} lors de la génération`, 'error');
                 }
                 
             } catch (error) {
-                console.error('Erreur critique:', error);
+                console.error('❌ Erreur critique:', error);
                 container.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
                         <span class="material-icons" style="font-size: 64px; color: var(--md-sys-color-error);">error</span>
-                        <h3 style="margin-top: 20px; color: var(--md-sys-color-error);">Erreur critique</h3>
+                        <h3 style="margin-top: 20px;">Erreur</h3>
                         <p style="margin-top: 10px;">${error.message}</p>
                         <button class="btn" onclick="generateAllQRCodes()" style="margin-top: 20px;">
                             <span class="material-icons">refresh</span>
@@ -4837,10 +4826,114 @@
                         </button>
                     </div>
                 `;
-                showAlert('Erreur: ' + error.message, 'error');
             }
         }
 
+        // === TÉLÉCHARGER QR depuis DB ===
+        async function downloadQRCodeFromDB(employeeId) {
+            try {
+                // AMPIASAO 'qr_codes' (misy underscore)
+                const qrData = await dbManager.get('qr_codes', employeeId);
+                
+                if (!qrData) {
+                    showAlert('QR Code non trouvé. Veuillez le générer.', 'error');
+                    return;
+                }
+                
+                const link = document.createElement('a');
+                link.href = qrData.dataURL;
+                link.download = `qr-${qrData.employeeName.replace(/\s+/g, '-')}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert(`✅ QR Code téléchargé: ${qrData.employeeName}`, 'success');
+                
+            } catch (error) {
+                console.error('Erreur téléchargement:', error);
+                showAlert('Erreur lors du téléchargement', 'error');
+            }
+        }
+
+        // === IMPRIMER QR depuis DB ===
+        async function printQRCodeFromDB(employeeId) {
+            try {
+                // AMPIASAO 'qr_codes' (misy underscore)
+                const qrData = await dbManager.get('qr_codes', employeeId);
+                
+                if (!qrData) {
+                    showAlert('QR Code non trouvé. Veuillez le générer.', 'error');
+                    return;
+                }
+                
+                const group = groups.find(g => g.id === qrData.employeeGroupId);
+                const groupName = group ? group.name : 'Sans groupe';
+                
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>QR Code - ${qrData.employeeName}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background: #f5f5f5; }
+                            .card { background: white; border: 3px solid #1e293b; padding: 35px; width: 400px; margin: 0 auto; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+                            h2 { font-size: 1.8em; color: #1e293b; margin: 0 0 10px 0; font-weight: 800; }
+                            .position { font-size: 1.1em; color: #64748b; margin-bottom: 15px; font-weight: 600; }
+                            .badge { background: linear-gradient(135deg, #6750A4, #5a4594); color: white; padding: 10px 18px; border-radius: 25px; display: inline-flex; align-items: center; gap: 8px; font-size: 1em; font-weight: 700; box-shadow: 0 2px 8px rgba(103,80,164,0.3); }
+                            .qr-wrapper { margin: 25px 0; padding: 20px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 12px; }
+                            img { width: 280px; height: 280px; border: 4px solid #6750A4; border-radius: 12px; padding: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                            .footer { margin-top: 25px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+                            .company { font-size: 1.3em; color: #6750A4; font-weight: 800; margin-bottom: 10px; }
+                            .instructions { font-size: 0.95em; color: #64748b; line-height: 1.6; }
+                            @media print {
+                                body { background: white; padding: 0; }
+                                .card { box-shadow: none; page-break-inside: avoid; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="card">
+                            <h2>${qrData.employeeName}</h2>
+                            <div class="position">${qrData.employeePosition}</div>
+                            <div class="badge">
+                                <span style="font-size: 1.1em;">👥</span>
+                                <span>${groupName}</span>
+                            </div>
+                            <div class="qr-wrapper">
+                                <img src="${qrData.dataURL}" alt="QR Code">
+                            </div>
+                            <div class="footer">
+                                <div class="company">🏢 BEHAVANA HR SYSTEM</div>
+                                <div class="instructions">
+                                    <strong>Scanner ce QR code</strong><br>
+                                    pour marquer votre présence
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                const printWindow = window.open('', '_blank', 'width=900,height=1000');
+                if (!printWindow) {
+                    showAlert('Veuillez autoriser les pop-ups', 'error');
+                    return;
+                }
+                
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 600);
+                
+            } catch (error) {
+                console.error('Erreur impression:', error);
+                showAlert('Erreur lors de l\'impression', 'error');
+            }
+        }
 
         // === DOWNLOAD DEPUIS MÉMOIRE ===
         function downloadQRCodeMemory(employeeId) {
