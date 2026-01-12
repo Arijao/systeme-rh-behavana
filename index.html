@@ -4689,25 +4689,13 @@
                     playPromise.catch(error => {
                         console.warn("⚠️ Tsy afaka nandefa ny feo 'suivant.mp3':", error);
                         
-                        // Fallback: Tritone sound
-                        if (audioContext && audioContext.state === 'suspended') {
-                            audioContext.resume().then(() => {
-                                audioPlayer.play().catch(() => {
-                                    // Si toujours erreur, utiliser playSuccessSound
-                                    playSuccessSound();
-                                });
-                            });
-                        } else {
-                            // Utiliser le son synthétique
-                            playSuccessSound();
-                        }
                     });
                 }
                 
             } catch (e) {
                 console.error('❌ Audio error:', e);
                 // Fallback final
-                playSuccessSound();
+
             }
         }
 
