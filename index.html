@@ -10124,30 +10124,31 @@
         function populateGroupSelects() {
             // Lisitry ny ID an'ireo SELECT rehetra mila fenoina
             const selects = {
-                'employeeGroup_add': '<option value="">Aucun groupe</option>',      // <--- Ity no ho an'ny fanampiana mpiasa vaovao
-                'editEmployeeGroup': '<option value="">Aucun groupe</option>',      // Ho an'ny fanovana mpiasa
+                'employeeGroupadd': '<option value="">Aucun groupe</option>',      // <--- Ho an'ny fanampiana mpiasa vaovao (TSY MISY UNDERSCORE!)
+                'editEmployeeGroup': '<option value="">Aucun groupe</option>',     // Ho an'ny fanovana mpiasa
                 'employeeGroupFilter': '<option value="all">Tous les Groupes</option><option value="none">Sans Groupe</option>',    // Ho an'ny sivana ao amin'ny lisitry ny mpiasa
                 'payrollGroupFilter': '<option value="all">Tous les Groupes</option>',     // Ho an'ny sivana ao amin'ny karama
-                'advanceGroupFilter': '<option value="all">Tous les Groupes</option>',
-                'estimationGroupFilter': '<option value="all">Tous les Groupes</option>',
-                'attendanceGroupFilter': '<option value="all">Tous les Groupes</option>',
-                'masseSalaireGroupSelect': '<option value="">-- Choisir un groupe --</option>'      // Ho an'ny sivana ao amin'ny trosa
+                'advanceGroupFilter': '<option value="all">Tous les Groupes</option>',     // Ho an'ny sivana ao amin'ny trosa
+                'estimationGroupFilter': '<option value="all">Tous les Groupes</option>',  // Ho an'ny estimation
+                'attendanceGroupFilter': '<option value="all">Tous les Groupes</option>',  // Ho an'ny présence
+                'masseSalaireGroupSelect': '<option value="">-- Choisir un groupe --</option>'  // 🆕 Ho an'ny Salaire en Masse
             };
             
             // Amboarina ny HTML ho an'ny options (tsy miova)
             const optionsHTML = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
 
-            // Fenoina tsirairay ireo select
-            selects.forEach(selectId => {
+            // ⚠️ FANITSIANA ETO: MAMPIASA Object.keys() FA TSY .forEach()
+            Object.keys(selects).forEach(selectId => {
                 const selectElement = document.getElementById(selectId);
                 if (selectElement) {
-                    // Tehirizina ny option voalohany (ohatra: "Aucun groupe" na "Tous les groupes")
-                    const firstOption = selectElement.options[0].outerHTML;
+                    // Alaina ny option voalohany avy ao amin'ny objet 'selects'
+                    const firstOption = selects[selectId];
                     // Fenoina ny select miaraka amin'ny option voalohany sy ny lisitry ny vondrona
                     selectElement.innerHTML = firstOption + optionsHTML;
                 }
             });
         }
+
 
         /**
          * Mameno ny lisitra fisafidianana mpiasa ao amin'ny fizarana PAIE ihany.
