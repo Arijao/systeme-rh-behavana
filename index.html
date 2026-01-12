@@ -5879,7 +5879,7 @@
             if (code) {
                 if (!code.data || code.data.trim() === '') {
                     console.warn('⚠️ QR Code vide ignoré');
-                    return; // Tsy mandefa son na message
+                    return;
                 }
                 handleQRScanResult(code.data);
             }
