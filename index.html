@@ -4681,7 +4681,7 @@
                 oscillator.frequency.value = 400; // Fréquence plus basse
                 oscillator.type = 'square'; // Son plus dur
                 
-                gainNode.gain.setValueAt(0.3, now);
+                gainNode.gain.setValueAtTime(0.3, now);
                 gainNode.gain.exponentialRampToValueAt(0.01, now + 0.3);
                 
                 oscillator.start(now);
@@ -5877,6 +5877,10 @@
             const code = jsQR(imageData.data, imageData.width, imageData.height);
 
             if (code) {
+                if (!code.data || code.data.trim() === '') {
+                    console.warn('⚠️ QR Code vide ignoré');
+                    return; // Tsy mandefa son na message
+                }
                 handleQRScanResult(code.data);
             }
         }
