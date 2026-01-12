@@ -4662,6 +4662,36 @@
             }
         }
 
+        // ✅ NOUVELLE FONCTION: Son error générique (buzzer)
+        function playGenericErrorSound() {
+            try {
+                if (!audioContext || audioContext.state !== 'running') {
+                    console.warn('AudioContext non prêt');
+                    return;
+                }
+                
+                const now = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Son error court et aigu (buzzer)
+                oscillator.frequency.value = 400; // Fréquence plus basse
+                oscillator.type = 'square'; // Son plus dur
+                
+                gainNode.gain.setValueAt(0.3, now);
+                gainNode.gain.exponentialRampToValueAt(0.01, now + 0.3);
+                
+                oscillator.start(now);
+                oscillator.stop(now + 0.3);
+                
+            } catch (e) {
+                console.error('Erreur son générique:', e);
+            }
+        }
+
         // =====================================================
         // PLAY AU SUIVANT SOUND - suivant.mp3
         // =====================================================
@@ -5919,7 +5949,7 @@
                 if (!employeeId) {
                     console.error('❌ Format QR invalide:', qrData);
                     showScanResult('QRCode non valide pour ce système.', 'error');
-                    playErrorSound();
+                    playGenericErrorSound();
                     return false;
                 }
                 
@@ -5971,7 +6001,7 @@
             } catch (error) {
                 console.error('❌ Erreur traitement QR:', error);
                 showScanResult('Erreur lors du traitement du QR Code', 'error');
-                playErrorSound();
+                playGenericErrorSound();
                 return false;
             }
         }
