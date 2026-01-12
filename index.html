@@ -11680,36 +11680,55 @@
                 // Ity no apetraka ao anatin'ny openFacePointageModal
                 btnCapture.onclick = async () => {
                     try {
-                        // ===> FANITSIANA: Esorina ilay "Analyse en cours" <===
                         status.innerHTML = '⏳ Maka sary...';
                         btnCapture.disabled = true;
                         btnCapture.style.opacity = '0.5';
 
-                        // Antsoina avy hatrany ilay recognizeFace haingana
                         const result = await FaceRecognition.recognizeFace(video, enrolled);
                         
                         if (result.success) {
                             const emp = result.employe;
                             const confidence = (result.confidence * 100).toFixed(1);
                             
-                            status.innerHTML = `✅ <strong>${emp.name}</strong>  
-                Confiance: ${confidence}%`;
-                            status.style.background = '#d4edda';
-                            status.style.color = '#155724';
+                            // ✅ FANITSIANA 1: Antso processAttendanceScan ALOHA
+                            const attendanceSuccess = await processAttendanceScan(emp, 'FACIAL', true);
                             
-                            playAuSuivantSound();
-                            await processAttendanceScan(emp, 'FACIAL',true);
-                            
-                            // Fiatoana kely alohan'ny hahafahana manindry indray
-                            setTimeout(() => {
-                                status.innerHTML = '🔹 Prêt pour le suivant...';
-                                status.style.background = '#f0f0f0';
-                                status.style.color = '#333';
-                                btnCapture.disabled = false;
-                                btnCapture.style.opacity = '1';
-                            }, 2000);
+                            // ✅ FANITSIANA 2: Manamarina raha nahomby
+                            if (attendanceSuccess) {
+                                // ✅ SUCCÈS: Son + message vert
+                                status.innerHTML = `✅ <strong>${emp.name}</strong> Confiance: ${confidence}%`;
+                                status.style.background = '#d4edda';
+                                status.style.color = '#155724';
+                                
+                                playAuSuivantSound(); // ← Raha NAHOMBY ihany
+                                
+                                setTimeout(() => {
+                                    status.innerHTML = '🔹 Prêt pour le suivant...';
+                                    status.style.background = '#f0f0f0';
+                                    status.style.color = '#333';
+                                    btnCapture.disabled = false;
+                                    btnCapture.style.opacity = '1';
+                                }, 2000);
+                                
+                            } else {
+                                // ✅ ERREUR: Message rouge (< 30 min na cancel)
+                                status.innerHTML = `❌ Pointage refusé`;
+                                status.style.background = '#f8d7da';
+                                status.style.color = '#721c24';
+                                
+                                // TSY MANDEFA son eto satria efa nisy playErrorSound() tao
+                                
+                                setTimeout(() => {
+                                    status.innerHTML = '🔹 Prêt pour le suivant...';
+                                    status.style.background = '#f0f0f0';
+                                    status.style.color = '#333';
+                                    btnCapture.disabled = false;
+                                    btnCapture.style.opacity = '1';
+                                }, 2000);
+                            }
                             
                         } else {
+                            // Reconnaissance FAILED (tsy nahita tarehy)
                             status.innerHTML = `❌ ${result.message}`;
                             status.style.background = '#f8d7da';
                             status.style.color = '#721c24';
@@ -11724,9 +11743,8 @@
                         btnCapture.disabled = false;
                         btnCapture.style.opacity = '1';
                     }
-
-
                 };
+
                 
                 btnClose.onclick = () => {
                     stream.getTracks().forEach(track => track.stop());
