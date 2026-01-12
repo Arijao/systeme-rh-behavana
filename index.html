@@ -3222,9 +3222,77 @@
                 <div id="groupList" class="employee-list">
                     <!-- Ho fenoina amin'ny alalan'ny JavaScript -->
                 </div>
+                        
+                <!-- ====================================== -->
+                <!-- 🆕 SECTION SALAIRE EN MASSE PAR GROUPE -->
+                <!-- ====================================== -->
+                <div class="card" style="margin-top: 32px; border: 2px solid var(--md-sys-color-primary); 
+                                        background: linear-gradient(135deg, rgba(103, 80, 164, 0.05) 0%, rgba(103, 80, 164, 0.02) 100%);">
+                    <h2 style="color: var(--md-sys-color-primary);">
+                        <span class="material-icons">payments</span>
+                        💰 Salaire en Masse par Groupe
+                    </h2>
+                    <p style="margin-top: -8px; margin-bottom: 20px; color: var(--md-sys-color-on-surface-variant);">
+                        Appliquez un salaire identique à tous les employés d'un groupe en une seule opération.
+                    </p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>1️⃣ Sélectionner un Groupe</label>
+                            <div class="select-dropdown">
+                                <select class="form-control" id="masseSalaireGroupSelect" 
+                                        onchange="showMasseSalairePreview(this.value)">
+                                    <option value="">-- Choisir un groupe --</option>
+                                    <!-- Rempli automatiquement par JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>2️⃣ Salaire du Groupe (Ar)</label>
+                            <input 
+                                type="text" 
+                                class="form-control currency-input" 
+                                id="masseSalaireAmount"
+                                placeholder="Ex: 150 000"
+                                data-type="currency"
+                            >
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="applyMasseSalaire()" style="width: 100%; font-weight: 600;">
+                        <span class="material-icons">done_all</span>
+                        Appliquer à Tous les Employés du Groupe
+                    </button>
+                    
+                    <!-- Prévisualisation des employés affectés -->
+                    <div id="masseSalairePreview" style="margin-top: 20px; display: none; 
+                                                        padding: 16px; background: var(--md-sys-color-surface-variant); 
+                                                        border-radius: 8px;">
+                        <h4 style="margin-top: 0; color: var(--md-sys-color-primary);">
+                            👥 Employés qui recevront ce salaire :
+                        </h4>
+                        <div id="masseSalaireEmployeeList" style="max-height: 250px; overflow-y: auto;"></div>
+                    </div>
+                    
+                    <!-- Instructions d'utilisation -->
+                    <div style="margin-top: 20px; padding: 12px; background: rgba(103, 80, 164, 0.08); 
+                                border-radius: 8px; border-left: 4px solid var(--md-sys-color-primary);">
+                        <h4 style="margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons" style="color: var(--md-sys-color-primary);">info</span>
+                            📋 Mode d'emploi
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                            <li><strong>Salaire groupe</strong> : Sélectionnez le groupe → Entrez le montant → Cliquez sur "Appliquer"</li>
+                            <li><strong>Ajustement individuel</strong> : Modifiez le salaire d'un employé dans sa fiche (il devient "personnalisé")</li>
+                            <li><strong>Changement de groupe</strong> : Utilisez le bouton "swap" dans la fiche employé → Son salaire s'adapte automatiquement</li>
+                            <li><strong>Recherche</strong> : Filtrez les employés par groupe ou nom pour un suivi précis</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- ==================================== -->
             </div>
         </div>
-
 
         <!-- Statut Employées-->
                 <!-- Statut Employé (Smart Search) Section - VERSION NOHATSARAINA -->
@@ -4431,6 +4499,13 @@
 
 
         let groups = [];
+        // =====================================
+        // 🆕 SYSTÈME SALAIRE EN MASSE
+        // =====================================
+        // Structure étendue :
+        // - groups[].salary : salaire par défaut du groupe
+        // - employee.useGroupSalary : true/false
+        // - employee.customSalary : montant si personnalisé
         let attendance = {};
         let payrolls = [];
         let advances = [];
@@ -7408,7 +7483,16 @@
                         <div class="employee-info">
                             <h4>${employee.name}</h4>
                             <p><strong>Poste:</strong> ${employee.position} | <strong>Groupe:</strong> ${groupName}</p>
-                            <p><strong>Salaire:</strong> ${formatCurrency(employee.salary)}</p>
+                            <p>
+                                <strong>Salaire:</strong> ${formatCurrency(employee.salary)}
+                                ${employee.useGroupSalary === false ? 
+                                    `<span class="attendance-badge" style="background: var(--md-sys-color-tertiary); margin-left: 8px;" 
+                                        title="Salaire personnalisé (ne suit pas le groupe)">
+                                        <span class="material-icons" style="font-size: 14px;">lock</span>
+                                    </span>` 
+                                    : ''}
+                            </p>
+
                             ${advanceHTML}
                         </div>
                         <div class="employee-actions">
@@ -9745,6 +9829,186 @@
             showAlert("Le rapport de paie en PDF a été généré avec succès!", 'success');
         }
 
+        // =====================================
+        // FONCTIONS SALAIRE EN MASSE PAR GROUPE
+        // =====================================
+
+        /**
+         * Applique un salaire à tous les employés d'un groupe
+         */
+        async function applyGroupSalary(groupId, salaryAmount) {
+            const group = groups.find(g => g.id === groupId);
+            if (!group) {
+                showAlert("Groupe non trouvé", "error");
+                return;
+            }
+            
+            // 1. Mettre à jour le salaire du groupe
+            group.salary = parseFloat(salaryAmount);
+            
+            // 2. Mettre à jour tous les employés du groupe (qui n'ont pas de salaire personnalisé)
+            let updatedCount = 0;
+            employees.forEach(emp => {
+                if (emp.groupId === groupId && emp.useGroupSalary !== false) {
+                    emp.salary = parseFloat(salaryAmount);
+                    emp.useGroupSalary = true;
+                    updatedCount++;
+                }
+            });
+            
+            await saveData();
+            displayEmployees();
+            displayGroups();
+            
+            showAlert(
+                `✅ Salaire appliqué à ${updatedCount} employé(s) du groupe "${group.name}"`, 
+                "success"
+            );
+        }
+
+        /**
+         * Définit un salaire personnalisé pour un employé
+         */
+        async function setCustomSalary(employeeId, customAmount) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+            
+            employee.salary = parseFloat(customAmount);
+            employee.customSalary = parseFloat(customAmount);
+            employee.useGroupSalary = false; // Ne suit plus le groupe
+            
+            await saveData();
+            displayEmployees();
+            
+            showAlert(`🔒 Salaire personnalisé appliqué à ${employee.name}`, "success");
+        }
+
+        /**
+         * Ramène un employé au salaire de son groupe
+         */
+        async function revertToGroupSalary(employeeId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee || !employee.groupId) return;
+            
+            const group = groups.find(g => g.id === employee.groupId);
+            if (!group || !group.salary) {
+                showAlert("Le groupe n'a pas de salaire défini", "warning");
+                return;
+            }
+            
+            employee.salary = group.salary;
+            employee.customSalary = null;
+            employee.useGroupSalary = true;
+            
+            await saveData();
+            displayEmployees();
+            
+            showAlert(`${employee.name} suit maintenant le salaire du groupe`, "success");
+        }
+
+        /**
+         * Change le groupe d'un employé et met à jour son salaire automatiquement
+         */
+        async function changeEmployeeGroupAuto(employeeId, newGroupId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+            
+            const oldGroupId = employee.groupId;
+            employee.groupId = newGroupId;
+            
+            // Si l'employé n'a pas de salaire personnalisé, on applique celui du nouveau groupe
+            if (employee.useGroupSalary !== false) {
+                const newGroup = groups.find(g => g.id === newGroupId);
+                if (newGroup && newGroup.salary) {
+                    employee.salary = newGroup.salary;
+                    employee.useGroupSalary = true;
+                }
+            }
+            
+            await saveData();
+            displayEmployees();
+            displayGroups();
+            
+            showAlert(`✅ ${employee.name} transféré(e) avec mise à jour du salaire`, "success");
+        }
+
+        /**
+         * Handler pour le bouton "Appliquer Salaire en Masse"
+         */
+        async function applyMasseSalaire() {
+            const groupId = document.getElementById('masseSalaireGroupSelect').value;
+            const amount = getCurrencyValue('masseSalaireAmount');
+            
+            if (!groupId) {
+                showAlert("⚠️ Veuillez sélectionner un groupe", "warning");
+                return;
+            }
+            
+            if (amount <= 0) {
+                showAlert("⚠️ Veuillez entrer un montant valide", "error");
+                return;
+            }
+            
+            const affectedEmployees = employees.filter(e => 
+                e.groupId === groupId && e.useGroupSalary !== false
+            );
+            
+            if (affectedEmployees.length === 0) {
+                showAlert("⚠️ Aucun employé dans ce groupe", "warning");
+                return;
+            }
+            
+            const confirmMsg = `Confirmer l'application de ${formatCurrency(amount)} à ${affectedEmployees.length} employé(s) ?\n\n` +
+                `Note : Les employés avec salaire personnalisé ne seront pas affectés.`;
+            
+            if (confirm(confirmMsg)) {
+                await applyGroupSalary(groupId, amount);
+                // Réinitialiser le formulaire
+                document.getElementById('masseSalaireAmount').value = '';
+                document.getElementById('masseSalaireGroupSelect').value = '';
+                document.getElementById('masseSalairePreview').style.display = 'none';
+            }
+        }
+
+        /**
+         * Affiche la prévisualisation des employés qui seront affectés
+         */
+        function showMasseSalairePreview(groupId) {
+            const preview = document.getElementById('masseSalairePreview');
+            const list = document.getElementById('masseSalaireEmployeeList');
+            
+            if (!groupId) {
+                preview.style.display = 'none';
+                return;
+            }
+            
+            const groupEmployees = employees.filter(e => e.groupId === groupId);
+            
+            if (groupEmployees.length === 0) {
+                list.innerHTML = '<p class="alert alert-warning">❌ Aucun employé dans ce groupe</p>';
+            } else {
+                list.innerHTML = groupEmployees.map(emp => `
+                    <div style="padding: 10px; border-bottom: 1px solid var(--md-sys-color-outline-variant); 
+                                display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${emp.name}</strong>
+                            <small style="display: block; opacity: 0.7;">${emp.position}</small>
+                        </div>
+                        <div style="text-align: right;">
+                            ${emp.useGroupSalary === false ? 
+                                `<span style="color: var(--md-sys-color-tertiary); font-weight: 600;">
+                                    🔒 Personnalisé: ${formatCurrency(emp.salary)}
+                                </span>` 
+                                : 
+                                `<span>Actuel: ${formatCurrency(emp.salary)}</span>`
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            preview.style.display = 'block';
+        }
 
         // --- GESTION DES GROUPES ---
 
@@ -9859,15 +10123,16 @@
 
         function populateGroupSelects() {
             // Lisitry ny ID an'ireo SELECT rehetra mila fenoina
-            const selects = [
-                'employeeGroup_add',      // <--- Ity no ho an'ny fanampiana mpiasa vaovao
-                'editEmployeeGroup',      // Ho an'ny fanovana mpiasa
-                'employeeGroupFilter',    // Ho an'ny sivana ao amin'ny lisitry ny mpiasa
-                'payrollGroupFilter',     // Ho an'ny sivana ao amin'ny karama
-                'advanceGroupFilter',
-                'estimationGroupFilter',
-                'attendanceGroupFilter'      // Ho an'ny sivana ao amin'ny trosa
-            ];
+            const selects = {
+                'employeeGroup_add': '<option value="">Aucun groupe</option>',      // <--- Ity no ho an'ny fanampiana mpiasa vaovao
+                'editEmployeeGroup': '<option value="">Aucun groupe</option>',      // Ho an'ny fanovana mpiasa
+                'employeeGroupFilter': '<option value="all">Tous les Groupes</option><option value="none">Sans Groupe</option>',    // Ho an'ny sivana ao amin'ny lisitry ny mpiasa
+                'payrollGroupFilter': '<option value="all">Tous les Groupes</option>',     // Ho an'ny sivana ao amin'ny karama
+                'advanceGroupFilter': '<option value="all">Tous les Groupes</option>',
+                'estimationGroupFilter': '<option value="all">Tous les Groupes</option>',
+                'attendanceGroupFilter': '<option value="all">Tous les Groupes</option>',
+                'masseSalaireGroupSelect': '<option value="">-- Choisir un groupe --</option>'      // Ho an'ny sivana ao amin'ny trosa
+            };
             
             // Amboarina ny HTML ho an'ny options (tsy miova)
             const optionsHTML = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
