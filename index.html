@@ -7307,10 +7307,14 @@
                 const min = parts[1] || "00";
                 const s = parts[2] || "00";
                 
+                if (s === '00') {
+                    return `${h}h ${min}min`;
+                }
+                
                 return `${h}h ${min}min ${s}s`;
             } catch (e) {
-                console.error("Erreur formatage heure:", timeString, e);
-                return timeString; // Averina ilay tany am-boalohany raha misy olana
+                console.error('Erreur formatage heure', timeString, e);
+                return timeString;
             }
         }
 
