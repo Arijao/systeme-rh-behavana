@@ -5940,7 +5940,7 @@
                 // ========================================
                 switch (purpose) {
                     case 'attendance':
-                        return await processAttendanceScan(employee);
+                        return await processAttendanceScan(employee, 'QR');
                         
                     case 'payroll':
                         document.getElementById('payrollEmployeeSelect').value = employeeId;
@@ -6020,7 +6020,7 @@
         // === PROCESS ATTENDANCE SCAN - VERSION MULTIPLE CHECKS ===
         // =====================================================
 
-        async function processAttendanceScan(employee) {
+        async function processAttendanceScan(employee, method = 'QR') {
             try {
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
@@ -6042,7 +6042,7 @@
                     attendance[today][employee.id] = {
                         arrivee: currentTime,
                         depart: null,
-                        method: 'FACIAL',
+                        method: method,
                         checks: [{
                             type: 'arrivee',
                             time: currentTime,
