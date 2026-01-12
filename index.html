@@ -4682,7 +4682,7 @@
                 oscillator.type = 'square'; // Son plus dur
                 
                 gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAt(0.01, now + 0.3);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
                 
                 oscillator.start(now);
                 oscillator.stop(now + 0.3);
@@ -5963,7 +5963,7 @@
                 if (!employee) {
                     console.error('❌ Employé non trouvé, ID:', employeeId);
                     showScanResult(`Employé non trouvé (ID: ${employeeId})`, 'error');
-                    playErrorSound();
+                    playGenericErrorSound();
                     return false;
                 }
                 
@@ -6300,7 +6300,7 @@
                 
             } catch (error) {
                 console.error('❌ Erreur traitement présence:', error);
-                playErrorSound();
+                playGenericErrorSound();
                 showScanResult(`Erreur lors de l'enregistrement`, 'error');
                 return false;
             }
