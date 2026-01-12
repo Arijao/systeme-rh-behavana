@@ -6020,13 +6020,13 @@
         // === PROCESS ATTENDANCE SCAN - VERSION MULTIPLE CHECKS ===
         // =====================================================
 
-        async function processAttendanceScan(employee, method = 'QR') {
+        async function processAttendanceScan(employee, method = 'QR', skipSound = false) {
             try {
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
                 const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
                 
-                console.log('✅ Traitement présence pour', employee.name);
+                console.log('✅ Traitement présence pour', employee.name, '| Méthode:', method);
                 
                 // Initialiser si nécessaire
                 if (!attendance[today]) {
@@ -6062,7 +6062,9 @@
                     });
                     
                     await saveAttendanceData();
-                    playSuccessSound();
+                    if (!skipSound) {
+                        playSuccessSound();
+                    }
                     
                     showScanResult(
                         `<strong>✅ ARRIVÉE ENREGISTRÉE</strong><br>
@@ -6113,7 +6115,9 @@
                     });
                     
                     await saveAttendanceData();
-                    playSuccessSound();
+                    if (!skipSound) {
+                        playSuccessSound();
+                    }
                     
                     showScanResult(
                         `<strong>✅ DÉPART ENREGISTRÉ</strong><br>
@@ -6184,7 +6188,9 @@
                             });
                             
                             await saveAttendanceData();
-                            playSuccessSound();
+                            if (!skipSound) {
+                                playSuccessSound();
+                            }
                             
                             showScanResult(
                                 `<strong>✅ DÉPART MIS À JOUR</strong><br>
@@ -11691,7 +11697,8 @@
                             status.style.background = '#d4edda';
                             status.style.color = '#155724';
                             
-                            await processAttendanceScan(emp, 'FACIAL');
+                            playAuSuivantSound();
+                            await processAttendanceScan(emp, 'FACIAL',true);
                             
                             // Fiatoana kely alohan'ny hahafahana manindry indray
                             setTimeout(() => {
