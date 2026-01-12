@@ -4116,7 +4116,7 @@
         </div>
     </div>
 
-    <!-- MODAL VAOVAO HO AN'NY FANAMPIANA MPIASA -->
+    <!-- MODAL add Employees -->
     <div class="modal" id="addEmployeeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -4756,6 +4756,98 @@
                 dbManager.updateDBStatus('Erreur d\'initialisation', 'error');
                 showAlert('Erreur lors de l\'initialisation de la base de données', 'error');
             }
+
+            // ==============================================
+            // ===== FANAMPIANA: LIVE NAME VALIDATION =====
+            // ==============================================
+            const employeeNameInput = document.getElementById('employeeName_add'); // ← UNDERSCORE!
+            if (employeeNameInput) {
+                employeeNameInput.addEventListener('input', function(e) {
+                    const inputName = e.target.value.trim().toLowerCase();
+                    
+                    // Auto-capitalize
+                    e.target.value = capitalizeWords(e.target.value);
+                    
+                    // Jereo raha efa misy
+                    const exists = employees.some(emp => 
+                        emp.name.toLowerCase() === inputName
+                    );
+                    
+                    if (exists && inputName.length > 0) {
+                        // ❌ MENA - Efa misy
+                        e.target.style.borderColor = '#dc2626';
+                        e.target.style.borderWidth = '2px';
+                        e.target.style.background = 'rgba(220, 38, 38, 0.05)';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.1)';
+                        
+                        // Message d'erreur
+                        let errorMsg = e.target.parentElement.querySelector('.error-message');
+                        if (!errorMsg) {
+                            errorMsg = document.createElement('div');
+                            errorMsg.className = 'error-message';
+                            errorMsg.style.cssText = `
+                                color: #dc2626;
+                                font-size: 12px;
+                                font-weight: 600;
+                                margin-top: 6px;
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                                animation: shake 0.3s ease;
+                            `;
+                            e.target.parentElement.appendChild(errorMsg);
+                        }
+                        errorMsg.innerHTML = `
+                            <span class="material-icons" style="font-size: 16px;">error</span>
+                            Ce nom existe déjà!
+                        `;
+                        
+                        // Désactiver bouton submit
+                        const submitBtn = document.querySelector('#employeeForm button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.style.opacity = '0.5';
+                            submitBtn.style.cursor = 'not-allowed';
+                        }
+                        
+                    } else {
+                        // ✅ VERT - OK
+                        e.target.style.borderColor = inputName.length > 0 ? '#10b981' : '';
+                        e.target.style.borderWidth = '2px';
+                        e.target.style.background = inputName.length > 0 ? 'rgba(16, 185, 129, 0.05)' : '';
+                        e.target.style.boxShadow = inputName.length > 0 ? '0 0 0 3px rgba(16, 185, 129, 0.1)' : '';
+                        
+                        // Effacer message d'erreur
+                        const errorMsg = e.target.parentElement.querySelector('.error-message');
+                        if (errorMsg) {
+                            errorMsg.remove();
+                        }
+                        
+                        // Réactiver bouton submit
+                        const submitBtn = document.querySelector('#employeeForm button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = '1';
+                            submitBtn.style.cursor = 'pointer';
+                        }
+                    }
+                });
+            }
+
+            // Animation shake
+            if (!document.getElementById('shake-animation-style')) {
+                const style = document.createElement('style');
+                style.id = 'shake-animation-style';
+                style.textContent = `
+                    @keyframes shake {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-5px); }
+                        75% { transform: translateX(5px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            // ===== FIN FANAMPINIA =====
 
             // ===================================================
             //  FANITSINA: Mampifandray ny formulaire fanovana
@@ -8660,7 +8752,7 @@
         // =======================================================================
         //  VERSION FARANY INDRINDRA - Mampiasa ID vaovao tanteraka
         // =======================================================================
-        // IZAO NO TOKONY HO IZY
+        
         document.getElementById('employeeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
