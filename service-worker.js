@@ -1,7 +1,7 @@
 // service-worker.js - Version 2.0 (Face Recognition)
 
 // 1. Version vaovao miaraka amin'ny face recognition
-const CACHE_NAME = 'behavana-rh-cache-v2.0'; // <-- Version 2.0
+const CACHE_NAME = 'behavana-rh-cache-v2.1'; // <-- Version 2.1
 
 // 2. Auto-detect: GitHub Pages na local
 const BASE_PATH = self.location.pathname.includes('/systeme-rh-behavana/') 
@@ -19,6 +19,7 @@ const URLS_TO_CACHE = [
   `${BASE_PATH}/icon-192.png`,
   `${BASE_PATH}/icon-512.png`,
   `${BASE_PATH}/jsQR.min.js`,
+  `${BASE_PATH}/js/face-api.min.js`,
   
   // Face-api.js models (VAOVAO)
   `${BASE_PATH}/models/ssd_mobilenetv1_model-weights_manifest.json`,
@@ -36,7 +37,7 @@ const URLS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js'
+  
 ];
 
 // 4. Dingana "Install": Mitahiry rakitra ao cache + activate avy hatrany
