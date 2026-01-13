@@ -1,5 +1,3 @@
-// service-worker.js - Version 2.0 (Face Recognition)
-
 // 1. Version vaovao miaraka amin'ny face recognition
 const CACHE_NAME = 'behavana-rh-cache-v2.4'; // <-- Version 2.1
 
