@@ -1,7 +1,7 @@
 // service-worker.js - Version 2.0 (Face Recognition)
 
 // 1. Version vaovao miaraka amin'ny face recognition
-const CACHE_NAME = 'behavana-rh-cache-v2.2'; // <-- Version 2.1
+const CACHE_NAME = 'behavana-rh-cache-v2.3'; // <-- Version 2.1
 
 // 2. Auto-detect: GitHub Pages na local
 const BASE_PATH = self.location.pathname.includes('/systeme-rh-behavana/') 
@@ -25,6 +25,8 @@ const URLS_TO_CACHE = [
   `${BASE_PATH}/models/ssd_mobilenetv1_model-weights_manifest.json`,
   `${BASE_PATH}/models/ssd_mobilenetv1_model.bin`,
   `${BASE_PATH}/models/face_landmark_68_model-weights_manifest.json`,
+  `${BASE_PATH}/models/tiny_face_detector_model-shard1`,
+  `${BASE_PATH}/models/tiny_face_detector_model-weights_manifest.json`,
   `${BASE_PATH}/models/face_landmark_68_model.bin`,
   `${BASE_PATH}/models/face_recognition_model-weights_manifest.json`,
   `${BASE_PATH}/models/face_recognition_model.bin`,
