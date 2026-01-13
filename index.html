@@ -3393,10 +3393,28 @@
                     <span class="material-icons" style="color: var(--md-sys-color-primary);">people</span>
                     Employés Enrolled (<span id="enrolledCount">0</span>)
                 </h3>
+                
+                <!-- ✅ Sélecteur éléments par page -->
+                <div class="form-group" style="max-width: 200px; margin-bottom: 16px">
+                    <label for="enrolledItemsPerPageSelect">Éléments par page</label>
+                    <select id="enrolledItemsPerPageSelect" class="form-control" onchange="changeItemsPerPage('enrolled', this.value)">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
                 <div id="enrolledEmployeesList">
                     <!-- Rempli par JavaScript -->
                 </div>
+                
+                <!-- ✅ Contrôles pagination -->
+                <div class="pagination-controls" id="enrolledPagination" style="margin-top: 16px">
+                    <!-- Ho fenoina aminny JavaScript -->
+                </div>
             </div>
+
 
             <!-- Pointages du jour -->
             <div class="card">
@@ -3404,10 +3422,28 @@
                     <span class="material-icons" style="color: var(--md-sys-color-success);">check_circle</span>
                     Pointages Faciaux du Jour
                 </h3>
+                
+                <!-- ✅ NAMPIANA: Sélecteur éléments par page -->
+                <div class="form-group" style="max-width: 200px; margin-bottom: 16px">
+                    <label for="faceAttendanceItemsPerPageSelect">Éléments par page</label>
+                    <select id="faceAttendanceItemsPerPageSelect" class="form-control" onchange="changeItemsPerPage('faceAttendance', this.value)">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
                 <div id="todayFaceAttendance">
                     <!-- Rempli par JavaScript -->
                 </div>
+                
+                <!-- ✅ NAMPIANA: Contrôles pagination -->
+                <div class="pagination-controls" id="faceAttendancePagination" style="margin-top: 16px">
+                    <!-- Ho fenoina aminny JavaScript -->
+                </div>
             </div>
+
         </div>
 
 
@@ -4495,7 +4531,14 @@
         let advancesItemsPerPage = 15;
 
         let qrAttendanceCurrentPage = 1;
-        let qrAttendanceItemsPerPage = 15; // Azo ovaina raha tiana
+        let qrAttendanceItemsPerPage = 15;
+
+        // Variables pagination pour Pointages Faciaux
+        let faceAttendanceCurrentPage = 1;
+        let faceAttendanceItemsPerPage = 20;
+
+        let enrolledCurrentPage = 1;
+        let enrolledItemsPerPage = 20;
 
 
         let groups = [];
@@ -10327,8 +10370,19 @@
                 advancesItemsPerPage = newValue;
                 advancesCurrentPage = 1;
                 displayAdvances();
+            } else if (listType === 'faceAttendance') {
+                // ✅ NAMPIANA - Ho an'ny Pointages Faciaux du Jour
+                faceAttendanceItemsPerPage = newValue;
+                faceAttendanceCurrentPage = 1;
+                displayTodayFaceAttendance();
+            } else if (listType === 'enrolled') {
+                // ✅ NAMPIANA - Ho an'ny Employés Enrolled
+                enrolledItemsPerPage = newValue;
+                enrolledCurrentPage = 1;
+                displayEnrolledEmployees();
             }
         }
+
 
         /**
          * Manao export ny lisitry ny trosa voasivana ho PDF na Excel (.xlsx).
@@ -12070,10 +12124,13 @@
             const countSpan = document.getElementById('enrolledCount');
             if (!container) return;
             
+            // 1. Filtrer ireo enrolled
             const enrolled = employees.filter(e => e.face_enrolled && e.face_descriptors && e.face_descriptors.length > 0);
             
+            // Mise à jour du compteur
             if (countSpan) countSpan.textContent = enrolled.length;
             
+            // 2. Raha tsy misy enrolled, afficher message
             if (enrolled.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 32px; color: var(--md-sys-color-on-surface-variant);">
@@ -12082,10 +12139,25 @@
                         <p style="font-size: 14px; opacity: 0.8;">Allez dans la liste des employés et cliquez sur l'icône 📸</p>
                     </div>
                 `;
+                // ✅ Fafana ny pagination raha tsy misy enrolled
+                document.getElementById('enrolledPagination').innerHTML = '';
                 return;
             }
             
-            container.innerHTML = enrolled.map(emp => `
+            // ✅ 3. PAGINATION - Mitovy amin'ny hafa
+            const totalItems = enrolled.length;
+            const totalPages = Math.ceil(totalItems / enrolledItemsPerPage);
+            
+            if (enrolledCurrentPage > totalPages && totalPages > 0) {
+                enrolledCurrentPage = totalPages;
+            }
+            
+            const startIndex = (enrolledCurrentPage - 1) * enrolledItemsPerPage;
+            const endIndex = startIndex + enrolledItemsPerPage;
+            const paginatedEnrolled = enrolled.slice(startIndex, endIndex);
+            
+            // ✅ 4. Affichage PAGINÉ
+            container.innerHTML = paginatedEnrolled.map(emp => `
                 <div style="
                     display: flex;
                     align-items: center;
@@ -12111,7 +12183,21 @@
                     </div>
                 </div>
             `).join('');
+            
+            // ✅ 5. Affichage pagination controls
+            renderPaginationControls(
+                'enrolledPagination',
+                enrolledCurrentPage,
+                totalPages,
+                totalItems,
+                enrolledItemsPerPage,
+                (page) => {
+                    enrolledCurrentPage = page;
+                    displayEnrolledEmployees();
+                }
+            );
         }
+
 
         // =================================================================
         //  DISPLAYTODAYFACEATTENDANCE (VERSION 2 - Mitovy endrika amin'ny Présence QR)
@@ -12124,9 +12210,9 @@
             const dayAttendance = attendance[today] || {};
 
             // 1. Famintinana (Présents, Absents, Total)
-            // Isaina fotsiny ireo izay nanao pointage FACIAL
             const facialPresents = Object.values(dayAttendance).filter(att => att && att.method === 'FACIAL').length;
             const totalEmployees = employees.length;
+            
             const summaryHTML = `
                 <div style="display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: var(--md-sys-color-surface-variant); border-radius: 8px;">
                     <div style="color: var(--md-sys-color-success); font-weight: 500;">
@@ -12140,8 +12226,7 @@
                 </div>
             `;
 
-            // 2. Fampisehoana ny lisitry ny mpiasa rehetra
-            // Alahatra mba ho eo ambony foana ireo izay nanao pointage facial
+            // 2. Alahatra ireo mpiasa
             const sortedEmployees = [...employees].sort((a, b) => {
                 const aIsFacial = dayAttendance[a.id] && dayAttendance[a.id].method === 'FACIAL';
                 const bIsFacial = dayAttendance[b.id] && dayAttendance[b.id].method === 'FACIAL';
@@ -12150,7 +12235,20 @@
                 return a.name.localeCompare(b.name);
             });
 
-            const listHTML = sortedEmployees.map(employee => {
+            // ✅ 3. PAGINATION - Mitovy amin'ny hafa
+            const totalItems = sortedEmployees.length;
+            const totalPages = Math.ceil(totalItems / faceAttendanceItemsPerPage);
+            
+            if (faceAttendanceCurrentPage > totalPages && totalPages > 0) {
+                faceAttendanceCurrentPage = totalPages;
+            }
+            
+            const startIndex = (faceAttendanceCurrentPage - 1) * faceAttendanceItemsPerPage;
+            const endIndex = startIndex + faceAttendanceItemsPerPage;
+            const paginatedEmployees = sortedEmployees.slice(startIndex, endIndex);
+
+            // ✅ 4. Liste PAGINÉE (tsy rehetra intsony)
+            const listHTML = paginatedEmployees.map(employee => {
                 const presenceData = dayAttendance[employee.id];
                 const isFacialPresent = presenceData && presenceData.method === 'FACIAL';
 
@@ -12195,9 +12293,23 @@
                 `;
             }).join('');
 
-            // 3. Atambatra ny famintinana sy ny lisitra
+            // ✅ 5. Affichage final
             container.innerHTML = summaryHTML + listHTML;
+
+            // ✅ 6. Affichage pagination controls
+            renderPaginationControls(
+                'faceAttendancePagination',
+                faceAttendanceCurrentPage,
+                totalPages,
+                totalItems,
+                faceAttendanceItemsPerPage,
+                (page) => {
+                    faceAttendanceCurrentPage = page;
+                    displayTodayFaceAttendance();
+                }
+            );
         }
+
 
 
         // Mettre à jour quand on affiche la section
