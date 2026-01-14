@@ -11655,23 +11655,22 @@
 
 
         // ==========================================
-        // UI: POINTAGE FACIAL
+        // UI: POINTAGE FACIAL - VERSION CORRIGÉE
         // ==========================================
 
         async function openFacePointageModal() {
             const loaded = await FaceRecognition.loadModels();
             if (!loaded) return;
             
-            // Utilise directement employees
             const enrolled = employees.filter(e => e.face_descriptors && e.face_descriptors.length > 0);
-
             
             if (enrolled.length === 0) {
-                alert('⚠ Tsy misy employé enrolled! Mba enrollment aloha.');
+                alert('⚠️ Tsy misy employé enrolled! Mba enrollment aloha.');
                 return;
             }
             
             const modal = document.createElement('div');
+            modal.id = 'facePointageModal'; // ✅ ID CORRECT POUR RÉFÉRENCE
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; right: 0; bottom: 0;
                 background: rgba(0,0,0,0.9); z-index: 10000;
@@ -11682,33 +11681,51 @@
             modal.innerHTML = `
                 <div class="modal-content-facial" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 95%; max-height: 95vh; overflow-y: auto;">
                     
-                    <!-- ================== FANITSIANA ETO ================== -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h2 style="margin: 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px;">
+                        <h2 style="margin: 0; color: #333; font-size: clamp(1.1rem, 4vw, 1.5rem); flex: 1;">
                             🎯 Pointage Reconnaissance Faciale
                         </h2>
                         
-                        <!-- Ity ilay bokotra vaovao nampidirina -->
-                        <button id="btnSwitchCamera" title="Changer de caméra" style="background: none; border: 1px solid #ccc; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <span class="material-icons">cameraswitch</span>
+                        <!-- Bouton Switch Caméra -->
+                        <button id="btnSwitchCamera" title="Changer de caméra" 
+                            style="background: #f0f0f0; border: 1px solid #ccc; border-radius: 50%; 
+                                width: 44px; height: 44px; cursor: pointer; 
+                                display: flex; align-items: center; justify-content: center; 
+                                flex-shrink: 0; transition: all 0.2s;"
+                            onmouseover="this.style.background='#e0e0e0'"
+                            onmouseout="this.style.background='#f0f0f0'">
+                            <span class="material-icons" style="font-size: 22px; color: #333;">cameraswitch</span>
                         </button>
                     </div>
-                    <!-- ==================================================== -->
+
+                    <!-- Indicateur caméra active -->
+                    <div id="cameraIndicator" style="text-align: center; margin-bottom: 8px; font-size: 12px; color: #666;">
+                        📷 Caméra frontale
+                    </div>
 
                     <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
-                        <video id="pointageVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <video id="pointageVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        
+                        <!-- Overlay de chargement -->
+                        <div id="videoLoader" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                            background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;">
+                            <div style="color: white; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
+                                <div>Changement de caméra...</div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="pointageStatus" style="padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 13px;">
-                        📹 Prêt pour le pointage...
+                        📹 Initialisation...
                     </div>
                     
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button id="btnPointageCapture" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500;">
-                        📸 Pointage
+                        <button id="btnPointageCapture" style="flex: 1; min-width: 120px; padding: 12px; background: #6750A4; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s;">
+                            📸 Pointage
                         </button>
-                        <button id="btnPointageClose" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px;">
-                        ✕ Hanakatona
+                        <button id="btnPointageClose" style="flex: 1; min-width: 120px; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; transition: all 0.2s;">
+                            ✕ Hanakatona
                         </button>
                     </div>
                     
@@ -11718,212 +11735,286 @@
                 </div>
                 <style>
                     @media (max-height: 500px) {
-                        .modal-content-facial { padding: 12px !important; }
-                        .modal-content-facial h2 { margin-bottom: 8px !important; }
+                        .modal-content-facial { padding: 12px !important; max-height: 90vh !important; }
+                        .modal-content-facial h2 { margin-bottom: 8px !important; font-size: 1rem !important; }
                         .modal-content-facial div[style*="max-width: 320px"] { max-width: 200px !important; margin-bottom: 8px !important; }
                         .modal-content-facial #pointageStatus { margin-bottom: 8px !important; padding: 6px !important; }
                     }
                 </style>
             `;
 
-            
             document.body.appendChild(modal);
             
+            // ✅ ÉLÉMENTS DOM - TOUS INITIALISÉS
             const video = modal.querySelector('#pointageVideo');
             const status = modal.querySelector('#pointageStatus');
             const btnCapture = modal.querySelector('#btnPointageCapture');
             const btnClose = modal.querySelector('#btnPointageClose');
-            const btnSwitchCamera = modal.querySelector('#btnSwitchCamera');
+            const btnSwitch = modal.querySelector('#btnSwitchCamera');
+            const cameraIndicator = modal.querySelector('#cameraIndicator');
+            const videoLoader = modal.querySelector('#videoLoader');
             
-            let stream;
-            let currentFacingMode = 'user';
+            // ✅ VARIABLES D'ÉTAT - INITIALISÉES CORRECTEMENT
+            let stream = null;  // ✅ INITIALISÉE À NULL
+            let currentFacingMode = 'user'; // Commence par caméra frontale
+            let isSwitching = false; // Protection contre double-clic
+            let isCapturing = false; // Protection pendant capture
             
+            // ✅ FONCTION SÉCURISÉE POUR DÉMARRER CAMÉRA
             async function startCamera(facingMode) {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                }
-
                 try {
-                    const constraints = {
+                    // ✅ 1. ARRÊTER PROPREMENT L'ANCIEN STREAM
+                    if (stream) {
+                        console.log('🛑 Arrêt du stream précédent...');
+                        stream.getTracks().forEach(track => {
+                            track.stop();
+                            console.log(`   ✓ Track ${track.kind} arrêté`);
+                        });
+                        video.srcObject = null;
+                        stream = null;
+                        
+                        // ✅ DÉLAI CRITIQUE : Laisser le système libérer la caméra
+                        await new Promise(r => setTimeout(r, 800));
+                    }
+                    
+                    status.innerHTML = '⏳ Démarrage de la caméra...';
+                    
+                    // ✅ 2. ESSAYER AVEC 'exact' D'ABORD, PUIS FALLBACK 'ideal'
+                    let constraints = {
                         video: { 
-                            facingMode: { ideal: facingMode },
+                            facingMode: { exact: facingMode },
                             width: { ideal: 640 },
                             height: { ideal: 480 }
                         }
                     };
-                    stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = stream;
-                    await new Promise(resolve => video.onloadedmetadata = resolve);
-                    video.play();
-                    currentFacingMode = facingMode;
-                } catch (error) {
-                    console.error("ERREUR CAMERA:", error); // Mba hahitantsika tsara ny tena karazana erreur
                     
-                    // ================== FANAMPIANA ETO ==================
-                    // Manome hafatra mazava kokoa ho an'ny mpampiasa
-                    let userMessage = "Tsy afaka nampiasa ny fakan-tsary. ";
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (exactError) {
+                        // Si 'exact' échoue, essayer 'ideal' (moins strict)
+                        console.log(`⚠️ Exact ${facingMode} non disponible, essai avec ideal...`);
+                        constraints.video.facingMode = { ideal: facingMode };
+                        stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    }
+                    
+                    // ✅ 3. CONNECTER LE STREAM À LA VIDÉO
+                    video.srcObject = stream;
+                    
+                    await new Promise((resolve, reject) => {
+                        video.onloadedmetadata = () => {
+                            video.play()
+                                .then(() => {
+                                    console.log('✅ Vidéo démarrée:', video.videoWidth, 'x', video.videoHeight);
+                                    resolve();
+                                })
+                                .catch(reject);
+                        };
+                        
+                        // Timeout de sécurité
+                        setTimeout(() => reject(new Error('Timeout video load')), 10000);
+                    });
+                    
+                    // ✅ 4. DÉLAI DE STABILISATION
+                    await new Promise(r => setTimeout(r, 500));
+                    
+                    // ✅ 5. WARM-UP DU DÉTECTEUR
+                    status.innerHTML = '⏳ Initialisation du détecteur...';
+                    for (let i = 0; i < 2; i++) {
+                        try {
+                            await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({
+                                inputSize: 224,
+                                scoreThreshold: 0.4
+                            }));
+                        } catch (e) {
+                            // Ignorer erreurs warm-up
+                        }
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                    
+                    // ✅ 6. MISE À JOUR DE L'INTERFACE
+                    currentFacingMode = facingMode;
+                    cameraIndicator.innerHTML = facingMode === 'environment' ? '📷 Caméra arrière' : '🤳 Caméra frontale';
+                    status.innerHTML = '📹 Prêt pour le pointage...';
+                    status.style.background = '#f0f0f0';
+                    status.style.color = '#333';
+                    
+                    console.log('✅ Caméra prête:', facingMode);
+                    return true;
+                    
+                } catch (error) {
+                    console.error("❌ ERREUR CAMÉRA:", error);
+                    
+                    // ✅ GESTION DES ERREURS DÉTAILLÉE
+                    let userMessage = "Tsy afaka mampiasa ny fakan-tsary. ";
+                    let shouldRetry = false;
+                    
                     if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-                        userMessage += "Nolavinao ny fahazoan-dàlana. Azafady, amboary ao amin'ny paramètres-n'ny navigateur-nao.";
+                        userMessage += "Nolavinao ny fahazoan-dalana. Azafady, amboary ao amin'ny paramètres-n'ny navigateur-nao.";
                     } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
                         userMessage += "Tsy nahitana fakan-tsary tamin'ity fitaovana ity.";
                     } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-                        userMessage += "Efa misy fampiharana hafa mampiasa ny fakan-tsary.";
+                        userMessage += "Efa misy fampiharana hafa mampiasa ny fakan-tsary. Akatona izany aloha.";
+                    } else if (error.name === "OverconstrainedError") {
+                        userMessage = `Ny caméra ${facingMode === 'environment' ? 'arrière' : 'frontale'} tsy misy.`;
+                        shouldRetry = true; // Essayer l'autre caméra
                     } else {
-                        userMessage += "Nisy olana tsy nampoizina.";
+                        userMessage += "Nisy olana: " + error.message;
                     }
                     
-                    // Asehoy amin'ny alerte ilay hafatra
-                    alert(userMessage);
+                    status.innerHTML = '❌ ' + userMessage;
+                    status.style.background = '#f8d7da';
+                    status.style.color = '#721c24';
                     
-                    // Akatona ilay modal satria tsy misy azo atao
-                    const modalToClose = document.getElementById('facePointageModal'); // Hamarino tsara ny ID-n'ny modal
-                    if(modalToClose) modalToClose.remove();
-                    // ====================================================
+                    // ✅ TENTATIVE AUTOMATIQUE AVEC L'AUTRE CAMÉRA
+                    if (shouldRetry && facingMode === 'environment') {
+                        console.log('🔄 Tentative avec caméra frontale...');
+                        await new Promise(r => setTimeout(r, 1000));
+                        return await startCamera('user');
+                    }
+                    
+                    // Si vraiment impossible
+                    setTimeout(() => {
+                        alert(userMessage);
+                        modal.remove();
+                    }, 1500);
+                    
+                    return false;
                 }
             }
-
-
-            // Ampifandraisina ilay bokotra
-            btnSwitchCamera.onclick = () => {
-                const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-                startCamera(newFacingMode);
-            };
-
-            // Antsoina voalohany
-            await startCamera(currentFacingMode);
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
-                });
-                video.srcObject = stream;
-
-                // ⬇️⬇️⬇️ NOUVEAU CODE: Attendre que la vidéo soit prête ⬇️⬇️⬇️
-                await new Promise(resolve => {
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        console.log('✅ Vidéo prête:', video.videoWidth, 'x', video.videoHeight);
-                        resolve();
-                    };
-                });
-
-                // Petit délai supplémentaire pour stabilisation
-                await new Promise(r => setTimeout(r, 500));
-                // ⬆️⬆️⬆️ FIN NOUVEAU CODE ⬆️⬆️⬆️
-
-                // ⬇️⬇️⬇️ AJOUTER WARM-UP ⬇️⬇️⬇️
-                status.innerHTML = '⏳ Initialisation de la caméra...';
-
-                // Effectuer 2 détections "vides" pour warm-up
-                for (let i = 0; i < 2; i++) {
-                    try {
-                        await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({
-                            inputSize: 224,
-                            scoreThreshold: 0.4
-                        }));
-                    } catch (e) {
-                        // Ignore les erreurs de warm-up
-                    }
-                    await new Promise(r => setTimeout(r, 300));
-                }
-
-                status.innerHTML = '🔹 Prêt pour le pointage...';
-                // ⬆️⬆️⬆️ FIN WARM-UP ⬆️⬆️⬆️
             
-                // Ity no apetraka ao anatin'ny openFacePointageModal
-                btnCapture.onclick = async () => {
-                    try {
-                        status.innerHTML = '⏳ Maka sary...';
-                        btnCapture.disabled = true;
-                        btnCapture.style.opacity = '0.5';
+            // ✅ BOUTON SWITCH CAMÉRA - AVEC PROTECTION
+            btnSwitch.onclick = async () => {
+                if (isSwitching || isCapturing) {
+                    console.log('⚠️ Action en cours, veuillez patienter...');
+                    return;
+                }
+                
+                isSwitching = true;
+                btnSwitch.disabled = true;
+                btnSwitch.style.opacity = '0.5';
+                btnCapture.disabled = true;
+                
+                // Afficher loader
+                videoLoader.style.display = 'flex';
+                
+                const newMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                console.log(`🔄 Changement de caméra: ${currentFacingMode} → ${newMode}`);
+                
+                const success = await startCamera(newMode);
+                
+                // Masquer loader
+                videoLoader.style.display = 'none';
+                
+                btnSwitch.disabled = false;
+                btnSwitch.style.opacity = '1';
+                btnCapture.disabled = false;
+                isSwitching = false;
+            };
+            
+            // ✅ BOUTON CAPTURE
+            btnCapture.onclick = async () => {
+                if (isCapturing || isSwitching) {
+                    console.log('⚠️ Action en cours...');
+                    return;
+                }
+                
+                isCapturing = true;
+                
+                try {
+                    status.innerHTML = '⏳ Capture en cours...';
+                    btnCapture.disabled = true;
+                    btnCapture.style.opacity = '0.5';
+                    btnSwitch.disabled = true;
 
-                        const result = await FaceRecognition.recognizeFace(video, enrolled);
+                    const result = await FaceRecognition.recognizeFace(video, enrolled);
+                    
+                    if (result.success) {
+                        const emp = result.employe;
+                        const confidence = (result.confidence * 100).toFixed(1);
                         
-                        if (result.success) {
-                            const emp = result.employe;
-                            const confidence = (result.confidence * 100).toFixed(1);
+                        // ✅ ANTSO processAttendanceScan
+                        const attendanceSuccess = await processAttendanceScan(emp, 'FACIAL', true);
+                        
+                        if (attendanceSuccess) {
+                            // ✅ SUCCÈS
+                            status.innerHTML = `✅ <strong>${emp.name}</strong> Confiance: ${confidence}%`;
+                            status.style.background = '#d4edda';
+                            status.style.color = '#155724';
                             
-                            // ✅ FANITSIANA 1: Antso processAttendanceScan ALOHA
-                            const attendanceSuccess = await processAttendanceScan(emp, 'FACIAL', true);
+                            playAuSuivantSound();
                             
-                            // ✅ FANITSIANA 2: Manamarina raha nahomby
-                            if (attendanceSuccess) {
-                                // ✅ SUCCÈS: Son + message vert
-                                status.innerHTML = `✅ <strong>${emp.name}</strong> Confiance: ${confidence}%`;
-                                status.style.background = '#d4edda';
-                                status.style.color = '#155724';
-                                
-                                playAuSuivantSound(); // ← Raha NAHOMBY ihany
-                                
-                                setTimeout(() => {
-                                    status.innerHTML = '🔹 Prêt pour le suivant...';
-                                    status.style.background = '#f0f0f0';
-                                    status.style.color = '#333';
-                                    btnCapture.disabled = false;
-                                    btnCapture.style.opacity = '1';
-                                }, 2000);
-                                
-                            } else {
-                                // ✅ ERREUR: Message rouge (< 30 min na cancel)
-                                status.innerHTML = `❌ Pointage refusé`;
-                                status.style.background = '#f8d7da';
-                                status.style.color = '#721c24';
-                                
-                                // TSY MANDEFA son eto satria efa nisy playErrorSound() tao
-                                
-                                setTimeout(() => {
-                                    status.innerHTML = '🔹 Prêt pour le suivant...';
-                                    status.style.background = '#f0f0f0';
-                                    status.style.color = '#333';
-                                    btnCapture.disabled = false;
-                                    btnCapture.style.opacity = '1';
-                                }, 2000);
-                            }
+                            setTimeout(() => {
+                                status.innerHTML = '📹 Prêt pour le suivant...';
+                                status.style.background = '#f0f0f0';
+                                status.style.color = '#333';
+                                btnCapture.disabled = false;
+                                btnCapture.style.opacity = '1';
+                                btnSwitch.disabled = false;
+                                isCapturing = false;
+                            }, 2000);
                             
                         } else {
-                            // Reconnaissance FAILED (tsy nahita tarehy)
-                            status.innerHTML = `❌ ${result.message}`;
+                            // ❌ POINTAGE REFUSÉ
+                            status.innerHTML = `❌ Pointage refusé`;
                             status.style.background = '#f8d7da';
                             status.style.color = '#721c24';
-                            btnCapture.disabled = false;
-                            btnCapture.style.opacity = '1';
+                            
+                            setTimeout(() => {
+                                status.innerHTML = '📹 Prêt pour le suivant...';
+                                status.style.background = '#f0f0f0';
+                                status.style.color = '#333';
+                                btnCapture.disabled = false;
+                                btnCapture.style.opacity = '1';
+                                btnSwitch.disabled = false;
+                                isCapturing = false;
+                            }, 2000);
                         }
                         
-                    } catch (error) {
-                        status.innerHTML = `❌ Erreur: ${error.message}`;
+                    } else {
+                        // Reconnaissance FAILED
+                        status.innerHTML = `❌ ${result.message}`;
                         status.style.background = '#f8d7da';
                         status.style.color = '#721c24';
                         btnCapture.disabled = false;
                         btnCapture.style.opacity = '1';
+                        btnSwitch.disabled = false;
+                        isCapturing = false;
                     }
-                };
-
-                
-                btnClose.onclick = () => {
-                    stream.getTracks().forEach(track => track.stop());
-                    document.body.removeChild(modal);
                     
-                    // ⬇️⬇️⬇️ HAFINDRA ETO ⬇️⬇️⬇️
-                    // Rafraîchir l'affichage si on est dans l'onglet
-                    if (document.getElementById('face-presence')?.classList.contains('active')) {
-                        displayEnrolledEmployees();
-                        displayTodayFaceAttendance();
-                    }
-                    // ⬆️⬆️⬆️ ETO NO MARINA ⬆️⬆️⬆️
-                };
+                } catch (error) {
+                    console.error('❌ Erreur capture:', error);
+                    status.innerHTML = `❌ Erreur: ${error.message}`;
+                    status.style.background = '#f8d7da';
+                    status.style.color = '#721c24';
+                    btnCapture.disabled = false;
+                    btnCapture.style.opacity = '1';
+                    btnSwitch.disabled = false;
+                    isCapturing = false;
+                }
+            };
 
+            // ✅ BOUTON FERMER - AVEC VÉRIFICATION stream
+            btnClose.onclick = () => {
+                if (stream) {  // ✅ VÉRIFICATION - ne pas crash si stream est null
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
                 
-            } catch (error) {
-                alert('❌ Erreur camera: ' + error.message);
-                document.body.removeChild(modal);
-            }
+                // ✅ FERMETURE SÉCURISÉE DE LA MODAL
+                if (modal && modal.parentNode) {
+                    document.body.removeChild(modal);
+                }
+                
+                // Rafraîchir l'affichage si on est dans l'onglet face-presence
+                if (document.getElementById('face-presence')?.classList.contains('active')) {
+                    displayEnrolledEmployees();
+                    displayTodayFaceAttendance();
+                }
+            };
             
-
+            // ✅ DÉMARRAGE INITIAL - ATTENDRE QUE TOUT SOIT PRÊT
+            await startCamera(currentFacingMode);
         }
-
         // =================================================================
         //  RECONNAISSANCE FACIALE POUR SÉLECTION (AVANCE & PAIE)
         // =================================================================
