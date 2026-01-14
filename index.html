@@ -4660,71 +4660,56 @@
         // PLAY ERROR SOUND - efateo.mp3 (QR + Facial)
         async function playErrorSound() {
             try {
-                let audioPlayer = document.getElementById('audioPlayerError');
+                // ✅ MAMORONA VAOVAO foana - TSY MITAHIRY
+                const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
+                    ? '/systeme-rh-behavana' 
+                    : '';
+                const audioUrl = `${window.location.origin}${basePath}/efateo.mp3`;
                 
-                if (!audioPlayer) {
-                    // ✅ VAOVAO: Try cache first (offline-capable)
-                    const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
-                        ? '/systeme-rh-behavana' 
-                        : '';
-                    const audioUrl = `${window.location.origin}${basePath}/efateo.mp3`;
-                    
-                    // Try to get from cache
-                    const cachedResponse = await caches.match(audioUrl);
-                    
-                    if (cachedResponse) {
-                        // Use cached blob
-                        const blob = await cachedResponse.blob();
-                        const blobUrl = URL.createObjectURL(blob);
-                        audioPlayer = new Audio(blobUrl);
-                        // Cleanup blob URL after audio ends
-                        audioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
-                    } else {
-                        // Fallback: direct URL (online)
-                        audioPlayer = new Audio('efateo.mp3');
-                    }
-                    
-                    audioPlayer.id = 'audioPlayerError';
-                    audioPlayer.style.display = 'none';
-                    audioPlayer.volume = 0.7; // 70% volume
-                    document.body.appendChild(audioPlayer);
+                // Try to get from cache
+                const cachedResponse = await caches.match(audioUrl);
+                
+                let audioPlayer;
+                if (cachedResponse) {
+                    // Use cached blob
+                    const blob = await cachedResponse.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    audioPlayer = new Audio(blobUrl);
+                    // ✅ TSY REVOKE - Avelao foana
+                } else {
+                    // Fallback: direct URL (online)
+                    audioPlayer = new Audio('efateo.mp3');
                 }
                 
-                // Reset position
-                audioPlayer.currentTime = 0;
+                audioPlayer.volume = 0.7;
                 
-                // Play with promise handling
-                const playPromise = audioPlayer.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.warn('⚠️ Erreur lecture efateo.mp3:', error);
-                        
-                        // Fallback: Son error synthétique
-                        if (audioContext && audioContext.state === 'running') {
-                            const now = audioContext.currentTime;
-                            const oscillator = audioContext.createOscillator();
-                            const gainNode = audioContext.createGain();
-                            
-                            oscillator.connect(gainNode);
-                            gainNode.connect(audioContext.destination);
-                            
-                            oscillator.frequency.value = 300;
-                            oscillator.type = 'sawtooth';
-                            
-                            gainNode.gain.setValueAtTime(0.3, now);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                            
-                            oscillator.start(now);
-                            oscillator.stop(now + 0.5);
-                        }
-                    });
-                }
+                // Play
+                await audioPlayer.play();
                 
             } catch (e) {
-                console.error('❌ Audio error:', e);
+                console.warn('⚠️ Erreur lecture efateo.mp3:', e);
+                
+                // Fallback: Son error synthétique
+                if (audioContext && audioContext.state === 'running') {
+                    const now = audioContext.currentTime;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'sawtooth';
+                    
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.5);
+                }
             }
         }
+
 
 
         // ✅ NOUVELLE FONCTION: Son error générique (buzzer)
@@ -4760,56 +4745,37 @@
         // =====================================================
         // PLAY AU SUIVANT SOUND - suivant.mp3
         // =====================================================
+        // PLAY AU SUIVANT SOUND - suivant.mp3
         async function playAuSuivantSound() {
             try {
-                // Hamarino aloha raha efa noforonina ilay singa audio
-                let audioPlayer = document.getElementById('audioPlayerAuSuivant');
+                // ✅ MAMORONA VAOVAO foana - TSY MITAHIRY
+                const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
+                    ? '/systeme-rh-behavana' 
+                    : '';
+                const audioUrl = `${window.location.origin}${basePath}/suivant.mp3`;
                 
-                if (!audioPlayer) {
-                    // VAOVAO: Try cache first (offline-capable)
-                    const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
-                        ? '/systeme-rh-behavana' 
-                        : '';
-                    const audioUrl = `${window.location.origin}${basePath}/suivant.mp3`;
-                    
-                    // Try to get from cache
-                    const cachedResponse = await caches.match(audioUrl);
-                    
-                    if (cachedResponse) {
-                        // Use cached blob
-                        const blob = await cachedResponse.blob();
-                        const blobUrl = URL.createObjectURL(blob);
-                        audioPlayer = new Audio(blobUrl);
-                        // Cleanup blob URL after audio ends
-                        audioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
-                    } else {
-                        // Fallback: direct URL (online)
-                        audioPlayer = new Audio('suivant.mp3');
-                    }
-                    
-                    audioPlayer.id = 'audioPlayerAuSuivant';
-                    audioPlayer.style.display = 'none';
-                    audioPlayer.volume = 0.8; // 80% volume
-                    document.body.appendChild(audioPlayer);
-                }
-
-                // Mba hahafahana mamerina mandefa azy avy hatrany raha vao avy nandeha teo
-                audioPlayer.currentTime = 0; 
+                // Try to get from cache
+                const cachedResponse = await caches.match(audioUrl);
                 
-                // Alefa ny feo
-                const playPromise = audioPlayer.play();
-
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.warn("⚠️ Tsy afaka nandefa ny feo 'suivant.mp3':", error);
-                    });
+                let audioPlayer;
+                if (cachedResponse) {
+                    const blob = await cachedResponse.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    audioPlayer = new Audio(blobUrl);
+                    // ✅ TSY REVOKE
+                } else {
+                    audioPlayer = new Audio('suivant.mp3');
                 }
+                
+                audioPlayer.volume = 0.8;
+                
+                await audioPlayer.play();
                 
             } catch (e) {
-                console.error('❌ Audio error:', e);
-                // Fallback final
+                console.warn('⚠️ Tsy afaka nandefa ny feo suivant.mp3:', e);
             }
         }
+
 
 
         async function resetAllData() {
