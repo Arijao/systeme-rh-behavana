@@ -112,6 +112,9 @@ self.addEventListener('fetch', event => {
         if (event.request.destination === 'document') {
           return caches.match(`${BASE_PATH}/index.html`);
         }
+        // Raha audio/fichier hafa tsy hita
+        return new Response('Offline', { status: 503 });
       })
+
   );
 });
