@@ -15,9 +15,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
-    <!-- ✅ FIREBASE SDK - AMPIDIRO ETO -->
+    <!-- ✅ FIREBASE SDK - VERSION STORAGE -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+
 
     <!-- ✅ CONFIGURATION FIREBASE - AMPIDIRO ETO -->
     <script>
@@ -32,18 +34,19 @@
 
     // Initialiser Firebase
     let firebaseApp;
-    let database;
+    let storage;
     let isFirebaseInitialized = false;
 
     try {
         firebaseApp = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
+        storage = firebase.storage();
         isFirebaseInitialized = true;
-        console.log('✅ Firebase initialisé avec succès!');
+        console.log('✅ Firebase Storage initialisé');
     } catch (error) {
         console.error('❌ Erreur Firebase:', error);
         isFirebaseInitialized = false;
     }
+
     </script>
 
 
@@ -4690,11 +4693,12 @@
         let nextSoundBuffer;
 
         // ==========================================
-        // SYNC MANAGER - SYNCHRONISATION AUTOMATIQUE
+        // SYNC MANAGER - FIREBASE STORAGE
         // ==========================================
 
         const SyncManager = {
             deviceId: localStorage.getItem('deviceId') || 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            isSyncing: false,
             
             init() {
                 if (!localStorage.getItem('deviceId')) {
@@ -4702,106 +4706,145 @@
                 }
                 
                 if (isFirebaseInitialized) {
-                    this.setupListeners();
-                    console.log('🔄 Sync Manager prêt - Device:', this.deviceId);
+                    console.log('🔄 Sync Manager Storage prêt');
+                    
+                    // Auto-download toutes les 30 secondes
+                    setInterval(() => {
+                        this.autoDownload();
+                    }, 30000);
                 }
             },
             
-            // ✅ ÉCOUTE LES CHANGEMENTS EN TEMPS RÉEL
-            setupListeners() {
-                // Employés
-                database.ref('employees').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.lastUpdatedBy !== this.deviceId) {
-                        console.log('📥 Employés reçus');
-                        employees = data.list || [];
-                        if (typeof displayEmployees === 'function') displayEmployees();
-                        if (typeof updateStats === 'function') updateStats();
-                    }
-                });
+            // ✅ Fonction appelée par saveData()
+            async syncAll() {
+                if (!isFirebaseInitialized || this.isSyncing) {
+                    return;
+                }
                 
-                // Pointages
-                database.ref('attendance').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.lastUpdatedBy !== this.deviceId) {
-                        console.log('📥 Pointages reçus');
-                        attendance = data.records || {};
-                        if (typeof displayAttendance === 'function') displayAttendance();
-                        if (typeof displayQRAttendance === 'function') displayQRAttendance();
-                        if (typeof displayTodayFaceAttendance === 'function') displayTodayFaceAttendance();
-                        if (typeof updateStats === 'function') updateStats();
-                    }
-                });
+                this.isSyncing = true;
                 
-                // Avances
-                database.ref('advances').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.lastUpdatedBy !== this.deviceId) {
-                        console.log('📥 Avances reçues');
-                        advances = data.list || [];
-                        if (typeof displayAdvances === 'function') displayAdvances();
-                    }
-                });
-                
-                // Paie
-                database.ref('payrolls').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.lastUpdatedBy !== this.deviceId) {
-                        console.log('📥 Paie reçue');
-                        payrolls = data.list || [];
-                        if (typeof calculatePayroll === 'function') calculatePayroll();
-                    }
-                });
-                
-                console.log('👂 Synchronisation en temps réel activée');
+                try {
+                    // 1. Préparer les données
+                    const syncData = {
+                        employees: employees,
+                        attendance: attendance,
+                        advances: advances,
+                        payrolls: payrolls,
+                        groups: groups,
+                        qrAttendance: qrAttendance || [],
+                        deviceId: this.deviceId,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // 2. Convertir en JSON
+                    const jsonString = JSON.stringify(syncData);
+                    
+                    // 3. Compresser
+                    const compressed = pako.gzip(jsonString);
+                    
+                    // 4. Créer blob
+                    const blob = new Blob([compressed], { type: 'application/gzip' });
+                    
+                    // 5. Upload vers Storage
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child('sync/latest.gz');
+                    
+                    await fileRef.put(blob);
+                    
+                    console.log('📤 Sync Storage OK');
+                    
+                } catch (error) {
+                    console.error('❌ Erreur sync:', error);
+                } finally {
+                    this.isSyncing = false;
+                }
             },
             
-            // ✅ SYNC TOUT AUTOMATIQUEMENT
-            async syncAll() {
+            // ✅ Download automatique
+            async autoDownload() {
                 if (!isFirebaseInitialized) return;
                 
                 try {
-                    const timestamp = new Date().toISOString();
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child('sync/latest.gz');
+                    const metadata = await fileRef.getMetadata();
                     
-                    // Sync employés
-                    await database.ref('employees').set({
-                        list: employees,
-                        lastUpdatedBy: this.deviceId,
-                        lastUpdatedAt: timestamp
-                    });
+                    const remoteDeviceId = metadata.customMetadata?.deviceId;
                     
-                    // Sync pointages
-                    await database.ref('attendance').set({
-                        records: attendance,
-                        lastUpdatedBy: this.deviceId,
-                        lastUpdatedAt: timestamp
-                    });
+                    // Ne pas télécharger notre propre upload
+                    if (remoteDeviceId === this.deviceId) {
+                        return;
+                    }
                     
-                    // Sync avances
-                    await database.ref('advances').set({
-                        list: advances,
-                        lastUpdatedBy: this.deviceId,
-                        lastUpdatedAt: timestamp
-                    });
+                    // Télécharger
+                    const url = await fileRef.getDownloadURL();
+                    const response = await fetch(url);
+                    const compressed = await response.arrayBuffer();
                     
-                    // Sync paie
-                    await database.ref('payrolls').set({
-                        list: payrolls,
-                        lastUpdatedBy: this.deviceId,
-                        lastUpdatedAt: timestamp
-                    });
+                    // Décompresser
+                    const decompressed = pako.ungzip(new Uint8Array(compressed), { to: 'string' });
+                    const syncData = JSON.parse(decompressed);
                     
-                    console.log('📤 Tout synchronisé !');
+                    // Appliquer
+                    employees = syncData.employees || [];
+                    attendance = syncData.attendance || {};
+                    advances = syncData.advances || [];
+                    payrolls = syncData.payrolls || [];
+                    groups = syncData.groups || [];
+                    qrAttendance = syncData.qrAttendance || [];
+                    
+                    // Sauvegarder localement SANS re-sync
+                    await this.saveLocal();
+                    
+                    // Rafraîchir
+                    if (typeof displayEmployees === 'function') displayEmployees();
+                    if (typeof displayAttendance === 'function') displayAttendance();
+                    if (typeof updateStats === 'function') updateStats();
+                    
+                    console.log('📥 Auto-sync reçue');
+                    
                 } catch (error) {
-                    console.error('❌ Erreur sync:', error);
+                    // Silencieux si pas de fichier
+                }
+            },
+            
+            // ✅ Sauvegarder local SANS sync
+            async saveLocal() {
+                try {
+                    await dbManager.clear('employees');
+                    for (const employee of employees) {
+                        await dbManager.add('employees', employee);
+                    }
+                    
+                    await dbManager.clear('groups');
+                    for (const group of groups) {
+                        await dbManager.add('groups', group);
+                    }
+                    
+                    await dbManager.clear('attendance');
+                    for (const [date, dayAttendance] of Object.entries(attendance)) {
+                        await dbManager.put('attendance', { date, data: dayAttendance });
+                    }
+                    
+                    await dbManager.clear('payrolls');
+                    for (const payroll of payrolls) {
+                        await dbManager.add('payrolls', payroll);
+                    }
+                    
+                    await dbManager.clear('advances');
+                    for (const advance of advances) {
+                        await dbManager.add('advances', advance);
+                    }
+                } catch (error) {
+                    console.error('Erreur saveLocal:', error);
                 }
             }
         };
 
-        // ✅ Démarrer au chargement
         document.addEventListener('DOMContentLoaded', () => {
             SyncManager.init();
         });
+
 
 
         //========================================================
