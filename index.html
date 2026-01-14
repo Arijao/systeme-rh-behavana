@@ -15,6 +15,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+    <!-- ✅ FIREBASE SDK - AMPIDIRO ETO -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <!-- ✅ CONFIGURATION FIREBASE - AMPIDIRO ETO -->
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA8uEOlP0VVWoNjnS3wJIU6JWm2iMBcoko",
+        authDomain: "behavana-sync.firebaseapp.com",
+        projectId: "behavana-sync",
+        storageBucket: "behavana-sync.firebasestorage.app",
+        messagingSenderId: "806381927804",
+        appId: "1:806381927804:web:2350bd3272e3b8ecbc38f9"
+    };
+
+    // Initialiser Firebase
+    let firebaseApp;
+    let database;
+    let isFirebaseInitialized = false;
+
+    try {
+        firebaseApp = firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        isFirebaseInitialized = true;
+        console.log('✅ Firebase initialisé avec succès!');
+    } catch (error) {
+        console.error('❌ Erreur Firebase:', error);
+        isFirebaseInitialized = false;
+    }
+    </script>
+
+
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -2801,6 +2833,34 @@
 
 </head>
 <body>
+    <!-- Indicateur Firebase -->
+    <div style="position: fixed; top: 70px; right: 20px; z-index: 9999; background: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; font-size: 13px;">
+        <span id="firebaseStatusIcon">⚪</span>
+        <span id="firebaseStatusText">Initialisation...</span>
+    </div>
+
+    <script>
+    // ✅ Mise à jour du statut
+    if (typeof database !== 'undefined') {
+        database.ref('.info/connected').on('value', (snap) => {
+            const icon = document.getElementById('firebaseStatusIcon');
+            const text = document.getElementById('firebaseStatusText');
+            
+            if (icon && text) {
+                if (snap.val() === true) {
+                    icon.textContent = '🟢';
+                    text.textContent = 'Synchronisé';
+                    text.style.color = '#10b981';
+                } else {
+                    icon.textContent = '🔴';
+                    text.textContent = 'Hors ligne';
+                    text.style.color = '#ef4444';
+                }
+            }
+        });
+    }
+    </script>
+
     <div class="container">
         <div class="header">
             <button class="settings-btn" onclick="toggleSettings()">
@@ -4628,6 +4688,120 @@
         let audioContext;
         let successSoundBuffer;
         let nextSoundBuffer;
+
+        // ==========================================
+        // SYNC MANAGER - SYNCHRONISATION AUTOMATIQUE
+        // ==========================================
+
+        const SyncManager = {
+            deviceId: localStorage.getItem('deviceId') || 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            
+            init() {
+                if (!localStorage.getItem('deviceId')) {
+                    localStorage.setItem('deviceId', this.deviceId);
+                }
+                
+                if (isFirebaseInitialized) {
+                    this.setupListeners();
+                    console.log('🔄 Sync Manager prêt - Device:', this.deviceId);
+                }
+            },
+            
+            // ✅ ÉCOUTE LES CHANGEMENTS EN TEMPS RÉEL
+            setupListeners() {
+                // Employés
+                database.ref('employees').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.lastUpdatedBy !== this.deviceId) {
+                        console.log('📥 Employés reçus');
+                        employees = data.list || [];
+                        if (typeof displayEmployees === 'function') displayEmployees();
+                        if (typeof updateStats === 'function') updateStats();
+                    }
+                });
+                
+                // Pointages
+                database.ref('attendance').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.lastUpdatedBy !== this.deviceId) {
+                        console.log('📥 Pointages reçus');
+                        attendance = data.records || {};
+                        if (typeof displayAttendance === 'function') displayAttendance();
+                        if (typeof displayQRAttendance === 'function') displayQRAttendance();
+                        if (typeof displayTodayFaceAttendance === 'function') displayTodayFaceAttendance();
+                        if (typeof updateStats === 'function') updateStats();
+                    }
+                });
+                
+                // Avances
+                database.ref('advances').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.lastUpdatedBy !== this.deviceId) {
+                        console.log('📥 Avances reçues');
+                        advances = data.list || [];
+                        if (typeof displayAdvances === 'function') displayAdvances();
+                    }
+                });
+                
+                // Paie
+                database.ref('payrolls').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.lastUpdatedBy !== this.deviceId) {
+                        console.log('📥 Paie reçue');
+                        payrolls = data.list || [];
+                        if (typeof calculatePayroll === 'function') calculatePayroll();
+                    }
+                });
+                
+                console.log('👂 Synchronisation en temps réel activée');
+            },
+            
+            // ✅ SYNC TOUT AUTOMATIQUEMENT
+            async syncAll() {
+                if (!isFirebaseInitialized) return;
+                
+                try {
+                    const timestamp = new Date().toISOString();
+                    
+                    // Sync employés
+                    await database.ref('employees').set({
+                        list: employees,
+                        lastUpdatedBy: this.deviceId,
+                        lastUpdatedAt: timestamp
+                    });
+                    
+                    // Sync pointages
+                    await database.ref('attendance').set({
+                        records: attendance,
+                        lastUpdatedBy: this.deviceId,
+                        lastUpdatedAt: timestamp
+                    });
+                    
+                    // Sync avances
+                    await database.ref('advances').set({
+                        list: advances,
+                        lastUpdatedBy: this.deviceId,
+                        lastUpdatedAt: timestamp
+                    });
+                    
+                    // Sync paie
+                    await database.ref('payrolls').set({
+                        list: payrolls,
+                        lastUpdatedBy: this.deviceId,
+                        lastUpdatedAt: timestamp
+                    });
+                    
+                    console.log('📤 Tout synchronisé !');
+                } catch (error) {
+                    console.error('❌ Erreur sync:', error);
+                }
+            }
+        };
+
+        // ✅ Démarrer au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            SyncManager.init();
+        });
 
 
         //========================================================
@@ -6939,33 +7113,37 @@
         }
 
         // ===============================
-        // DATA MANAGEMENT MODIFIÉ POUR QR
+        // DATA MANAGEMENT MODIFIÉ POUR QR + FIREBASE
         // ===============================
         async function saveData() {
             try {
-                // Sauvegarder les données existantes (identique à l'original)
+                // 1️⃣ Sauvegarder les données existantes dans IndexedDB
+                
+                // Employees
                 await dbManager.clear('employees');
                 for (const employee of employees) {
                     await dbManager.add('employees', employee);
                 }
 
-                // ... aorian'ny for (const employee of employees) { ... }
+                // Groups
                 await dbManager.clear('groups');
                 for (const group of groups) {
                     await dbManager.add('groups', group);
                 }
 
-
+                // Attendance
                 await dbManager.clear('attendance');
                 for (const [date, dayAttendance] of Object.entries(attendance)) {
                     await dbManager.put('attendance', { date, data: dayAttendance });
                 }
 
+                // Payrolls
                 await dbManager.clear('payrolls');
                 for (const payroll of payrolls) {
                     await dbManager.add('payrolls', payroll);
                 }
 
+                // Advances
                 await dbManager.clear('advances');
                 for (const advance of advances) {
                     await dbManager.add('advances', advance);
@@ -6974,15 +7152,22 @@
                 // Sauvegarder les paramètres
                 await dbManager.put('settings', { key: 'theme', value: currentTheme });
                 await dbManager.put('settings', { key: 'qrSettings', value: qrSettings });
-                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() }); 
-                console.log('Données sauvegardées dans IndexedDB avec QR');
+                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() });
                 
-                console.log('Données sauvegardées dans IndexedDB avec QR');
+                console.log('💾 Données sauvegardées dans IndexedDB avec QR');
+                
+                // 2️⃣ ✅ SYNCHRONISATION AUTOMATIQUE FIREBASE
+                if (typeof SyncManager !== 'undefined' && SyncManager.syncAll) {
+                    await SyncManager.syncAll();
+                    console.log('🔄 Synchronisation Firebase terminée');
+                }
+                
             } catch (error) {
-                console.error('Erreur lors de la sauvegarde:', error);
+                console.error('❌ Erreur lors de la sauvegarde:', error);
                 showAlert('Erreur lors de la sauvegarde des données', 'error');
             }
         }
+
 
         // Sauvegarder seulement les données de présence
         async function saveAttendanceData() {
