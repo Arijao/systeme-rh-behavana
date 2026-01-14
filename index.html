@@ -3012,7 +3012,8 @@
                 </div>
                 
                 <!-- Card Scans avec Menu Dropdown -->
-                <div class="stat-card" style="overflow: visible !important; position: relative;">
+                <div class="stat-card" style="overflow: visible !important; position: relative; cursor: pointer" 
+     onclick="showSection('qr-presence')">
                     <div class="stat-icon">
                         <span class="material-icons" id="scanMethodIcon">qr_code_scanner</span>
                     </div>
@@ -3023,7 +3024,7 @@
                     
                     <!-- 3 DOTS MENU -->
                     <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
-                        <button onclick="toggleScanMethodMenu(event)" 
+                        <button onclick="toggleScanMethodMenu(event); event.stopPropagation()" 
                                 style="background: none; border: none; cursor: pointer; padding: 4px; 
                                     border-radius: 50%; transition: background 0.2s;"
                                 onmouseover="this.style.background='rgba(0,0,0,0.1)'"
