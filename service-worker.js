@@ -1,5 +1,5 @@
 // 1. Version vaovao miaraka amin'ny face recognition
-const CACHE_NAME = 'behavana-rh-cache-v2.4'; // <-- Version 2.1
+const CACHE_NAME = 'behavana-rh-cache-v2.4'; // <-- Version 2.4
 
 // 2. Auto-detect: GitHub Pages na local
 const BASE_PATH = self.location.pathname.includes('/systeme-rh-behavana/') 
