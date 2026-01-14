@@ -4657,13 +4657,33 @@
         // =====================================================
         // PLAY ERROR SOUND - efateo.mp3
         // =====================================================
-        function playErrorSound() {
+        // PLAY ERROR SOUND - efateo.mp3 (QR + Facial)
+        async function playErrorSound() {
             try {
-                // ✅ FANITSIANA 1: Hampiasa audio player miaraka amin'ny error handling
                 let audioPlayer = document.getElementById('audioPlayerError');
                 
                 if (!audioPlayer) {
-                    audioPlayer = new Audio('efateo.mp3');
+                    // ✅ VAOVAO: Try cache first (offline-capable)
+                    const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
+                        ? '/systeme-rh-behavana' 
+                        : '';
+                    const audioUrl = `${window.location.origin}${basePath}/efateo.mp3`;
+                    
+                    // Try to get from cache
+                    const cachedResponse = await caches.match(audioUrl);
+                    
+                    if (cachedResponse) {
+                        // Use cached blob
+                        const blob = await cachedResponse.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        audioPlayer = new Audio(blobUrl);
+                        // Cleanup blob URL after audio ends
+                        audioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
+                    } else {
+                        // Fallback: direct URL (online)
+                        audioPlayer = new Audio('efateo.mp3');
+                    }
+                    
                     audioPlayer.id = 'audioPlayerError';
                     audioPlayer.style.display = 'none';
                     audioPlayer.volume = 0.7; // 70% volume
@@ -4705,6 +4725,7 @@
                 console.error('❌ Audio error:', e);
             }
         }
+
 
         // ✅ NOUVELLE FONCTION: Son error générique (buzzer)
         function playGenericErrorSound() {
