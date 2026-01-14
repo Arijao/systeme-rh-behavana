@@ -4739,14 +4739,33 @@
         // =====================================================
         // PLAY AU SUIVANT SOUND - suivant.mp3
         // =====================================================
-        function playAuSuivantSound() {
+        async function playAuSuivantSound() {
             try {
                 // Hamarino aloha raha efa noforonina ilay singa audio
                 let audioPlayer = document.getElementById('audioPlayerAuSuivant');
                 
                 if (!audioPlayer) {
-                    // Raha mbola tsy misy dia amboary izy ary afeno.
-                    audioPlayer = new Audio('suivant.mp3'); 
+                    // VAOVAO: Try cache first (offline-capable)
+                    const basePath = window.location.pathname.includes('/systeme-rh-behavana/') 
+                        ? '/systeme-rh-behavana' 
+                        : '';
+                    const audioUrl = `${window.location.origin}${basePath}/suivant.mp3`;
+                    
+                    // Try to get from cache
+                    const cachedResponse = await caches.match(audioUrl);
+                    
+                    if (cachedResponse) {
+                        // Use cached blob
+                        const blob = await cachedResponse.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        audioPlayer = new Audio(blobUrl);
+                        // Cleanup blob URL after audio ends
+                        audioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
+                    } else {
+                        // Fallback: direct URL (online)
+                        audioPlayer = new Audio('suivant.mp3');
+                    }
+                    
                     audioPlayer.id = 'audioPlayerAuSuivant';
                     audioPlayer.style.display = 'none';
                     audioPlayer.volume = 0.8; // 80% volume
@@ -4762,7 +4781,6 @@
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
                         console.warn("⚠️ Tsy afaka nandefa ny feo 'suivant.mp3':", error);
-                        
                     });
                 }
                 
@@ -4771,6 +4789,7 @@
                 // Fallback final
             }
         }
+
 
         async function resetAllData() {
             if (!dbManager || !dbManager.isInitialized) {
