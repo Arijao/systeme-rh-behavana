@@ -3036,68 +3036,6 @@
                     </div>
                 </div>
 
-                <!-- DROPDOWN EO IVELANY CARD -->
-                <div id="scanMethodMenu" 
-                    style="display: none; position: fixed; 
-                            background: white; border-radius: 12px; 
-                            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-                            min-width: 220px; z-index: 9999; 
-                            overflow: hidden; border: 1px solid #e5e7eb;">
-                    
-                    <div onclick="filterScanMethod('all')" 
-                        class="menu-item"
-                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
-                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
-                        onmouseover="this.style.background='#f3f4f6'"
-                        onmouseout="this.style.background='white'">
-                        <span class="material-icons" style="color: #6b7280; font-size: 22px;">apps</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Tous</div>
-                            <div style="font-size: 12px; color: #6b7280;" id="allCount">0 pointages</div>
-                        </div>
-                    </div>
-                    
-                    <div onclick="filterScanMethod('qr')" 
-                        class="menu-item"
-                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
-                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
-                        onmouseover="this.style.background='#f3f4f6'"
-                        onmouseout="this.style.background='white'">
-                        <span class="material-icons" style="color: #6750A4; font-size: 22px;">qr_code_scanner</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">QR Code</div>
-                            <div style="font-size: 12px; color: #6b7280;" id="qrCount">0 scans</div>
-                        </div>
-                    </div>
-                    
-                    <div onclick="filterScanMethod('manual')" 
-                        class="menu-item"
-                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
-                                border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
-                        onmouseover="this.style.background='#f3f4f6'"
-                        onmouseout="this.style.background='white'">
-                        <span class="material-icons" style="color: #f59e0b; font-size: 22px;">edit</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Manuel</div>
-                            <div style="font-size: 12px; color: #6b7280;" id="manualCount">0 entrées</div>
-                        </div>
-                    </div>
-                    
-                    <div onclick="filterScanMethod('facial')" 
-                        class="menu-item"
-                        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
-                                transition: background 0.2s;"
-                        onmouseover="this.style.background='#f3f4f6'"
-                        onmouseout="this.style.background='white'">
-                        <span class="material-icons" style="color: #0ea5e9; font-size: 22px;">face</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Facial</div>
-                            <div style="font-size: 12px; color: #6b7280;" id="facialCount">0 reconnaissances</div>
-                        </div>
-                    </div>
-                </div>
-
-
                 <div class="stat-card">
                     <div class="stat-icon">
                         <span class="material-icons">payments</span>
@@ -4275,9 +4213,124 @@
         </div>
     </div>
 
+    <!-- DROPDOWN EO IVELANY CARD -->
+
+<div id="scanMethodMenu" 
+
+    style="display: none; position: fixed; 
+
+        background: white; border-radius: 12px; 
+
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+
+        min-width: 220px; z-index: 9999; 
+
+        overflow: hidden; border: 1px solid #e5e7eb;">
+
+    <div onclick="filterScanMethod('all')" 
+
+        class="menu-item"
+
+        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+
+            border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+
+        onmouseover="this.style.background='#f3f4f6'"
+
+        onmouseout="this.style.background='white'">
+
+        <span class="material-icons" style="color: #6b7280; font-size: 22px;">apps</span>
+
+        <div style="flex: 1;">
+
+            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Tous</div>
+
+            <div style="font-size: 12px; color: #6b7280;" id="allCount">0 pointages</div>
+
+        </div>
+
+    </div>
+
+    <div onclick="filterScanMethod('qr')" 
+
+        class="menu-item"
+
+        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+
+            border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+
+        onmouseover="this.style.background='#f3f4f6'"
+
+        onmouseout="this.style.background='white'">
+
+        <span class="material-icons" style="color: #6750A4; font-size: 22px;">qr_code_scanner</span>
+
+        <div style="flex: 1;">
+
+            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">QR Code</div>
+
+            <div style="font-size: 12px; color: #6b7280;" id="qrCount">0 scans</div>
+
+        </div>
+
+    </div>
+
+    <div onclick="filterScanMethod('manual')" 
+
+        class="menu-item"
+
+        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+
+            border-bottom: 1px solid #f3f4f6; transition: background 0.2s;"
+
+        onmouseover="this.style.background='#f3f4f6'"
+
+        onmouseout="this.style.background='white'">
+
+        <span class="material-icons" style="color: #f59e0b; font-size: 22px;">edit</span>
+
+        <div style="flex: 1;">
+
+            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Manuel</div>
+
+            <div style="font-size: 12px; color: #6b7280;" id="manualCount">0 entrÃ©es</div>
+
+        </div>
+
+    </div>
+
+    <div onclick="filterScanMethod('facial')" 
+
+        class="menu-item"
+
+        style="padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+
+            transition: background 0.2s;"
+
+        onmouseover="this.style.background='#f3f4f6'"
+
+        onmouseout="this.style.background='white'">
+
+        <span class="material-icons" style="color: #0ea5e9; font-size: 22px;">face</span>
+
+        <div style="flex: 1;">
+
+            <div style="font-weight: 600; font-size: 14px; color: #1f2937;">Facial</div>
+
+            <div style="font-size: 12px; color: #6b7280;" id="facialCount">0 reconnaissances</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
     <!-- ========================================================== -->
     <!--      MODAL VAOVAO HO AN'NY SCANNER QR (IRAIZAN'NY REHETRA)      -->
-    <!-- ========================================================== -->    <div class="modal" id="qrScannerModal">
+    <!-- ========================================================== -->    
+    <div class="modal" id="qrScannerModal">
         <div class="modal-content qr-modal-content" style="max-width: 450px;">
             <div class="modal-header">
                 <h3 id="qrScannerTitle" style="display: flex; align-items: center; gap: 8px; font-size: clamp(1rem, 4vw, 1.3rem);"><span class="material-icons">qr_code_scanner</span> Scanner le QR Code</h3>
