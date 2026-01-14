@@ -12613,29 +12613,42 @@
             
             if (!menu || !button) return;
             
-            if (menu.style.display === 'none') {
-                // CALCULATION POSITION
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                // ✅ CALCULATION POSITION - TSARA KOKOA
                 const rect = button.getBoundingClientRect();
                 
-                // Position menu eo ambanin'ny button
-                menu.style.top = (rect.bottom + 8) + 'px';
-                menu.style.right = (window.innerWidth - rect.right) + 'px';
+                // ✅ Mampiasa LEFT fa tsy RIGHT
+                menu.style.left = `${rect.right - 220}px`; // 220px = menu width
+                menu.style.top = `${rect.bottom + 8}px`;
                 
-                // Hamarino fa tsy hivoaka ny écran
+                // ✅ IMPORTANTE: Reset right positioning
+                menu.style.right = 'auto';
+                
+                // Asehoy aloha
                 menu.style.display = 'block';
                 
-                // Ajustement raha tsy mifanaraka
+                // ✅ Ajustement rehefa hita ny tena dimension
                 setTimeout(() => {
                     const menuRect = menu.getBoundingClientRect();
                     
-                    // Raha mivoaka eo ambany
-                    if (menuRect.bottom > window.innerHeight) {
-                        menu.style.top = (rect.top - menuRect.height - 8) + 'px';
+                    // Raha mivoaka eo ankavanana
+                    if (menuRect.right > window.innerWidth) {
+                        menu.style.left = `${window.innerWidth - menuRect.width - 16}px`;
                     }
                     
-                    // Raha mivoaka eo ankavanana
+                    // Raha mivoaka eo ankavia
                     if (menuRect.left < 0) {
-                        menu.style.right = '8px';
+                        menu.style.left = '16px';
+                    }
+                    
+                    // Raha mivoaka eo ambany - asehoy eo amboniny
+                    if (menuRect.bottom > window.innerHeight) {
+                        menu.style.top = `${rect.top - menuRect.height - 8}px`;
+                    }
+                    
+                    // Raha mivoaka eo ambony (rare case)
+                    if (menuRect.top < 0) {
+                        menu.style.top = '16px';
                     }
                 }, 10);
                 
@@ -12644,6 +12657,7 @@
                 menu.style.display = 'none';
             }
         }
+
 
         // Close menu si click ailleurs
         document.addEventListener('click', function(e) {
