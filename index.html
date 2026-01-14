@@ -15,41 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
-    <!-- ✅ FIREBASE SDK - VERSION STORAGE -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-
-
-    <!-- ✅ CONFIGURATION FIREBASE - AMPIDIRO ETO -->
-    <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyA8uEOlP0VVWoNjnS3wJIU6JWm2iMBcoko",
-        authDomain: "behavana-sync.firebaseapp.com",
-        projectId: "behavana-sync",
-        storageBucket: "behavana-sync.firebasestorage.app",
-        messagingSenderId: "806381927804",
-        appId: "1:806381927804:web:2350bd3272e3b8ecbc38f9"
-    };
-
-    // Initialiser Firebase
-    let firebaseApp;
-    let storage;
-    let isFirebaseInitialized = false;
-
-    try {
-        firebaseApp = firebase.initializeApp(firebaseConfig);
-        storage = firebase.storage();
-        isFirebaseInitialized = true;
-        console.log('✅ Firebase Storage initialisé');
-    } catch (error) {
-        console.error('❌ Erreur Firebase:', error);
-        isFirebaseInitialized = false;
-    }
-
-    </script>
-
-
+    
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -2836,33 +2802,6 @@
 
 </head>
 <body>
-    <!-- Indicateur Firebase -->
-    <div style="position: fixed; top: 70px; right: 20px; z-index: 9999; background: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; font-size: 13px;">
-        <span id="firebaseStatusIcon">⚪</span>
-        <span id="firebaseStatusText">Initialisation...</span>
-    </div>
-
-    <script>
-    // ✅ Mise à jour du statut
-    if (typeof database !== 'undefined') {
-        database.ref('.info/connected').on('value', (snap) => {
-            const icon = document.getElementById('firebaseStatusIcon');
-            const text = document.getElementById('firebaseStatusText');
-            
-            if (icon && text) {
-                if (snap.val() === true) {
-                    icon.textContent = '🟢';
-                    text.textContent = 'Synchronisé';
-                    text.style.color = '#10b981';
-                } else {
-                    icon.textContent = '🔴';
-                    text.textContent = 'Hors ligne';
-                    text.style.color = '#ef4444';
-                }
-            }
-        });
-    }
-    </script>
 
     <div class="container">
         <div class="header">
@@ -4691,161 +4630,6 @@
         let audioContext;
         let successSoundBuffer;
         let nextSoundBuffer;
-
-        // ==========================================
-        // SYNC MANAGER - FIREBASE STORAGE
-        // ==========================================
-
-        const SyncManager = {
-            deviceId: localStorage.getItem('deviceId') || 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            isSyncing: false,
-            
-            init() {
-                if (!localStorage.getItem('deviceId')) {
-                    localStorage.setItem('deviceId', this.deviceId);
-                }
-                
-                if (isFirebaseInitialized) {
-                    console.log('🔄 Sync Manager Storage prêt');
-                    
-                    // Auto-download toutes les 30 secondes
-                    setInterval(() => {
-                        this.autoDownload();
-                    }, 30000);
-                }
-            },
-            
-            // ✅ Fonction appelée par saveData()
-            async syncAll() {
-                if (!isFirebaseInitialized || this.isSyncing) {
-                    return;
-                }
-                
-                this.isSyncing = true;
-                
-                try {
-                    // 1. Préparer les données
-                    const syncData = {
-                        employees: employees,
-                        attendance: attendance,
-                        advances: advances,
-                        payrolls: payrolls,
-                        groups: groups,
-                        qrAttendance: qrAttendance || [],
-                        deviceId: this.deviceId,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    // 2. Convertir en JSON
-                    const jsonString = JSON.stringify(syncData);
-                    
-                    // 3. Compresser
-                    const compressed = pako.gzip(jsonString);
-                    
-                    // 4. Créer blob
-                    const blob = new Blob([compressed], { type: 'application/gzip' });
-                    
-                    // 5. Upload vers Storage
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child('sync/latest.gz');
-                    
-                    await fileRef.put(blob);
-                    
-                    console.log('📤 Sync Storage OK');
-                    
-                } catch (error) {
-                    console.error('❌ Erreur sync:', error);
-                } finally {
-                    this.isSyncing = false;
-                }
-            },
-            
-            // ✅ Download automatique
-            async autoDownload() {
-                if (!isFirebaseInitialized) return;
-                
-                try {
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child('sync/latest.gz');
-                    const metadata = await fileRef.getMetadata();
-                    
-                    const remoteDeviceId = metadata.customMetadata?.deviceId;
-                    
-                    // Ne pas télécharger notre propre upload
-                    if (remoteDeviceId === this.deviceId) {
-                        return;
-                    }
-                    
-                    // Télécharger
-                    const url = await fileRef.getDownloadURL();
-                    const response = await fetch(url);
-                    const compressed = await response.arrayBuffer();
-                    
-                    // Décompresser
-                    const decompressed = pako.ungzip(new Uint8Array(compressed), { to: 'string' });
-                    const syncData = JSON.parse(decompressed);
-                    
-                    // Appliquer
-                    employees = syncData.employees || [];
-                    attendance = syncData.attendance || {};
-                    advances = syncData.advances || [];
-                    payrolls = syncData.payrolls || [];
-                    groups = syncData.groups || [];
-                    qrAttendance = syncData.qrAttendance || [];
-                    
-                    // Sauvegarder localement SANS re-sync
-                    await this.saveLocal();
-                    
-                    // Rafraîchir
-                    if (typeof displayEmployees === 'function') displayEmployees();
-                    if (typeof displayAttendance === 'function') displayAttendance();
-                    if (typeof updateStats === 'function') updateStats();
-                    
-                    console.log('📥 Auto-sync reçue');
-                    
-                } catch (error) {
-                    // Silencieux si pas de fichier
-                }
-            },
-            
-            // ✅ Sauvegarder local SANS sync
-            async saveLocal() {
-                try {
-                    await dbManager.clear('employees');
-                    for (const employee of employees) {
-                        await dbManager.add('employees', employee);
-                    }
-                    
-                    await dbManager.clear('groups');
-                    for (const group of groups) {
-                        await dbManager.add('groups', group);
-                    }
-                    
-                    await dbManager.clear('attendance');
-                    for (const [date, dayAttendance] of Object.entries(attendance)) {
-                        await dbManager.put('attendance', { date, data: dayAttendance });
-                    }
-                    
-                    await dbManager.clear('payrolls');
-                    for (const payroll of payrolls) {
-                        await dbManager.add('payrolls', payroll);
-                    }
-                    
-                    await dbManager.clear('advances');
-                    for (const advance of advances) {
-                        await dbManager.add('advances', advance);
-                    }
-                } catch (error) {
-                    console.error('Erreur saveLocal:', error);
-                }
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            SyncManager.init();
-        });
-
-
 
         //========================================================
         //  PERFORMANCE: Virtualization ho an'ny lisitry ny mpiasa
@@ -7160,7 +6944,7 @@
         // ===============================
         async function saveData() {
             try {
-                // 1️⃣ Sauvegarder les données existantes dans IndexedDB
+                //  Sauvegarder les données existantes dans IndexedDB
                 
                 // Employees
                 await dbManager.clear('employees');
@@ -7198,12 +6982,6 @@
                 await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() });
                 
                 console.log('💾 Données sauvegardées dans IndexedDB avec QR');
-                
-                // 2️⃣ ✅ SYNCHRONISATION AUTOMATIQUE FIREBASE
-                if (typeof SyncManager !== 'undefined' && SyncManager.syncAll) {
-                    await SyncManager.syncAll();
-                    console.log('🔄 Synchronisation Firebase terminée');
-                }
                 
             } catch (error) {
                 console.error('❌ Erreur lors de la sauvegarde:', error);
@@ -13545,5 +13323,198 @@
         }
 
     </script>
+
+    <!-- ======================================== -->
+    <!-- SYSTÈME DE SYNC MANUEL - WHATSAPP/DRIVE -->
+    <!-- ======================================== -->
+
+    <div id="syncButtons" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;">
+        
+        <!-- Bouton Export -->
+        <button onclick="quickExport()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 24px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+            <span class="material-icons">file_download</span>
+            <span>Exporter</span>
+        </button>
+        
+        <!-- Bouton Import -->
+        <button onclick="quickImport()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 16px 24px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+            <span class="material-icons">file_upload</span>
+            <span>Importer</span>
+        </button>
+        
+        <!-- Info dernière sync -->
+        <div id="lastSyncInfo" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; text-align: center; display: none;">
+            <span id="lastSyncText"></span>
+        </div>
+        
+    </div>
+
+    <!-- Input file caché -->
+    <input type="file" id="quickImportFile" accept=".json" style="display: none;">
+
+    <script>
+    // ==========================================
+    // SYSTÈME DE SYNC MANUEL
+    // ==========================================
+
+    // ✅ EXPORT RAPIDE
+    function quickExport() {
+        try {
+            const now = new Date();
+            const data = {
+                employees: employees,
+                attendance: attendance,
+                advances: advances,
+                payrolls: payrolls,
+                groups: groups,
+                qrAttendance: qrAttendance || [],
+                exportDate: now.toISOString(),
+                exportDateFormatted: now.toLocaleString('fr-FR'),
+                version: '1.0',
+                totalEmployees: employees.length,
+                totalAttendanceRecords: Object.keys(attendance).length
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+            a.href = url;
+            a.download = `BEHAVANA-${dateStr}-${timeStr}.json`;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            localStorage.setItem('lastExport', now.toISOString());
+            updateLastSyncInfo();
+            
+            showAlert('✅ Export réussi !<br>📱 Envoyez le fichier via WhatsApp<br>☁️ Ou uploadez sur Google Drive', 'success');
+            
+            console.log('📤 Export:', {
+                employees: employees.length,
+                attendance: Object.keys(attendance).length,
+                date: dateStr
+            });
+            
+        } catch (error) {
+            console.error('❌ Erreur export:', error);
+            showAlert('❌ Erreur lors de l\'export', 'error');
+        }
+    }
+
+    // ✅ IMPORT RAPIDE
+    function quickImport() {
+        document.getElementById('quickImportFile').click();
+    }
+
+    document.getElementById('quickImportFile').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+            showAlert('⏳ Import en cours...', 'info');
+            
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (!data.employees || !data.attendance) {
+                throw new Error('Fichier invalide');
+            }
+            
+            const exportDate = data.exportDateFormatted || new Date(data.exportDate).toLocaleString('fr-FR');
+            const totalEmp = data.totalEmployees || data.employees.length;
+            const totalAtt = data.totalAttendanceRecords || Object.keys(data.attendance).length;
+            
+            if (!confirm('📊 Données à importer :\\n\\n' +
+                        '📅 Date: ' + exportDate + '\\n' +
+                        '👥 Employés: ' + totalEmp + '\\n' +
+                        '📋 Pointages: ' + totalAtt + ' jours\\n\\n' +
+                        '⚠️ Cela remplacera vos données actuelles.\\n\\n' +
+                        'Continuer ?')) {
+                e.target.value = '';
+                return;
+            }
+            
+            employees = data.employees || [];
+            attendance = data.attendance || {};
+            advances = data.advances || [];
+            payrolls = data.payrolls || [];
+            groups = data.groups || [];
+            qrAttendance = data.qrAttendance || [];
+            
+            await saveData();
+            
+            if (typeof displayEmployees === 'function') displayEmployees();
+            if (typeof displayAttendance === 'function') displayAttendance();
+            if (typeof updateStats === 'function') updateStats();
+            
+            localStorage.setItem('lastImport', new Date().toISOString());
+            updateLastSyncInfo();
+            
+            showAlert('✅ Import réussi ! Données synchronisées.', 'success');
+            
+            console.log('📥 Import réussi:', {
+                employees: employees.length,
+                attendance: Object.keys(attendance).length
+            });
+            
+        } catch (error) {
+            console.error('❌ Erreur import:', error);
+            showAlert('❌ Erreur lors de l\'import. Vérifiez le fichier.', 'error');
+        }
+        
+        e.target.value = '';
+    });
+
+    // ✅ Afficher info dernière sync
+    function updateLastSyncInfo() {
+        const lastExport = localStorage.getItem('lastExport');
+        const lastImport = localStorage.getItem('lastImport');
+        const infoDiv = document.getElementById('lastSyncInfo');
+        const infoText = document.getElementById('lastSyncText');
+        
+        if (lastExport || lastImport) {
+            const lastAction = lastExport > lastImport ? 
+                { type: '📤', date: lastExport } : 
+                { type: '📥', date: lastImport };
+            
+            const date = new Date(lastAction.date);
+            const timeAgo = getTimeAgo(date);
+            
+            infoText.textContent = lastAction.type + ' ' + timeAgo;
+            infoDiv.style.display = 'block';
+        }
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        if (seconds < 60) return 'À l\'instant';
+        if (seconds < 3600) return 'Il y a ' + Math.floor(seconds / 60) + ' min';
+        if (seconds < 86400) return 'Il y a ' + Math.floor(seconds / 3600) + 'h';
+        return 'Il y a ' + Math.floor(seconds / 86400) + 'j';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateLastSyncInfo();
+        setInterval(updateLastSyncInfo, 60000);
+        
+        const buttons = document.querySelectorAll('#syncButtons button');
+        buttons.forEach(function(btn) {
+            btn.addEventListener('mouseenter', function() {
+                btn.style.transform = 'scale(1.05)';
+            });
+            btn.addEventListener('mouseleave', function() {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    });
+    </script>
+
+
 </body>
 </html>
