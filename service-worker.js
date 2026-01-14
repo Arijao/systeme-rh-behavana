@@ -1,5 +1,5 @@
 // 1. Version vaovao miaraka amin'ny face recognition
-const CACHE_NAME = 'behavana-rh-cache-v2.4'; // <-- Version 2.4
+const CACHE_NAME = 'behavana-rh-cache-v2.5'; // <-- Version 2.4
 
 // 2. Auto-detect: GitHub Pages na local
 const BASE_PATH = self.location.pathname.includes('/systeme-rh-behavana/') 
@@ -18,6 +18,12 @@ const URLS_TO_CACHE = [
   `${BASE_PATH}/icon-512.png`,
   `${BASE_PATH}/jsQR.min.js`,
   `${BASE_PATH}/js/face-api.min.js`,
+  // Audio files
+  `${BASE_PATH}/suivant.mp3`,
+  `${BASE_PATH}/au_suivant.mp3`,
+  `${BASE_PATH}/déjà là.mp3`,
+  `${BASE_PATH}/efateo.mp3`,
+
   
   // Face-api.js models (VAOVAO)
   `${BASE_PATH}/models/ssd_mobilenetv1_model-weights_manifest.json`,
