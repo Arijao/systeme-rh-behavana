@@ -9239,7 +9239,7 @@
             const employee = employees.find(e => e.id === employeeId);
             if (!employee) return;
 
-            // --- FANAMPIANA VAOVAO: Kajiana ny pointages araka ny fomba ---
+            // --- KAJIANA NY POINTAGES ARAKA NY FOMBA ---
             const qrPointages = qrAttendance.filter(att => 
                 att.employeeId === employeeId && att.date.startsWith(month)
             );
@@ -9300,22 +9300,22 @@
             const proportionalSalary = (employee.salary / daysInMonth) * presenceDays;
             const netSalaryToPay = proportionalSalary - totalAdvances;
 
-            // AFFICHAGE AVEC GLASSMORPHISM
+            // AFFICHAGE AVEC GLASSMORPHISM VISIBLE
             let tableHTML = `
                 <div class="employee-status-report" style="animation: fadeIn 0.4s ease;">
                     
-                    <!-- EN-TÊTE AVEC GLASSMORPHISM -->
+                    <!-- EN-TÊTE -->
                     <div style="
-                        background: linear-gradient(135deg, rgba(255, 105, 180, 0.15) 0%, rgba(186, 85, 211, 0.15) 100%);
-                        backdrop-filter: blur(16px);
-                        -webkit-backdrop-filter: blur(16px);
-                        border: 2px solid rgba(255, 105, 180, 0.3);
+                        background: linear-gradient(135deg, rgba(255, 182, 193, 0.25) 0%, rgba(221, 160, 221, 0.25) 100%);
+                        backdrop-filter: blur(10px);
+                        -webkit-backdrop-filter: blur(10px);
+                        border: 2px solid rgba(255, 105, 180, 0.4);
                         border-radius: 20px;
                         padding: 24px;
                         margin-bottom: 24px;
-                        box-shadow: 0 8px 32px rgba(255, 105, 180, 0.2);
+                        box-shadow: 0 8px 32px rgba(255, 105, 180, 0.25);
                     ">
-                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
                             <div style="
                                 width: 64px;
                                 height: 64px;
@@ -9333,252 +9333,325 @@
                                     margin: 0;
                                     font-size: 1.8em;
                                     font-weight: 800;
-                                    background: linear-gradient(135deg, #FF1493 0%, #BA55D3 100%);
-                                    -webkit-background-clip: text;
-                                    -webkit-text-fill-color: transparent;
-                                    background-clip: text;
-                                    letter-spacing: 0.5px;
+                                    color: #1e293b;
+                                    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
                                 ">${employee.name}</h3>
-                                <p style="margin: 4px 0 0 0; font-size: 1.1em; color: #64748b; font-weight: 600;">
+                                <p style="margin: 4px 0 0 0; font-size: 1.1em; color: #475569; font-weight: 600;">
                                     ${employee.position} • <strong style="color: #FF1493;">Groupe: ${groupName}</strong>
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- STATISTIQUES POINTAGES PAR MÉTHODE - GLASSMORPHISM -->
-                    <!-- STATISTIQUES POINTAGES - Compact -->
+                    <!-- STATISTIQUES POINTAGES - GLASSMORPHISM VISIBLE -->
                     <div style="
-                        background: linear-gradient(135deg, rgba(237, 233, 254, 0.4) 0%, rgba(221, 214, 254, 0.4) 100%);
-                        backdrop-filter: blur(12px);
-                        -webkit-backdrop-filter: blur(12px);
-                        border: 1.5px solid rgba(103, 80, 164, 0.2);
+                        background: linear-gradient(135deg, rgba(237, 233, 254, 0.5) 0%, rgba(221, 214, 254, 0.5) 100%);
+                        backdrop-filter: blur(10px);
+                        -webkit-backdrop-filter: blur(10px);
+                        border: 2px solid rgba(103, 80, 164, 0.35);
                         border-radius: 16px;
                         padding: 20px;
                         margin-bottom: 24px;
-                        box-shadow: 0 4px 16px rgba(103, 80, 164, 0.08);
+                        box-shadow: 0 6px 24px rgba(103, 80, 164, 0.2);
                     ">
                         <h4 style="
                             margin: 0 0 16px 0;
                             display: flex;
                             align-items: center;
-                            gap: 8px;
-                            font-size: 1.15em;
-                            font-weight: 700;
-                            color: #6750A4;
+                            gap: 10px;
+                            font-size: 1.2em;
+                            font-weight: 800;
+                            color: #1e293b;
+                            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
                         ">
-                            <span class="material-icons" style="font-size: 22px;">analytics</span>
+                            <span class="material-icons" style="font-size: 26px; color: #6750A4;">analytics</span>
                             Statistiques des Pointages - ${month}
                         </h4>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px;">
                             <!-- Total -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.65);
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 12px;
-                                border-radius: 10px;
+                                padding: 14px;
+                                border-radius: 12px;
                                 text-align: center;
-                                border: 1px solid rgba(103, 80, 164, 0.15);
-                                box-shadow: 0 2px 8px rgba(103, 80, 164, 0.06);
+                                border: 2px solid rgba(103, 80, 164, 0.25);
+                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.15);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(103, 80, 164, 0.12)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(103, 80, 164, 0.06)';">
-                                <span class="material-icons" style="color: #6750A4; font-size: 22px; display: block; margin-bottom: 6px;">apps</span>
-                                <div style="font-size: 1.9em; font-weight: 800; color: #6750A4; line-height: 1;">${totalPointages}</div>
-                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Total</div>
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.25)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.15)';">
+                                <span class="material-icons" style="color: #6750A4; font-size: 24px; display: block; margin-bottom: 8px;">apps</span>
+                                <div style="font-size: 2em; font-weight: 900; color: #6750A4; line-height: 1;">${totalPointages}</div>
+                                <div style="font-size: 0.9em; color: #1e293b; font-weight: 700; margin-top: 6px;">Total</div>
                             </div>
                             
                             <!-- QR Code -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.65);
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 12px;
-                                border-radius: 10px;
+                                padding: 14px;
+                                border-radius: 12px;
                                 text-align: center;
-                                border: 1px solid rgba(103, 80, 164, 0.15);
-                                box-shadow: 0 2px 8px rgba(103, 80, 164, 0.06);
+                                border: 2px solid rgba(103, 80, 164, 0.25);
+                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.15);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(103, 80, 164, 0.12)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(103, 80, 164, 0.06)';">
-                                <span class="material-icons" style="color: #6750A4; font-size: 22px; display: block; margin-bottom: 6px;">qr_code_scanner</span>
-                                <div style="font-size: 1.9em; font-weight: 800; color: #6750A4; line-height: 1;">${qrPointagesCount}</div>
-                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">QR Code</div>
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.25)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.15)';">
+                                <span class="material-icons" style="color: #6750A4; font-size: 24px; display: block; margin-bottom: 8px;">qr_code_scanner</span>
+                                <div style="font-size: 2em; font-weight: 900; color: #6750A4; line-height: 1;">${qrPointagesCount}</div>
+                                <div style="font-size: 0.9em; color: #1e293b; font-weight: 700; margin-top: 6px;">QR Code</div>
                             </div>
                             
                             <!-- Facial -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.65);
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 12px;
-                                border-radius: 10px;
+                                padding: 14px;
+                                border-radius: 12px;
                                 text-align: center;
-                                border: 1px solid rgba(14, 165, 233, 0.15);
-                                box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06);
+                                border: 2px solid rgba(14, 165, 233, 0.25);
+                                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(14, 165, 233, 0.12)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(14, 165, 233, 0.06)';">
-                                <span class="material-icons" style="color: #0ea5e9; font-size: 22px; display: block; margin-bottom: 6px;">face</span>
-                                <div style="font-size: 1.9em; font-weight: 800; color: #0ea5e9; line-height: 1;">${facialPointages}</div>
-                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Facial</div>
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(14, 165, 233, 0.25)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(14, 165, 233, 0.15)';">
+                                <span class="material-icons" style="color: #0ea5e9; font-size: 24px; display: block; margin-bottom: 8px;">face</span>
+                                <div style="font-size: 2em; font-weight: 900; color: #0ea5e9; line-height: 1;">${facialPointages}</div>
+                                <div style="font-size: 0.9em; color: #1e293b; font-weight: 700; margin-top: 6px;">Facial</div>
                             </div>
                             
                             <!-- Manuel -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.65);
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 12px;
-                                border-radius: 10px;
+                                padding: 14px;
+                                border-radius: 12px;
                                 text-align: center;
-                                border: 1px solid rgba(245, 158, 11, 0.15);
-                                box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06);
+                                border: 2px solid rgba(245, 158, 11, 0.25);
+                                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(245, 158, 11, 0.12)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.06)';">
-                                <span class="material-icons" style="color: #f59e0b; font-size: 22px; display: block; margin-bottom: 6px;">edit</span>
-                                <div style="font-size: 1.9em; font-weight: 800; color: #f59e0b; line-height: 1;">${manualPointages}</div>
-                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Manuel</div>
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(245, 158, 11, 0.25)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.15)';">
+                                <span class="material-icons" style="color: #f59e0b; font-size: 24px; display: block; margin-bottom: 8px;">edit</span>
+                                <div style="font-size: 2em; font-weight: 900; color: #f59e0b; line-height: 1;">${manualPointages}</div>
+                                <div style="font-size: 0.9em; color: #1e293b; font-weight: 700; margin-top: 6px;">Manuel</div>
                             </div>
                         </div>
                     </div>
 
-
-                    <!-- RÉSUMÉ MENSUEL - GLASSMORPHISM -->
+                    <!-- RÉSUMÉ MENSUEL -->
                     <div style="
-                        background: linear-gradient(135deg, rgba(240, 253, 244, 0.4) 0%, rgba(209, 250, 229, 0.4) 100%);
-                        backdrop-filter: blur(12px);
-                        -webkit-backdrop-filter: blur(12px);
-                        border: 1.5px solid rgba(16, 185, 129, 0.2);
+                        background: linear-gradient(135deg, rgba(240, 253, 244, 0.5) 0%, rgba(209, 250, 229, 0.5) 100%);
+                        backdrop-filter: blur(10px);
+                        -webkit-backdrop-filter: blur(10px);
+                        border: 2px solid rgba(16, 185, 129, 0.35);
                         border-radius: 16px;
                         padding: 20px;
                         margin-bottom: 24px;
-                        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+                        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.2);
                     ">
                         <h4 style="
                             margin: 0 0 16px 0;
-                            font-size: 1.15em;
-                            font-weight: 700;
-                            color: #059669;
+                            font-size: 1.2em;
+                            font-weight: 800;
+                            color: #1e293b;
                             display: flex;
                             align-items: center;
-                            gap: 8px;
+                            gap: 10px;
+                            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
                         ">
-                            <span class="material-icons" style="font-size: 22px;">summarize</span>
+                            <span class="material-icons" style="font-size: 26px; color: #059669;">summarize</span>
                             Résumé du Mois
                         </h4>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
-                            <!-- Card 1: Jours de Présence -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 18px;">
                             <div style="
-                                padding: 12px 14px;
-                                background: rgba(255, 255, 255, 0.6);
+                                padding: 14px;
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
-                                border-radius: 10px;
-                                border-left: 4px solid #10b981;
-                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+                                border-radius: 12px;
+                                border-left: 5px solid #10b981;
+                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
                             ">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                    <span class="material-icons" style="color: #10b981; font-size: 20px;">event_available</span>
-                                    <strong style="color: #334155; font-size: 0.9em;">Jours de Présence</strong>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #10b981; font-size: 22px;">event_available</span>
+                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Jours de Présence</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #1e293b; font-size: 1.4em;">${presenceDays}</span>
-                                <span style="color: #64748b; font-weight: 600; font-size: 0.95em;"> / ${daysInMonth}</span>
+                                <span style="font-weight: 900; color: #1e293b; font-size: 1.6em;">${presenceDays}</span>
+                                <span style="color: #475569; font-weight: 700; font-size: 1.05em;"> / ${daysInMonth}</span>
                             </div>
                             
-                            <!-- Card 2: Total Heures -->
                             <div style="
-                                padding: 12px 14px;
-                                background: rgba(255, 255, 255, 0.6);
+                                padding: 14px;
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
-                                border-radius: 10px;
-                                border-left: 4px solid #3b82f6;
-                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+                                border-radius: 12px;
+                                border-left: 5px solid #3b82f6;
+                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
                             ">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                    <span class="material-icons" style="color: #3b82f6; font-size: 20px;">schedule</span>
-                                    <strong style="color: #334155; font-size: 0.9em;">Total Heures</strong>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #3b82f6; font-size: 22px;">schedule</span>
+                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Total Heures</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #3b82f6; font-size: 1.4em;">${monthlyHoursText}</span>
+                                <span style="font-weight: 900; color: #3b82f6; font-size: 1.6em;">${monthlyHoursText}</span>
                             </div>
                             
-                            <!-- Card 3: Total Avances -->
                             <div style="
-                                padding: 12px 14px;
-                                background: rgba(255, 255, 255, 0.6);
+                                padding: 14px;
+                                background: rgba(255, 255, 255, 0.85);
                                 backdrop-filter: blur(8px);
-                                border-radius: 10px;
-                                border-left: 4px solid #ef4444;
-                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+                                border-radius: 12px;
+                                border-left: 5px solid #ef4444;
+                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
                             ">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                    <span class="material-icons" style="color: #ef4444; font-size: 20px;">savings</span>
-                                    <strong style="color: #334155; font-size: 0.9em;">Total Avances</strong>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #ef4444; font-size: 22px;">savings</span>
+                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Total Avances</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #ef4444; font-size: 1.4em;">${formatCurrency(totalAdvances)}</span>
+                                <span style="font-weight: 900; color: #ef4444; font-size: 1.6em;">${formatCurrency(totalAdvances)}</span>
                             </div>
                         </div>
                         
-                        <!-- Card Salaire Net Glassmorphism (voir code ci-dessus) -->
+                        <!-- SALAIRE NET À PAYER - CARD GLASSMORPHISM -->
+                        <div style="
+                            background: linear-gradient(135deg, rgba(255, 182, 193, 0.3) 0%, rgba(221, 160, 221, 0.3) 100%);
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                            padding: 20px;
+                            border-radius: 18px;
+                            text-align: center;
+                            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.25);
+                            border: 2px solid rgba(255, 105, 180, 0.4);
+                            position: relative;
+                            overflow: hidden;
+                        ">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
+                                <span class="material-icons" style="color: #FF1493; font-size: 32px;">payments</span>
+                                <strong style="
+                                    color: #1e293b;
+                                    font-size: 1.15em;
+                                    letter-spacing: 0.5px;
+                                    font-weight: 800;
+                                    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+                                ">SALAIRE NET À PAYER</strong>
+                            </div>
+                            <div style="
+                                font-weight: 900;
+                                background: linear-gradient(135deg, #FF1493 0%, #BA55D3 100%);
+                                -webkit-background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                                background-clip: text;
+                                font-size: 2.5em;
+                                letter-spacing: 1px;
+                                text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            ">${formatCurrency(netSalaryToPay)}</div>
+                        </div>
                     </div>
-
                     
-                    <!-- TABLEAU DÉTAILS PAR JOUR -->
+                    <!-- TABLEAU DÉTAILS JOURNALIERS - GLASSMORPHISM AMÉLIORÉ -->
                     <div style="
-                        background: rgba(255, 255, 255, 0.5);
-                        backdrop-filter: blur(10px);
-                        -webkit-backdrop-filter: blur(10px);
-                        border: 2px solid rgba(148, 163, 184, 0.2);
-                        border-radius: 16px;
+                        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(241, 245, 249, 0.4) 100%);
+                        backdrop-filter: blur(16px);
+                        -webkit-backdrop-filter: blur(16px);
+                        border: 2px solid rgba(100, 116, 139, 0.3);
+                        border-radius: 18px;
                         overflow: hidden;
-                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
                     ">
+                        <!-- EN-TÊTE DU TABLEAU -->
                         <div style="
                             background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-                            padding: 16px 20px;
-                            border-bottom: 2px solid rgba(148, 163, 184, 0.3);
+                            padding: 18px 24px;
+                            border-bottom: 3px solid rgba(255, 105, 180, 0.3);
                         ">
                             <h4 style="
                                 margin: 0;
                                 color: white;
-                                font-size: 1.2em;
-                                font-weight: 700;
+                                font-size: 1.3em;
+                                font-weight: 900;
                                 display: flex;
                                 align-items: center;
-                                gap: 10px;
+                                gap: 12px;
+                                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
                             ">
-                                <span class="material-icons">calendar_month</span>
+                                <span class="material-icons" style="font-size: 28px;">calendar_month</span>
                                 Détails Journaliers
                             </h4>
                         </div>
                         
-                        <div style="max-height: 450px; overflow-y: auto;">
+                        <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse;">
-                                <thead style="position: sticky; top: 0; z-index: 1;">
-                                    <tr style="background: linear-gradient(135deg, rgba(51, 65, 85, 0.95), rgba(30, 41, 59, 0.95)); backdrop-filter: blur(8px);">
-                                        <th style="padding: 14px 16px; text-align: left; color: white; font-weight: 700; font-size: 0.95em;">
-                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">event</span>
-                                            Date
+                                <thead style="position: sticky; top: 0; z-index: 10;">
+                                    <tr style="
+                                        background: linear-gradient(135deg, rgba(51, 65, 85, 0.98), rgba(30, 41, 59, 0.98));
+                                        backdrop-filter: blur(12px);
+                                        -webkit-backdrop-filter: blur(12px);
+                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    ">
+                                        <th style="
+                                            padding: 16px 20px;
+                                            text-align: left;
+                                            color: white;
+                                            font-weight: 900;
+                                            font-size: 1em;
+                                            border-bottom: 3px solid rgba(255, 105, 180, 0.4);
+                                        ">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="material-icons" style="font-size: 20px;">event</span>
+                                                Date
+                                            </div>
                                         </th>
-                                        <th style="padding: 14px 16px; text-align: left; color: white; font-weight: 700; font-size: 0.95em;">
-                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">fact_check</span>
-                                            Statut
+                                        <th style="
+                                            padding: 16px 20px;
+                                            text-align: left;
+                                            color: white;
+                                            font-weight: 900;
+                                            font-size: 1em;
+                                            border-bottom: 3px solid rgba(255, 105, 180, 0.4);
+                                        ">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="material-icons" style="font-size: 20px;">fact_check</span>
+                                                Statut
+                                            </div>
                                         </th>
-                                        <th style="padding: 14px 16px; text-align: center; color: white; font-weight: 700; font-size: 0.95em;">
-                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">schedule</span>
-                                            Total Heures
+                                        <th style="
+                                            padding: 16px 20px;
+                                            text-align: center;
+                                            color: white;
+                                            font-weight: 900;
+                                            font-size: 1em;
+                                            border-bottom: 3px solid rgba(255, 105, 180, 0.4);
+                                        ">
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                                <span class="material-icons" style="font-size: 20px;">schedule</span>
+                                                Total Heures
+                                            </div>
                                         </th>
-                                        <th style="padding: 14px 16px; text-align: right; color: white; font-weight: 700; font-size: 0.95em;">
-                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">account_balance_wallet</span>
-                                            Avance
+                                        <th style="
+                                            padding: 16px 20px;
+                                            text-align: right;
+                                            color: white;
+                                            font-weight: 900;
+                                            font-size: 1em;
+                                            border-bottom: 3px solid rgba(255, 105, 180, 0.4);
+                                        ">
+                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                                <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
+                                                Avance
+                                            </div>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
+
             `;
+
+            const HALFDAYINMINUTES = 240; // 4h
+            const MINIMUMHOURSINMINUTES = 480; // 8h
 
             dailyDetails.forEach((detail, index) => {
                 const { dateStr, presenceData, duration } = detail;
@@ -9590,73 +9663,223 @@
                     .filter(adv => adv.employeeId === employeeId && adv.date === dateStr)
                     .reduce((sum, adv) => sum + adv.amount, 0);
                 
-                let status = `<span style="color: #ef4444; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                    <span class="material-icons" style="font-size: 18px;">cancel</span> Absent
-                </span>`;
+                // DISTINCTION PRÉSENT vs ABSENT
+                let isPresent = !!presenceData;
                 
-                if (presenceData) {
+                let status = '';
+                let rowBgColor = '';
+                let rowBorder = '';
+                
+                if (isPresent) {
+                    // PRÉSENT - Style vert glassmorphism
                     const arrival = formatDisplayTime(presenceData.arrivee);
                     const departure = formatDisplayTime(presenceData.depart);
-                    status = `<span style="color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                        <span class="material-icons" style="font-size: 18px;">check_circle</span> Présent
-                    </span>
-                    <div style="font-size: 0.85em; color: #64748b; margin-top: 4px;">${arrival} → ${departure}</div>`;
+                    
+                    status = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 8px 14px;
+                            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.25) 100%);
+                            backdrop-filter: blur(8px);
+                            -webkit-backdrop-filter: blur(8px);
+                            border: 2px solid rgba(16, 185, 129, 0.4);
+                            border-radius: 12px;
+                            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+                        ">
+                            <span class="material-icons" style="font-size: 20px; color: #059669;">check_circle</span>
+                            <span style="font-weight: 900; color: #064e3b; font-size: 1em;">Présent</span>
+                        </div>
+                        <div style="
+                            font-size: 0.9em;
+                            color: #1e293b;
+                            margin-top: 6px;
+                            font-weight: 700;
+                            padding: 4px 8px;
+                            background: rgba(255, 255, 255, 0.6);
+                            border-radius: 6px;
+                            display: inline-block;
+                        ">
+                            <span style="color: #10b981;">⬤</span> ${arrival} → ${departure}
+                        </div>
+                    `;
+                    
+                    rowBgColor = 'background: linear-gradient(135deg, rgba(209, 250, 229, 0.4) 0%, rgba(167, 243, 208, 0.4) 100%);';
+                    rowBorder = 'border-left: 5px solid #10b981;';
+                    
+                } else {
+                    // ABSENT - Style rouge glassmorphism
+                    status = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 8px 14px;
+                            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+                            backdrop-filter: blur(8px);
+                            -webkit-backdrop-filter: blur(8px);
+                            border: 2px solid rgba(239, 68, 68, 0.4);
+                            border-radius: 12px;
+                            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+                        ">
+                            <span class="material-icons" style="font-size: 20px; color: #dc2626;">cancel</span>
+                            <span style="font-weight: 900; color: #7f1d1d; font-size: 1em;">Absent</span>
+                        </div>
+                    `;
+                    
+                    rowBgColor = 'background: linear-gradient(135deg, rgba(254, 226, 226, 0.3) 0%, rgba(252, 165, 165, 0.3) 100%);';
+                    rowBorder = 'border-left: 5px solid #ef4444;';
                 }
                 
-                const HALFDAYINMINUTES = 240; // 4h
-                const MINIMUMHOURSINMINUTES = 480; // 8h
-                
-                let durationStyle = 'font-weight: 700; color: #94a3b8;';
-                let durationIcon = '';
+                // DURÉE - Couleurs selon les heures
+                let durationStyle = 'font-weight: 900; color: #94a3b8;';
+                let durationBadge = '';
                 
                 if (duration.totalMinutes > 0 && duration.totalMinutes < HALFDAYINMINUTES) {
-                    durationStyle = 'color: #ef4444; font-weight: 800;';
-                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">error</span>';
+                    // Moins de 4h - Rouge
+                    durationBadge = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            padding: 6px 12px;
+                            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.25) 100%);
+                            backdrop-filter: blur(8px);
+                            border: 2px solid rgba(239, 68, 68, 0.4);
+                            border-radius: 10px;
+                            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+                        ">
+                            <span class="material-icons" style="font-size: 18px; color: #dc2626;">error</span>
+                            <span style="font-weight: 900; color: #7f1d1d; font-size: 1.05em;">${duration.displayText}</span>
+                        </div>
+                    `;
                 } else if (duration.totalMinutes >= HALFDAYINMINUTES && duration.totalMinutes < MINIMUMHOURSINMINUTES) {
-                    durationStyle = 'color: #f59e0b; font-weight: 800;';
-                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">warning</span>';
+                    // 4h-8h - Orange
+                    durationBadge = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            padding: 6px 12px;
+                            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%);
+                            backdrop-filter: blur(8px);
+                            border: 2px solid rgba(245, 158, 11, 0.4);
+                            border-radius: 10px;
+                            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+                        ">
+                            <span class="material-icons" style="font-size: 18px; color: #d97706;">warning</span>
+                            <span style="font-weight: 900; color: #78350f; font-size: 1.05em;">${duration.displayText}</span>
+                        </div>
+                    `;
                 } else if (duration.totalMinutes >= MINIMUMHOURSINMINUTES) {
-                    durationStyle = 'color: #10b981; font-weight: 800;';
-                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">check_circle</span>';
+                    // 8h+ - Vert
+                    durationBadge = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            padding: 6px 12px;
+                            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.25) 100%);
+                            backdrop-filter: blur(8px);
+                            border: 2px solid rgba(16, 185, 129, 0.4);
+                            border-radius: 10px;
+                            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+                        ">
+                            <span class="material-icons" style="font-size: 18px; color: #059669;">check_circle</span>
+                            <span style="font-weight: 900; color: #064e3b; font-size: 1.05em;">${duration.displayText}</span>
+                        </div>
+                    `;
+                } else {
+                    // Pas d'heures
+                    durationBadge = `<span style="font-weight: 900; color: #94a3b8; font-size: 1.05em;">---</span>`;
                 }
                 
-                let rowStyle = '';
+                // WEEKEND styling
                 if (isWeekend) {
-                    rowStyle = 'background: rgba(148, 163, 184, 0.15); opacity: 0.7;';
-                } else if (index % 2 === 0) {
-                    rowStyle = 'background: rgba(241, 245, 249, 0.5);';
+                    rowBgColor = 'background: linear-gradient(135deg, rgba(148, 163, 184, 0.3) 0%, rgba(100, 116, 139, 0.3) 100%);';
+                    rowBorder = 'border-left: 5px solid #64748b;';
                 }
                 
                 tableHTML += `
-                    <tr style="${rowStyle} transition: all 0.2s ease;" 
-                        onmouseover="this.style.background='rgba(255, 105, 180, 0.08)'" 
-                        onmouseout="this.style.background='${rowStyle ? rowStyle.split(':')[1].split(';')[0] : 'transparent'}'">
-                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); font-weight: 600; color: #1e293b;">
-                            ${formatDate(dateStr)}
+                    <tr style="
+                        ${rowBgColor}
+                        ${rowBorder}
+                        backdrop-filter: blur(8px);
+                        -webkit-backdrop-filter: blur(8px);
+                        transition: all 0.3s ease;
+                        border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+                    " 
+                    onmouseover="this.style.transform='translateX(8px)'; this.style.boxShadow='0 4px 16px rgba(255, 105, 180, 0.2)';" 
+                    onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none';">
+                        
+                        <!-- DATE -->
+                        <td style="padding: 14px 20px;">
+                            <div style="
+                                font-weight: 900;
+                                color: #1e293b;
+                                font-size: 1em;
+                                padding: 6px 12px;
+                                background: rgba(255, 255, 255, 0.7);
+                                backdrop-filter: blur(6px);
+                                border-radius: 8px;
+                                display: inline-block;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+                            ">
+                                ${formatDate(dateStr)}
+                            </div>
                         </td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8);">
+                        
+                        <!-- STATUT -->
+                        <td style="padding: 14px 20px;">
                             ${status}
                         </td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); text-align: center; ${durationStyle}">
-                            ${durationIcon}${duration.displayText}
+                        
+                        <!-- DURÉE -->
+                        <td style="padding: 14px 20px; text-align: center;">
+                            ${durationBadge}
                         </td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); text-align: right; color: ${advanceOnDay > 0 ? '#ef4444' : '#94a3b8'}; font-weight: 700; font-size: 1.05em;">
-                            ${advanceOnDay > 0 ? formatCurrency(advanceOnDay) : '-'}
+                        
+                        <!-- AVANCE -->
+                        <td style="padding: 14px 20px; text-align: right;">
+                            ${advanceOnDay > 0 ? `
+                                <div style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    padding: 8px 14px;
+                                    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+                                    backdrop-filter: blur(8px);
+                                    border: 2px solid rgba(239, 68, 68, 0.35);
+                                    border-radius: 10px;
+                                    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+                                ">
+                                    <span class="material-icons" style="font-size: 18px; color: #dc2626;">payments</span>
+                                    <span style="font-weight: 900; color: #7f1d1d; font-size: 1.1em;">${formatCurrency(advanceOnDay)}</span>
+                                </div>
+                            ` : `
+                                <span style="
+                                    font-weight: 800;
+                                    color: #94a3b8;
+                                    font-size: 1.1em;
+                                ">-</span>
+                            `}
                         </td>
                     </tr>
                 `;
             });
 
             tableHTML += `
-                                </tbody>
-                            </table>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
 
+
             container.innerHTML = tableHTML;
         }
+
 
 
         function fixTextVisibility() {
