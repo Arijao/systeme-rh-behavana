@@ -11691,7 +11691,7 @@
                 return;
             }
 
-            const departureDate = new Date(employee.departureDate + 'T23:59:59Z');
+            const departureDate = new Date(employee.departureDate + 'T00:00:00');
             const lastPaidMonth = getLastPaidMonth(employeeId);
             
             // Ity andalana ity izao dia mandray ny daty marina (na daty nidirana, na 1er du mois suivant)
@@ -11708,7 +11708,7 @@
             let detailsHTML = '';
 
             let currentYear = startDateForCalc.getUTCFullYear();
-            let currentMonth = startDateForCalc.getUTCMonth(); // 0-11
+            let currentMonth = startDateForCalc.getMonth();
 
             const endYear = departureDate.getUTCFullYear();
             const endMonth = departureDate.getUTCMonth();
@@ -11745,7 +11745,7 @@
 
             // Fampisehoana ny vokany
             container.innerHTML = `
-                <h3>Détail du Solde pour ${employee.name}</h3>
+                <h3>Détail du Solde pour ${employee.nom || employee.name}</h3>
                 <p>Période de calcul: du <strong>${startDateForCalc.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong> au <strong>${new Date(employee.departureDate + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' })}</strong></p>
                 
                 <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr;">
