@@ -2792,6 +2792,17 @@
             text-decoration: line-through;
         }
 
+        /* Effet hover pour le bouton import */
+        label[for="importFile"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(103, 80, 164, 0.4);
+            filter: brightness(1.1);
+        }
+
+        label[for="importFile"]:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+        }
 
     </style>
 
@@ -4002,12 +4013,13 @@
                 </button>
                 
                 <div class="form-group">
-                    <label for="importFile" style="cursor: pointer; display: block; padding: 12px; background-color: var(--md-sys-color-secondary-container); text-align: center; border-radius: 8px;">
-                        <span class="material-icons">file_upload</span>
-                        Importer les Données (Import)
+                    <label for="importFile" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 28px; background: rgba(103, 80, 164, 0.15); backdrop-filter: blur(10px); color: #6750A4; text-align: center; border-radius: 16px; font-weight: 700; border: 2px solid rgba(103, 80, 164, 0.3); box-shadow: 0 8px 32px rgba(103, 80, 164, 0.15); transition: all 0.3s ease;">
+                        <span class="material-icons" style="font-size: 24px;">upload_file</span> 
+                        <span style="font-size: 15px;">Importer les Données</span>
                     </label>
                     <input type="file" class="form-control" id="importFile" accept=".json" onchange="importData(event)" style="display: none;">
                 </div>
+
                 <p id="lastBackupInfo" style="font-size: 12px; text-align: center; color: var(--md-sys-color-on-surface-variant);"></p>
             </div>
 
