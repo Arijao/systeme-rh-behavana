@@ -12608,7 +12608,31 @@
                 return;
             }
             
-            // ⭐ NESORINA: Tsy mila check enrolled - avelao ny scan no hanao izany
+            // ⭐ FIX: VAKIO MIVANTANA AO AMIN'NY DATABASE
+            console.log('📦 Chargement employés depuis IndexedDB...');
+            let dbEmployees = [];
+            try {
+                dbEmployees = await dbManager.getAll('employees');
+                console.log('✅ Employés chargés depuis DB:', dbEmployees.length);
+            } catch (error) {
+                console.error('❌ Erreur chargement DB:', error);
+                showAlert('❌ Erreur de chargement des données', 'error');
+                return;
+            }
+            
+            // Filter enrolled depuis DB directement
+            const enrolled = dbEmployees.filter(e => {
+                const hasDescriptors = e.facedescriptors && Array.isArray(e.facedescriptors) && e.facedescriptors.length > 0;
+                const isEnrolled = e.faceenrolled === true;
+                
+                if (hasDescriptors || isEnrolled) {
+                    console.log('✅ Enrolled:', e.name, '- Descriptors:', e.facedescriptors?.length || 0);
+                }
+                
+                return hasDescriptors;
+            });
+            
+            console.log('📊 Total employés enrolled:', enrolled.length);
             
             // 2. Créer modal custom automatique
             const modal = document.createElement('div');
@@ -12659,10 +12683,23 @@
                         </button>
                     </div>
                     
-                    <!-- Vidéo -->
+                    <!-- Vidéo avec fix miroir -->
                     <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden;">
-                        <video id="faceSearchVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-                        <canvas id="faceSearchCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                        <video id="faceSearchVideo" autoplay playsinline muted style="
+                            width: 100%; 
+                            height: 100%; 
+                            object-fit: cover;
+                            transform: scaleX(-1);
+                        "></video>
+                        <canvas id="faceSearchCanvas" style="
+                            position: absolute; 
+                            top: 0; 
+                            left: 0; 
+                            width: 100%; 
+                            height: 100%; 
+                            pointer-events: none;
+                            transform: scaleX(-1);
+                        "></canvas>
                     </div>
                     
                     <!-- Status -->
@@ -12683,9 +12720,12 @@
                     
                     <!-- Info -->
                     <div style="text-align: center; font-size: 0.9em; color: #64748b;">
-                        <p style="margin: 0;">
+                        <p style="margin: 0 0 4px 0;">
                             <span class="material-icons" style="font-size: 16px; vertical-align: middle;">info</span>
                             La reconnaissance se fait automatiquement
+                        </p>
+                        <p style="margin: 0; font-size: 0.85em; color: #94a3b8;">
+                            Employés enregistrés: <strong style="color: #0ea5e9;">${enrolled.length}</strong>
                         </p>
                     </div>
                 </div>
@@ -12743,6 +12783,19 @@
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 
+                // Vérifier enrolled après caméra
+                if (enrolled.length === 0) {
+                    status.innerHTML = `
+                        <span class="material-icons" style="font-size: 48px; color: #f59e0b;">warning</span>
+                        <p style="margin: 12px 0 0 0; color: #f59e0b; font-weight: 600;">
+                            ⚠️ Aucun employé enregistré<br>
+                            <span style="font-size: 0.9em; color: #64748b;">Veuillez d'abord enregistrer des visages dans l'onglet "Face-Présence"</span>
+                        </p>
+                    `;
+                    setTimeout(closeModal, 4000);
+                    return;
+                }
+                
                 status.innerHTML = `
                     <span class="material-icons" style="font-size: 48px; color: #10b981; animation: bounce 1s ease-in-out;">face</span>
                     <p style="margin: 12px 0 0 0; color: #1e293b; font-weight: 600;">
@@ -12750,24 +12803,6 @@
                         <span style="font-size: 0.9em; color: #64748b;">Regardez la caméra</span>
                     </p>
                 `;
-                
-                // ⭐ VAOVAO: Alaina ny enrolled eto - APRES camera start
-                const enrolled = employees.filter(e => e.facedescriptors && e.facedescriptors.length > 0);
-                
-                console.log('📊 Employés enrolled:', enrolled.length);
-                
-                // Raha tsy misy enrolled, mampiseho warning fa mitohy ihany
-                if (enrolled.length === 0) {
-                    status.innerHTML = `
-                        <span class="material-icons" style="font-size: 48px; color: #f59e0b;">warning</span>
-                        <p style="margin: 12px 0 0 0; color: #f59e0b; font-weight: 600;">
-                            ⚠️ Aucun employé enregistré<br>
-                            <span style="font-size: 0.9em; color: #64748b;">Veuillez d'abord enregistrer des visages</span>
-                        </p>
-                    `;
-                    setTimeout(closeModal, 3000);
-                    return;
-                }
                 
                 // 6. Reconnaissance automatique en boucle
                 recognitionInterval = setInterval(async () => {
@@ -12810,16 +12845,25 @@
                             `;
                             
                             // Son succès
-                            playSuccessSound();
+                            if (typeof playSuccessSound === 'function') {
+                                playSuccessSound();
+                            }
                             
                             // Remplir recherche
                             setTimeout(() => {
-                                document.getElementById('smartSearchInput').value = employee.name;
-                                handleSmartSearch();
-                                
-                                setTimeout(() => {
-                                    selectEmployeeForStat(employee.id);
-                                }, 300);
+                                const searchInput = document.getElementById('smartSearchInput');
+                                if (searchInput) {
+                                    searchInput.value = employee.name;
+                                    if (typeof handleSmartSearch === 'function') {
+                                        handleSmartSearch();
+                                    }
+                                    
+                                    setTimeout(() => {
+                                        if (typeof selectEmployeeForStat === 'function') {
+                                            selectEmployeeForStat(employee.id);
+                                        }
+                                    }, 300);
+                                }
                                 
                                 // Fermer modal
                                 setTimeout(() => {
@@ -12836,12 +12880,12 @@
                             }, 1000);
                         }
                     } catch (error) {
-                        console.error('Erreur reconnaissance:', error);
+                        console.error('❌ Erreur reconnaissance:', error);
                     }
                 }, 1000); // Reconnaissance chaque seconde
                 
             } catch (error) {
-                console.error('Erreur caméra:', error);
+                console.error('❌ Erreur caméra:', error);
                 status.innerHTML = `
                     <span class="material-icons" style="font-size: 48px; color: #ef4444;">videocam_off</span>
                     <p style="margin: 12px 0 0 0; color: #ef4444; font-weight: 600;">
@@ -12853,7 +12897,6 @@
                 setTimeout(closeModal, 3000);
             }
         }
-
 
 
         // ==========================================
