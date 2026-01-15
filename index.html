@@ -15,7 +15,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
-    
     <link href="roboto.css" rel="stylesheet">
     <link href="icons.css" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -2799,9 +2798,9 @@
     <!-- Face Recognition Library -->
     <script defer src="js/face-api.min.js"></script>
 
+
 </head>
 <body>
-
     <div class="container">
         <div class="header">
             <button class="settings-btn" onclick="toggleSettings()">
@@ -4629,6 +4628,7 @@
         let audioContext;
         let successSoundBuffer;
         let nextSoundBuffer;
+
 
         //========================================================
         //  PERFORMANCE: Virtualization ho an'ny lisitry ny mpiasa
@@ -6939,37 +6939,33 @@
         }
 
         // ===============================
-        // DATA MANAGEMENT MODIFIÉ POUR QR + FIREBASE
+        // DATA MANAGEMENT MODIFIÉ POUR QR
         // ===============================
         async function saveData() {
             try {
-                //  Sauvegarder les données existantes dans IndexedDB
-                
-                // Employees
+                // Sauvegarder les données existantes (identique à l'original)
                 await dbManager.clear('employees');
                 for (const employee of employees) {
                     await dbManager.add('employees', employee);
                 }
 
-                // Groups
+                // ... aorian'ny for (const employee of employees) { ... }
                 await dbManager.clear('groups');
                 for (const group of groups) {
                     await dbManager.add('groups', group);
                 }
 
-                // Attendance
+
                 await dbManager.clear('attendance');
                 for (const [date, dayAttendance] of Object.entries(attendance)) {
                     await dbManager.put('attendance', { date, data: dayAttendance });
                 }
 
-                // Payrolls
                 await dbManager.clear('payrolls');
                 for (const payroll of payrolls) {
                     await dbManager.add('payrolls', payroll);
                 }
 
-                // Advances
                 await dbManager.clear('advances');
                 for (const advance of advances) {
                     await dbManager.add('advances', advance);
@@ -6978,16 +6974,15 @@
                 // Sauvegarder les paramètres
                 await dbManager.put('settings', { key: 'theme', value: currentTheme });
                 await dbManager.put('settings', { key: 'qrSettings', value: qrSettings });
-                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() });
+                await dbManager.put('settings', { key: 'lastUpdated', value: new Date().toISOString() }); 
+                console.log('Données sauvegardées dans IndexedDB avec QR');
                 
-                console.log('💾 Données sauvegardées dans IndexedDB avec QR');
-                
+                console.log('Données sauvegardées dans IndexedDB avec QR');
             } catch (error) {
-                console.error('❌ Erreur lors de la sauvegarde:', error);
+                console.error('Erreur lors de la sauvegarde:', error);
                 showAlert('Erreur lors de la sauvegarde des données', 'error');
             }
         }
-
 
         // Sauvegarder seulement les données de présence
         async function saveAttendanceData() {
@@ -13322,198 +13317,5 @@
         }
 
     </script>
-
-    <!-- ======================================== -->
-    <!-- SYSTÈME DE SYNC MANUEL - WHATSAPP/DRIVE -->
-    <!-- ======================================== -->
-
-    <div id="syncButtons" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;">
-        
-        <!-- Bouton Export -->
-        <button onclick="quickExport()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 24px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-            <span class="material-icons">file_download</span>
-            <span>Exporter</span>
-        </button>
-        
-        <!-- Bouton Import -->
-        <button onclick="quickImport()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 16px 24px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-            <span class="material-icons">file_upload</span>
-            <span>Importer</span>
-        </button>
-        
-        <!-- Info dernière sync -->
-        <div id="lastSyncInfo" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; text-align: center; display: none;">
-            <span id="lastSyncText"></span>
-        </div>
-        
-    </div>
-
-    <!-- Input file caché -->
-    <input type="file" id="quickImportFile" accept=".json" style="display: none;">
-
-    <script>
-    // ==========================================
-    // SYSTÈME DE SYNC MANUEL
-    // ==========================================
-
-    // ✅ EXPORT RAPIDE
-    function quickExport() {
-        try {
-            const now = new Date();
-            const data = {
-                employees: employees,
-                attendance: attendance,
-                advances: advances,
-                payrolls: payrolls,
-                groups: groups,
-                qrAttendance: qrAttendance || [],
-                exportDate: now.toISOString(),
-                exportDateFormatted: now.toLocaleString('fr-FR'),
-                version: '1.0',
-                totalEmployees: employees.length,
-                totalAttendanceRecords: Object.keys(attendance).length
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            
-            const dateStr = now.toISOString().split('T')[0];
-            const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-            a.href = url;
-            a.download = `BEHAVANA-${dateStr}-${timeStr}.json`;
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            localStorage.setItem('lastExport', now.toISOString());
-            updateLastSyncInfo();
-            
-            showAlert('✅ Export réussi !<br>📱 Envoyez le fichier via WhatsApp<br>☁️ Ou uploadez sur Google Drive', 'success');
-            
-            console.log('📤 Export:', {
-                employees: employees.length,
-                attendance: Object.keys(attendance).length,
-                date: dateStr
-            });
-            
-        } catch (error) {
-            console.error('❌ Erreur export:', error);
-            showAlert('❌ Erreur lors de l\'export', 'error');
-        }
-    }
-
-    // ✅ IMPORT RAPIDE
-    function quickImport() {
-        document.getElementById('quickImportFile').click();
-    }
-
-    document.getElementById('quickImportFile').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        try {
-            showAlert('⏳ Import en cours...', 'info');
-            
-            const text = await file.text();
-            const data = JSON.parse(text);
-            
-            if (!data.employees || !data.attendance) {
-                throw new Error('Fichier invalide');
-            }
-            
-            const exportDate = data.exportDateFormatted || new Date(data.exportDate).toLocaleString('fr-FR');
-            const totalEmp = data.totalEmployees || data.employees.length;
-            const totalAtt = data.totalAttendanceRecords || Object.keys(data.attendance).length;
-            
-            if (!confirm('📊 Données à importer :\\n\\n' +
-                        '📅 Date: ' + exportDate + '\\n' +
-                        '👥 Employés: ' + totalEmp + '\\n' +
-                        '📋 Pointages: ' + totalAtt + ' jours\\n\\n' +
-                        '⚠️ Cela remplacera vos données actuelles.\\n\\n' +
-                        'Continuer ?')) {
-                e.target.value = '';
-                return;
-            }
-            
-            employees = data.employees || [];
-            attendance = data.attendance || {};
-            advances = data.advances || [];
-            payrolls = data.payrolls || [];
-            groups = data.groups || [];
-            qrAttendance = data.qrAttendance || [];
-            
-            await saveData();
-            
-            if (typeof displayEmployees === 'function') displayEmployees();
-            if (typeof displayAttendance === 'function') displayAttendance();
-            if (typeof updateStats === 'function') updateStats();
-            
-            localStorage.setItem('lastImport', new Date().toISOString());
-            updateLastSyncInfo();
-            
-            showAlert('✅ Import réussi ! Données synchronisées.', 'success');
-            
-            console.log('📥 Import réussi:', {
-                employees: employees.length,
-                attendance: Object.keys(attendance).length
-            });
-            
-        } catch (error) {
-            console.error('❌ Erreur import:', error);
-            showAlert('❌ Erreur lors de l\'import. Vérifiez le fichier.', 'error');
-        }
-        
-        e.target.value = '';
-    });
-
-    // ✅ Afficher info dernière sync
-    function updateLastSyncInfo() {
-        const lastExport = localStorage.getItem('lastExport');
-        const lastImport = localStorage.getItem('lastImport');
-        const infoDiv = document.getElementById('lastSyncInfo');
-        const infoText = document.getElementById('lastSyncText');
-        
-        if (lastExport || lastImport) {
-            const lastAction = lastExport > lastImport ? 
-                { type: '📤', date: lastExport } : 
-                { type: '📥', date: lastImport };
-            
-            const date = new Date(lastAction.date);
-            const timeAgo = getTimeAgo(date);
-            
-            infoText.textContent = lastAction.type + ' ' + timeAgo;
-            infoDiv.style.display = 'block';
-        }
-    }
-
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        
-        if (seconds < 60) return 'À l\'instant';
-        if (seconds < 3600) return 'Il y a ' + Math.floor(seconds / 60) + ' min';
-        if (seconds < 86400) return 'Il y a ' + Math.floor(seconds / 3600) + 'h';
-        return 'Il y a ' + Math.floor(seconds / 86400) + 'j';
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updateLastSyncInfo();
-        setInterval(updateLastSyncInfo, 60000);
-        
-        const buttons = document.querySelectorAll('#syncButtons button');
-        buttons.forEach(function(btn) {
-            btn.addEventListener('mouseenter', function() {
-                btn.style.transform = 'scale(1.05)';
-            });
-            btn.addEventListener('mouseleave', function() {
-                btn.style.transform = 'scale(1)';
-            });
-        });
-    });
-    </script>
-
-
 </body>
 </html>
