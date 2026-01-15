@@ -12354,18 +12354,40 @@
                     if(statusElement) statusElement.style.background = '#f0f0f0';
                 }
                 
-                if (descriptors.length < instructions.length) {
+                if (descriptors.length !== instructions.length) {
+                    console.error('❌ Descriptors incomplets:', descriptors.length, '/', instructions.length);
                     throw new Error('Tsy feno ny sary voaray. Avereno azafady.');
                 }
-                
-                console.log(`✅ Enrollment OK: ${descriptors.length} descriptors voaray.`);
-                
-                return {
-                    ...employeData,
-                    face_descriptors: descriptors,
-                    face_enrolled: true,
-                    face_enrollment_date: new Date().toISOString()
+
+                console.log('✅ Enrollment OK:', descriptors.length, 'descriptors voaray.');
+
+                // ⭐ CONSTRUCTION EXPLICITE DE L'OBJET
+                const enrolledEmployee = {
+                    id: employeData.id,
+                    name: employeData.name,
+                    position: employeData.position,
+                    gender: employeData.gender,
+                    salary: employeData.salary,
+                    groupId: employeData.groupId,
+                    useGroupSalary: employeData.useGroupSalary,
+                    customSalary: employeData.customSalary,
+                    status: employeData.status,
+                    departureDate: employeData.departureDate,
+                    facedescriptors: descriptors,
+                    faceenrolled: true,
+                    faceenrollmentdate: new Date().toISOString()
                 };
+
+                // ⭐ DEBUG AVANT RETURN
+                console.log('📦 Objet enrollment créé:', {
+                    name: enrolledEmployee.name,
+                    hasDescriptors: !!enrolledEmployee.facedescriptors,
+                    descriptorsCount: enrolledEmployee.facedescriptors?.length,
+                    enrolled: enrolledEmployee.faceenrolled
+                });
+
+                return enrolledEmployee;
+
             },
 
 
@@ -12633,20 +12655,12 @@
                 return;
             }
             
-            // ⭐ FIX: VAKIO MIVANTANA AO AMIN'NY DATABASE
-            console.log('📦 Chargement employés depuis IndexedDB...');
-            let dbEmployees = [];
-            try {
-                dbEmployees = await dbManager.getAll('employees');
-                console.log('✅ Employés chargés depuis DB:', dbEmployees.length);
-            } catch (error) {
-                console.error('❌ Erreur chargement DB:', error);
-                showAlert('❌ Erreur de chargement des données', 'error');
-                return;
-            }
-            
-            // Filter enrolled depuis DB directement
-            const enrolled = dbEmployees.filter(e => {
+            // ⭐ UTILISER LA VARIABLE EN MÉMOIRE (comme Présence/Avance/Payroll)
+            console.log('📦 Utilisation des employés en mémoire...');
+
+            // Filter enrolled depuis la variable globale
+            const enrolled = employees.filter(e => {
+
                 const hasDescriptors = e.facedescriptors && Array.isArray(e.facedescriptors) && e.facedescriptors.length > 0;
                 const isEnrolled = e.faceenrolled === true;
                 
