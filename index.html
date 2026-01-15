@@ -12541,25 +12541,12 @@
                 return;
             }
             
-            // ⭐ CORRECTION: Vérifier avec les bons field names
-            const enrolled = employees.filter(e => {
-                // Vérifier faceenrolled OU facedescriptors
-                return (e.faceenrolled === true) || (e.facedescriptors && e.facedescriptors.length > 0);
-            });
-            
-            console.log('📊 Employés enrolled trouvés:', enrolled.length, '/', employees.length);
-            
-            if (enrolled.length === 0) {
-                showAlert('⚠️ Aucun employé enregistré en reconnaissance faciale. Veuillez d\'abord enregistrer des visages.', 'warning');
-                return;
-            }
-            
-            // Mametraka ny mode reconnaissance ho recherche
+            // Définir le mode
             facialRecognitionMode = 'status-search';
             
             console.log('🎯 Mode défini:', facialRecognitionMode);
             
-            // Antso ny fonction efa misy
+            // Ouvrir le modal - il gère lui-même le check enrolled
             await openFacePointageModal();
         }
 
@@ -12575,7 +12562,7 @@
             const enrolled = employees.filter(e => e.face_descriptors && e.face_descriptors.length > 0);
             
             if (enrolled.length === 0) {
-                alert('⚠️ Tsy misy employé enrolled! Mba enrollment aloha.');
+                alert('⚠️ Tsy misy employé enrolled! Mba mi-enrollement aloha.');
                 return;
             }
             
