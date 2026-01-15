@@ -12529,7 +12529,7 @@
         }
 
         // ===================================================================
-        // RECONNAISSANCE FACIALE POUR RECHERCHE STATUT
+        // RECONNAISSANCE FACIALE POUR RECHERCHE STATUT - CORRECTED
         // ===================================================================
         async function openFaceRecognitionForStatusSearch() {
             console.log('👤 Ouverture reconnaissance faciale pour recherche statut');
@@ -12541,19 +12541,28 @@
                 return;
             }
             
-            // Vérifier si employés enrolled
-            const enrolled = employees.filter(e => e.facedescriptors && e.facedescriptors.length > 0);
+            // ⭐ CORRECTION: Vérifier avec les bons field names
+            const enrolled = employees.filter(e => {
+                // Vérifier faceenrolled OU facedescriptors
+                return (e.faceenrolled === true) || (e.facedescriptors && e.facedescriptors.length > 0);
+            });
+            
+            console.log('📊 Employés enrolled trouvés:', enrolled.length, '/', employees.length);
+            
             if (enrolled.length === 0) {
-                showAlert('⚠️ Aucun employé enregistré en reconnaissance faciale.', 'warning');
+                showAlert('⚠️ Aucun employé enregistré en reconnaissance faciale. Veuillez d\'abord enregistrer des visages.', 'warning');
                 return;
             }
             
             // Mametraka ny mode reconnaissance ho recherche
             facialRecognitionMode = 'status-search';
             
+            console.log('🎯 Mode défini:', facialRecognitionMode);
+            
             // Antso ny fonction efa misy
             await openFacePointageModal();
         }
+
 
         // ==========================================
         // UI: POINTAGE FACIAL - VERSION CORRIGÉE
