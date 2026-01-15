@@ -3269,36 +3269,107 @@
 
         <!-- Statut Employées-->
                 <!-- Statut Employé (Smart Search) Section - VERSION NOHATSARAINA -->
+        <!-- Statut Employés - Recherche Intelligente avec Facial & QR -->
         <div id="employee-stats" class="section">
             <div class="card">
-                <h2><span class="material-icons">person_search</span>Recherche Intelligente de Statut</h2>
+                <h2>
+                    <span class="material-icons">person_search</span>
+                    Recherche Intelligente de Statut
+                </h2>
                 <p style="margin-top: -12px; margin-bottom: 20px; color: var(--md-sys-color-on-surface-variant);">
-                    Recherchez un employé par son nom pour voir son statut en temps réel.
+                    Recherchez un employé par son nom, reconnaissance faciale ou QR Code pour voir son statut en temps réel.
                 </p>
 
                 <div class="form-row" style="align-items: flex-end;">
-                    <!-- Sehatra Fikarohana vaovao -->
-                    <div class="form-group">
+                    <!-- Champ de recherche par nom -->
+                    <div class="form-group" style="flex: 1;">
                         <label for="smartSearchInput">Nom de l'employé</label>
-                        <div class="search-container" style="margin-bottom: 0;">
+                        <div class="search-container" style="margin-bottom: 0; position: relative;">
                             <span class="material-icons search-icon">search</span>
-                            <input type="text" class="search-input" id="smartSearchInput" placeholder="Commencez à taper un nom...">
+                            <input 
+                                type="text" 
+                                class="search-input" 
+                                id="smartSearchInput" 
+                                placeholder="Commencez à taper un nom..."
+                                style="padding-right: 120px;">
+
+                            <!-- BOUTONS QR & FACIAL INTÉGRÉS -->
+                            <div style="
+                                position: absolute;
+                                right: 12px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                display: flex;
+                                gap: 8px;
+                                z-index: 5;
+                            ">
+                                <!-- Bouton QR Code -->
+                                <button 
+                                    type="button"
+                                    class="btn-icon"
+                                    onclick="startQRScanForStatusSearch()"
+                                    title="Scanner QR Code"
+                                    style="
+                                        background: linear-gradient(135deg, #6750A4 0%, #7C4DFF 100%);
+                                        color: white;
+                                        border: none;
+                                        border-radius: 8px;
+                                        padding: 8px;
+                                        cursor: pointer;
+                                        box-shadow: 0 2px 8px rgba(103, 80, 164, 0.3);
+                                        transition: all 0.3s ease;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    "
+                                    onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.4)';"
+                                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(103, 80, 164, 0.3)';">
+                                    <span class="material-icons" style="font-size: 20px;">qr_code_scanner</span>
+                                </button>
+                                
+                                <!-- Bouton Reconnaissance Faciale -->
+                                <button 
+                                    type="button"
+                                    class="btn-icon"
+                                    onclick="openFaceRecognitionForStatusSearch()"
+                                    title="Scanner Visage"
+                                    style="
+                                        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                                        color: white;
+                                        border: none;
+                                        border-radius: 8px;
+                                        padding: 8px;
+                                        cursor: pointer;
+                                        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+                                        transition: all 0.3s ease;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    "
+                                    onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(14, 165, 233, 0.4)';"
+                                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(14, 165, 233, 0.3)';">
+                                    <span class="material-icons" style="font-size: 20px;">face_retouching_natural</span>
+                                </button>
+                            </div>
+
                         </div>
                     </div>
-                    <!-- Safidy volana (tsy miova) -->
+
+                    <!-- Sélecteur de mois -->
                     <div class="form-group">
                         <label for="statsMonth">Mois</label>
                         <input type="month" class="form-control" id="statsMonth">
                     </div>
                 </div>
 
-                <!-- Fampisehoana ny vokatry ny fikarohana -->
+                <!-- Résultats de recherche -->
                 <div id="smartSearchResults" style="margin-top: 16px;"></div>
-                
-                <!-- Fampisehoana ny tatitra rehefa misy voafidy -->
+
+                <!-- Rapport de statut -->
                 <div id="employeeStatusResults" style="margin-top: 24px;"></div>
             </div>
         </div>
+
 
         <!-- ========================================== -->
         <!-- SECTION: POINTAGE FACIAL -->
@@ -4663,6 +4734,7 @@
         let successSoundBuffer;
         let nextSoundBuffer;
 
+        let facialRecognitionMode = 'pointage'; // 'pointage' ou 'status-search'
 
         //========================================================
         //  PERFORMANCE: Virtualization ho an'ny lisitry ny mpiasa
@@ -6135,8 +6207,44 @@
                         }
                         return true;
                         
+                    case 'status-search':
+                        // Remplir le champ de recherche avec le nom de l'employé
+                        if (employee) {
+                            document.getElementById('smartSearchInput').value = employee.name;
+                            
+                            // Déclencher la recherche
+                            handleSmartSearch();
+                            
+                            // Sélectionner automatiquement l'employé
+                            setTimeout(() => {
+                                selectEmployeeForStat(employee.id);
+                            }, 300);
+                            
+                            showScanResult(`
+                                <strong>✅ EMPLOYÉ TROUVÉ</strong><br>
+                                <span style="font-size: 1.2em; font-weight: 700;">${employee.name}</span><br>
+                                <span style="font-size: 0.9em;">${employee.position}</span>
+                            `, 'success');
+                            
+                            playSuccessSound();
+                            
+                            // Fermer le scanner
+                            setTimeout(() => stopQRScan(), 1500);
+                            
+                            // Scroller vers les résultats
+                            setTimeout(() => {
+                                const resultsContainer = document.getElementById('employeeStatusResults');
+                                if (resultsContainer) {
+                                    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, 2000);
+                            
+                            return true;
+                        }
+                        break;
+                        
                     default:
-                        console.warn('⚠️ Purpose non géré:', purpose);
+                        console.warn('Purpose non géré:', purpose);
                         return false;
                 }
                 
@@ -6194,6 +6302,72 @@
 
         async function processAttendanceScan(employee, method = 'QR', skipSound = false) {
             try {
+                // =====================================================
+                // ⭐ VAOVAO: JEREO NY MODE RECHERCHE STATUT ALOHA
+                // =====================================================
+                if (typeof facialRecognitionMode !== 'undefined' && facialRecognitionMode === 'status-search') {
+                    console.log('✅ Mode recherche statut détecté');
+                    
+                    // Averina ho pointage ny mode
+                    facialRecognitionMode = 'pointage';
+                    
+                    // Remplir recherche
+                    const searchInput = document.getElementById('smartSearchInput');
+                    if (searchInput) {
+                        searchInput.value = employee.name;
+                        handleSmartSearch();
+                        
+                        // Sélectionner employé
+                        setTimeout(() => {
+                            selectEmployeeForStat(employee.id);
+                        }, 300);
+                        
+                        // Scroll vers résultats
+                        setTimeout(() => {
+                            const resultsContainer = document.getElementById('employeeStatusResults');
+                            if (resultsContainer) {
+                                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }, 1000);
+                    }
+                    
+                    // Notification
+                    showScanResult(
+                        `<strong>✅ EMPLOYÉ TROUVÉ</strong><br>
+                        <span style="font-size: 1.2em; font-weight: 700;">${employee.name}</span><br>
+                        <span style="font-size: 0.9em;">${employee.position}</span><br>
+                        <div style="margin-top: 10px; padding: 8px; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
+                            <span style="font-size: 0.85em; color: #059669;">📊 Affichage du statut en cours...</span>
+                        </div>`,
+                        'success'
+                    );
+                    
+                    if (!skipSound) {
+                        playSuccessSound();
+                    }
+                    
+                    // Fermer scanner
+                    setTimeout(() => {
+                        if (typeof stopQRScan === 'function') stopQRScan();
+                        // Fermer modal facial si ouvert
+                        const faceModal = document.getElementById('facePointageModal');
+                        if (faceModal && faceModal.parentNode) {
+                            // Arrêter stream vidéo
+                            const video = faceModal.querySelector('video');
+                            if (video && video.srcObject) {
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                            }
+                            document.body.removeChild(faceModal);
+                        }
+                    }, 2000);
+                    
+                    // IMPORTANTE: Retourner TRUE mais ne PAS enregistrer attendance
+                    return true;
+                }
+                
+                // =====================================================
+                // CODE ORIGINAL 
+                // =====================================================
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
                 const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
@@ -6407,7 +6581,7 @@
                     else {
                         console.log('❌ < 30 min → Refusé');
                         
-                        playErrorSound(); // ← AMPIANA
+                        playErrorSound();
                         
                         showScanResult(
                             `<strong>❌ POINTAGE TROP RAPPROCHÉ</strong><br>
@@ -6433,7 +6607,6 @@
                         setTimeout(() => stopQRScan(), 4000);
                         return false;
                     }
-
                 }
                 
             } catch (error) {
@@ -6443,7 +6616,6 @@
                 return false;
             }
         }
-
 
         // ===================================================
         //  showScanResult (FANITSARANA: Mampiasa innerHTML)
@@ -7213,8 +7385,33 @@
             }
         }
 
+        // ===================================================================
+        // RECHERCHE INTELLIGENTE - QR CODE SCANNER
+        // ===================================================================
+        async function startQRScanForStatusSearch() {
+            console.log('🔍 Démarrage scan QR pour recherche statut');
+            
+            // Utiliser le scanner QR unifié
+            currentScanPurpose = 'status-search';
+            await startQRScan('status-search');
+        }
 
-
+        // ===================================================================
+        // RECHERCHE INTELLIGENTE - FACIAL RECOGNITION
+        // ===================================================================
+        async function startFacialScanForStatusSearch() {
+            console.log('👤 Démarrage reconnaissance faciale pour recherche statut');
+            
+            // Vérifier si face-api est chargé
+            if (!window.faceapi || !faceapi.nets.ssdMobilenetv1.isLoaded) {
+                showAlert('⚠️ Modèles de reconnaissance faciale non chargés. Veuillez patienter...', 'warning');
+                return;
+            }
+            
+            // Ouvrir le modal de reconnaissance faciale
+            currentFacialScanMode = 'status-search';
+            openFacePointageModal();
+        }
 
 
         // ===================================================
@@ -9957,106 +10154,174 @@
         // ===================================================
         //  Fonction de recherche pour le Smart Search
         // ===================================================
-        // Fonction de recherche pour le Smart Search
         function handleSmartSearch() {
-        const searchTerm = document.getElementById('smartSearchInput').value.toLowerCase();
-        const resultsContainer = document.getElementById('smartSearchResults');
-        const reportContainer = document.getElementById('employeeStatusResults');
+            const searchTerm = document.getElementById('smartSearchInput').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('smartSearchResults');
+            const reportContainer = document.getElementById('employeeStatusResults');
 
-        if (searchTerm.length < 2) {
-            resultsContainer.innerHTML = '';
-            reportContainer.innerHTML = '';
-            return;
+            if (searchTerm.length < 2) {
+                resultsContainer.innerHTML = '';
+                reportContainer.innerHTML = '';
+                return;
+            }
+
+            const results = employees.filter(emp => 
+                emp.name.toLowerCase().includes(searchTerm) || 
+                emp.position.toLowerCase().includes(searchTerm)
+            );
+
+            if (results.length > 0) {
+                resultsContainer.innerHTML = results.map(emp => {
+                    // Alaina ny groupe
+                    const group = groups.find(g => g.id === emp.groupId);
+                    const groupName = group ? group.name : '<i>Sans groupe</i>';
+                    
+                    // Kajy pointages
+                    const today = new Date().toISOString().split('T')[0];
+                    const currentMonth = new Date().toISOString().slice(0, 7);
+                    
+                    const qrCount = qrAttendance.filter(att => 
+                        att.employeeId === emp.id && att.date.startsWith(currentMonth)
+                    ).length;
+                    
+                    let facialCount = 0;
+                    let manualCount = 0;
+                    
+                    Object.keys(attendance).forEach(date => {
+                        if (date.startsWith(currentMonth)) {
+                            const dayData = attendance[date]?.[emp.id];
+                            if (dayData) {
+                                if (dayData.method === 'FACIAL') facialCount++;
+                                else if (dayData.method === 'MANUAL') manualCount++;
+                            }
+                        }
+                    });
+                    
+                    const todayPresence = attendance[today]?.[emp.id];
+                    const isPresentToday = !!todayPresence;
+                    
+                    return `
+                        <div class="employee-item" style="
+                            cursor: pointer;
+                            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(241, 245, 249, 0.7) 100%);
+                            backdrop-filter: blur(10px);
+                            -webkit-backdrop-filter: blur(10px);
+                            border: 2px solid rgba(100, 116, 139, 0.2);
+                            border-radius: 12px;
+                            padding: 16px;
+                            margin-bottom: 12px;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                        " onclick="selectEmployeeForStat('${emp.id}')"
+                        onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(255, 105, 180, 0.2)'; this.style.borderColor='rgba(255, 105, 180, 0.5)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.08)'; this.style.borderColor='rgba(100, 116, 139, 0.2)';">
+                            <div class="employee-info">
+                                <h4 style="margin: 0 0 6px 0; color: #1e293b; font-size: 1.1em; font-weight: 800;">
+                                    ${emp.name}
+                                </h4>
+                                <p style="margin: 0 0 10px 0; color: #475569; font-weight: 600;">
+                                    ${emp.position} • <strong style="color: #FF1493;">Groupe: ${groupName}</strong>
+                                </p>
+                                
+                                <!-- Badges Pointages -->
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                    ${isPresentToday ? `
+                                        <span style="
+                                            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+                                            backdrop-filter: blur(6px);
+                                            border: 1.5px solid rgba(16, 185, 129, 0.4);
+                                            color: #064e3b;
+                                            padding: 5px 12px;
+                                            border-radius: 20px;
+                                            font-size: 0.85em;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 5px;
+                                            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+                                        ">
+                                            <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                                            Présent Aujourd'hui
+                                        </span>
+                                    ` : ''}
+                                    
+                                    ${qrCount > 0 ? `
+                                        <span style="
+                                            background: linear-gradient(135deg, rgba(103, 80, 164, 0.15) 0%, rgba(124, 77, 255, 0.15) 100%);
+                                            backdrop-filter: blur(6px);
+                                            border: 1.5px solid rgba(103, 80, 164, 0.3);
+                                            color: #3730a3;
+                                            padding: 5px 12px;
+                                            border-radius: 20px;
+                                            font-size: 0.85em;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 5px;
+                                            box-shadow: 0 2px 6px rgba(103, 80, 164, 0.12);
+                                        ">
+                                            <span class="material-icons" style="font-size: 16px;">qr_code_scanner</span>
+                                            ${qrCount} QR
+                                        </span>
+                                    ` : ''}
+                                    
+                                    ${facialCount > 0 ? `
+                                        <span style="
+                                            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(2, 132, 199, 0.15) 100%);
+                                            backdrop-filter: blur(6px);
+                                            border: 1.5px solid rgba(14, 165, 233, 0.3);
+                                            color: #075985;
+                                            padding: 5px 12px;
+                                            border-radius: 20px;
+                                            font-size: 0.85em;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 5px;
+                                            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.12);
+                                        ">
+                                            <span class="material-icons" style="font-size: 16px;">face</span>
+                                            ${facialCount} Facial
+                                        </span>
+                                    ` : ''}
+                                    
+                                    ${manualCount > 0 ? `
+                                        <span style="
+                                            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+                                            backdrop-filter: blur(6px);
+                                            border: 1.5px solid rgba(245, 158, 11, 0.3);
+                                            color: #78350f;
+                                            padding: 5px 12px;
+                                            border-radius: 20px;
+                                            font-size: 0.85em;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 5px;
+                                            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.12);
+                                        ">
+                                            <span class="material-icons" style="font-size: 16px;">edit</span>
+                                            ${manualCount} Manuel
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <span class="material-icons" style="color: #FF1493;">arrow_forward_ios</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                resultsContainer.innerHTML = `
+                    <p style="
+                        text-align: center;
+                        padding: 20px;
+                        color: #64748b;
+                        font-weight: 600;
+                    ">Aucun employé trouvé.</p>
+                `;
+            }
         }
 
-        const results = employees.filter(emp => 
-            emp.name.toLowerCase().includes(searchTerm) || 
-            emp.position.toLowerCase().includes(searchTerm)
-        );
-
-        if (results.length > 0) {
-            resultsContainer.innerHTML = results.map(emp => {
-            // 1. Alaina ny anaranny vondrona
-            const group = groups.find(g => g.id === emp.groupId);
-            const groupName = group ? group.name : '<i>Sans groupe</i>';
-            
-            // 2. VAOVAO - Kajiana ny pointages (QR, Facial, Manuel)
-            const today = new Date().toISOString().split('T')[0];
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            
-            // Kajy ny pointages QR
-            const qrCount = qrAttendance.filter(att => 
-                att.employeeId === emp.id && att.date.startsWith(currentMonth)
-            ).length;
-            
-            // Kajy ny pointages Facial
-            const facialCount = Object.keys(attendance).filter(date => {
-                if (date.startsWith(currentMonth)) {
-                const dayData = attendance[date]?.[emp.id];
-                return dayData && dayData.method === 'FACIAL';
-                }
-                return false;
-            }).length;
-            
-            // Kajy ny pointages Manuel
-            const manualCount = Object.keys(attendance).filter(date => {
-                if (date.startsWith(currentMonth)) {
-                const dayData = attendance[date]?.[emp.id];
-                return dayData && dayData.method === 'MANUAL';
-                }
-                return false;
-            }).length;
-            
-            // Pointage anio
-            const todayPresence = attendance[today]?.[emp.id];
-            const isPresentToday = !!todayPresence;
-            
-            // 3. Ampidirina ao anatinny HTML
-            return `
-                <div class="employee-item" style="cursor: pointer;" onclick="selectEmployeeForStat('${emp.id}')">
-                <div class="employee-info">
-                    <h4>${emp.name}</h4>
-                    <p>${emp.position} - <strong>Groupe: ${groupName}</strong></p>
-                    
-                    <!-- VAOVAO: Badges Pointages -->
-                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                    ${isPresentToday ? `
-                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                        <span class="material-icons" style="font-size: 14px;">check_circle</span>
-                        Présent
-                        </span>
-                    ` : ''}
-                    
-                    ${qrCount > 0 ? `
-                        <span style="background: rgba(103, 80, 164, 0.15); color: #6750A4; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                        <span class="material-icons" style="font-size: 14px;">qr_code_scanner</span>
-                        ${qrCount} QR
-                        </span>
-                    ` : ''}
-                    
-                    ${facialCount > 0 ? `
-                        <span style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                        <span class="material-icons" style="font-size: 14px;">face</span>
-                        ${facialCount} Facial
-                        </span>
-                    ` : ''}
-                    
-                    ${manualCount > 0 ? `
-                        <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                        <span class="material-icons" style="font-size: 14px;">edit</span>
-                        ${manualCount} Manuel
-                        </span>
-                    ` : ''}
-                    </div>
-                </div>
-                <span class="material-icons">arrow_forward_ios</span>
-                </div>
-            `;
-            }).join('');
-        } else {
-            resultsContainer.innerHTML = '<p style="text-align: center; padding: 10px;">Aucun employé trouvé.</p>';
-        }
-        }
 
 
 
@@ -12263,6 +12528,32 @@
             }
         }
 
+        // ===================================================================
+        // RECONNAISSANCE FACIALE POUR RECHERCHE STATUT
+        // ===================================================================
+        async function openFaceRecognitionForStatusSearch() {
+            console.log('👤 Ouverture reconnaissance faciale pour recherche statut');
+            
+            // Vérifier si face-api est chargé
+            const loaded = await FaceRecognition.loadModels();
+            if (!loaded) {
+                showAlert('⚠️ Modèles de reconnaissance faciale non chargés.', 'warning');
+                return;
+            }
+            
+            // Vérifier si employés enrolled
+            const enrolled = employees.filter(e => e.facedescriptors && e.facedescriptors.length > 0);
+            if (enrolled.length === 0) {
+                showAlert('⚠️ Aucun employé enregistré en reconnaissance faciale.', 'warning');
+                return;
+            }
+            
+            // Mametraka ny mode reconnaissance ho recherche
+            facialRecognitionMode = 'status-search';
+            
+            // Antso ny fonction efa misy
+            await openFacePointageModal();
+        }
 
         // ==========================================
         // UI: POINTAGE FACIAL - VERSION CORRIGÉE
