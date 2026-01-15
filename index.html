@@ -9239,14 +9239,34 @@
             const employee = employees.find(e => e.id === employeeId);
             if (!employee) return;
 
-            // --- FANAMPIANA 1: Alaina ny anaran'ny vondrona ---
+            // --- FANAMPIANA VAOVAO: Kajiana ny pointages araka ny fomba ---
+            const qrPointages = qrAttendance.filter(att => 
+                att.employeeId === employeeId && att.date.startsWith(month)
+            );
+            
+            let facialPointages = 0;
+            let manualPointages = 0;
+            let totalPointages = 0;
+            
+            Object.keys(attendance).forEach(date => {
+                if (date.startsWith(month)) {
+                    const dayData = attendance[date]?.[employeeId];
+                    if (dayData) {
+                        totalPointages++;
+                        if (dayData.method === 'FACIAL') facialPointages++;
+                        else if (dayData.method === 'MANUAL') manualPointages++;
+                    }
+                }
+            });
+            
+            const qrPointagesCount = qrPointages.length;
+
+            // Alaina ny anaranny vondrona
             const group = groups.find(g => g.id === employee.groupId);
-            const groupName = group ? group.name : "<i>Sans groupe</i>"; // Mampiseho "Sans groupe" raha tsy manana izy
+            const groupName = group ? group.name : '<i>Sans groupe</i>';
 
             const [year, monthNum] = month.split('-');
             const daysInMonth = getDaysInMonth(parseInt(year), parseInt(monthNum));
-
-            
 
             let totalMonthlyMinutes = 0;
             let dailyDetails = [];
@@ -9256,9 +9276,11 @@
                 const presenceData = attendance[dateStr]?.[employeeId];
                 
                 let duration = { totalMinutes: 0, displayText: "---" };
-                if (presenceData) {
-                    duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
-                    totalMonthlyMinutes += duration.totalMinutes;
+                if (presenceData && presenceData.arrivee) {
+                    if (presenceData.depart) {
+                        duration = calculateWorkDuration(presenceData.arrivee, presenceData.depart);
+                        totalMonthlyMinutes += duration.totalMinutes;
+                    }
                 }
                 dailyDetails.push({
                     dateStr: dateStr,
@@ -9278,50 +9300,309 @@
             const proportionalSalary = (employee.salary / daysInMonth) * presenceDays;
             const netSalaryToPay = proportionalSalary - totalAdvances;
 
+            // AFFICHAGE AVEC GLASSMORPHISM
             let tableHTML = `
-                <div style="margin-bottom: 16px;">
-                    <h3 style="color: #f1f5f9 !important; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">📋 Rapport Mensuel Détaillé pour ${employee.name}</h3>
-                    <p style="margin-top: 0; color: #e2e8f0 !important; font-weight: 600;"><strong>Groupe:</strong> ${groupName}</p>
-                </div>
-                
-                <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, rgba(226, 232, 240, 0.95), rgba(241, 245, 249, 0.95)); border-radius: 12px; border: 2px solid rgba(129, 140, 248, 0.3);">
-                    <h4 style="margin-bottom: 16px; color: #1e293b !important; font-weight: 800; font-size: 1.2rem;">✨ Résumé du Mois</h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; font-size: 1.05em;">
-                        <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 8px; border-left: 4px solid #6366f1;">
-                            <strong style="color: #334155 !important; display: block; margin-bottom: 4px;">📅 Jours de Présence:</strong>
-                            <span style="font-weight: bold; color: #1e293b !important; font-size: 1.2em;">${presenceDays} / ${daysInMonth} jours</span>
-                        </div>
-                        <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 8px; border-left: 4px solid #6366f1;">
-                            <strong style="color: #334155 !important; display: block; margin-bottom: 4px;">⏰ Total Heures Travaillées:</strong>
-                            <span style="font-weight: bold; color: #6366f1 !important; font-size: 1.2em;">${monthlyHoursText}</span>
-                        </div>
-                        <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 8px; border-left: 4px solid #ef4444;">
-                            <strong style="color: #334155 !important; display: block; margin-bottom: 4px;">💰 Total Avances:</strong>
-                            <span style="font-weight: bold; color: #ef4444 !important; font-size: 1.2em;">${formatCurrency(totalAdvances)}</span>
+                <div class="employee-status-report" style="animation: fadeIn 0.4s ease;">
+                    
+                    <!-- EN-TÊTE AVEC GLASSMORPHISM -->
+                    <div style="
+                        background: linear-gradient(135deg, rgba(255, 105, 180, 0.15) 0%, rgba(186, 85, 211, 0.15) 100%);
+                        backdrop-filter: blur(16px);
+                        -webkit-backdrop-filter: blur(16px);
+                        border: 2px solid rgba(255, 105, 180, 0.3);
+                        border-radius: 20px;
+                        padding: 24px;
+                        margin-bottom: 24px;
+                        box-shadow: 0 8px 32px rgba(255, 105, 180, 0.2);
+                    ">
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                            <div style="
+                                width: 64px;
+                                height: 64px;
+                                background: linear-gradient(135deg, #FF69B4 0%, #BA55D3 100%);
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 4px 16px rgba(255, 105, 180, 0.4);
+                            ">
+                                <span class="material-icons" style="font-size: 36px; color: white;">person</span>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="
+                                    margin: 0;
+                                    font-size: 1.8em;
+                                    font-weight: 800;
+                                    background: linear-gradient(135deg, #FF1493 0%, #BA55D3 100%);
+                                    -webkit-background-clip: text;
+                                    -webkit-text-fill-color: transparent;
+                                    background-clip: text;
+                                    letter-spacing: 0.5px;
+                                ">${employee.name}</h3>
+                                <p style="margin: 4px 0 0 0; font-size: 1.1em; color: #64748b; font-weight: 600;">
+                                    ${employee.position} • <strong style="color: #FF1493;">Groupe: ${groupName}</strong>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div style="background: linear-gradient(135deg, #6366f1, #818cf8); padding: 16px; border-radius: 10px; margin-top: 16px; text-align: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
-                        <strong style="color: white !important; font-size: 1.1em; display: block; margin-bottom: 4px;">💵 Salaire Net à Payer</strong>
-                        <span style="font-weight: 800; color: white !important; font-size: 1.6em; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${formatCurrency(netSalaryToPay)}</span>
+
+                    <!-- STATISTIQUES POINTAGES PAR MÉTHODE - GLASSMORPHISM -->
+                    <div style="
+                        background: linear-gradient(135deg, rgba(103, 80, 164, 0.1) 0%, rgba(124, 77, 255, 0.1) 100%);
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
+                        border: 2px solid rgba(103, 80, 164, 0.25);
+                        border-radius: 16px;
+                        padding: 24px;
+                        margin-bottom: 24px;
+                        box-shadow: 0 8px 32px rgba(103, 80, 164, 0.15);
+                    ">
+                        <h4 style="
+                            margin: 0 0 20px 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            font-size: 1.3em;
+                            font-weight: 700;
+                            color: #6750A4;
+                        ">
+                            <span class="material-icons" style="font-size: 28px;">analytics</span>
+                            Statistiques des Pointages - ${month}
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+                            <!-- Total -->
+                            <div style="
+                                background: rgba(255, 255, 255, 0.6);
+                                backdrop-filter: blur(8px);
+                                -webkit-backdrop-filter: blur(8px);
+                                padding: 16px;
+                                border-radius: 12px;
+                                text-align: center;
+                                border: 1px solid rgba(103, 80, 164, 0.2);
+                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.1);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.2)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.1)';">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
+                                    <span class="material-icons" style="color: #6750A4; font-size: 24px;">apps</span>
+                                </div>
+                                <div style="font-size: 2.2em; font-weight: 800; color: #6750A4; line-height: 1;">${totalPointages}</div>
+                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Total</div>
+                            </div>
+                            
+                            <!-- QR Code -->
+                            <div style="
+                                background: rgba(255, 255, 255, 0.6);
+                                backdrop-filter: blur(8px);
+                                -webkit-backdrop-filter: blur(8px);
+                                padding: 16px;
+                                border-radius: 12px;
+                                text-align: center;
+                                border: 1px solid rgba(103, 80, 164, 0.2);
+                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.1);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.2)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.1)';">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
+                                    <span class="material-icons" style="color: #6750A4; font-size: 24px;">qr_code_scanner</span>
+                                </div>
+                                <div style="font-size: 2.2em; font-weight: 800; color: #6750A4; line-height: 1;">${qrPointagesCount}</div>
+                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">QR Code</div>
+                            </div>
+                            
+                            <!-- Facial -->
+                            <div style="
+                                background: rgba(255, 255, 255, 0.6);
+                                backdrop-filter: blur(8px);
+                                -webkit-backdrop-filter: blur(8px);
+                                padding: 16px;
+                                border-radius: 12px;
+                                text-align: center;
+                                border: 1px solid rgba(14, 165, 233, 0.2);
+                                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(14, 165, 233, 0.2)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(14, 165, 233, 0.1)';">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
+                                    <span class="material-icons" style="color: #0ea5e9; font-size: 24px;">face</span>
+                                </div>
+                                <div style="font-size: 2.2em; font-weight: 800; color: #0ea5e9; line-height: 1;">${facialPointages}</div>
+                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Facial</div>
+                            </div>
+                            
+                            <!-- Manuel -->
+                            <div style="
+                                background: rgba(255, 255, 255, 0.6);
+                                backdrop-filter: blur(8px);
+                                -webkit-backdrop-filter: blur(8px);
+                                padding: 16px;
+                                border-radius: 12px;
+                                text-align: center;
+                                border: 1px solid rgba(245, 158, 11, 0.2);
+                                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(245, 158, 11, 0.2)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.1)';">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
+                                    <span class="material-icons" style="color: #f59e0b; font-size: 24px;">edit</span>
+                                </div>
+                                <div style="font-size: 2.2em; font-weight: 800; color: #f59e0b; line-height: 1;">${manualPointages}</div>
+                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Manuel</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead style="position: sticky; top: 0; background-color: var(--md-sys-color-surface); z-index: 1;">
-                            <tr style="background: linear-gradient(135deg, rgba(51, 65, 85, 0.95), rgba(30, 41, 59, 0.95));">
-                                <th style="padding: 12px; text-align: left; color: #f1f5f9 !important; font-weight: 800;">Date</th>
-                                <th style="padding: 12px; text-align: left; color: #f1f5f9 !important; font-weight: 800;">Statut</th>
-                                <th style="padding: 12px; text-align: center; color: #f1f5f9 !important; font-weight: 800;">Total Heures</th>
-                                <th style="padding: 12px; text-align: right; color: #f1f5f9 !important; font-weight: 800;">Avance du Jour</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+
+                    <!-- RÉSUMÉ MENSUEL - GLASSMORPHISM -->
+                    <div style="
+                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
+                        border: 2px solid rgba(16, 185, 129, 0.25);
+                        border-radius: 16px;
+                        padding: 24px;
+                        margin-bottom: 24px;
+                        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+                    ">
+                        <h4 style="
+                            margin: 0 0 20px 0;
+                            font-size: 1.3em;
+                            font-weight: 700;
+                            color: #059669;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        ">
+                            <span class="material-icons" style="font-size: 28px;">summarize</span>
+                            Résumé du Mois
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                            <div style="
+                                padding: 16px;
+                                background: rgba(255, 255, 255, 0.7);
+                                backdrop-filter: blur(8px);
+                                border-radius: 12px;
+                                border-left: 5px solid #10b981;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                            ">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #10b981; font-size: 22px;">event_available</span>
+                                    <strong style="color: #334155; font-size: 0.95em;">Jours de Présence</strong>
+                                </div>
+                                <span style="font-weight: 800; color: #1e293b; font-size: 1.5em;">${presenceDays}</span>
+                                <span style="color: #64748b; font-weight: 600;"> / ${daysInMonth} jours</span>
+                            </div>
+                            
+                            <div style="
+                                padding: 16px;
+                                background: rgba(255, 255, 255, 0.7);
+                                backdrop-filter: blur(8px);
+                                border-radius: 12px;
+                                border-left: 5px solid #3b82f6;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                            ">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #3b82f6; font-size: 22px;">schedule</span>
+                                    <strong style="color: #334155; font-size: 0.95em;">Total Heures Travaillées</strong>
+                                </div>
+                                <span style="font-weight: 800; color: #3b82f6; font-size: 1.5em;">${monthlyHoursText}</span>
+                            </div>
+                            
+                            <div style="
+                                padding: 16px;
+                                background: rgba(255, 255, 255, 0.7);
+                                backdrop-filter: blur(8px);
+                                border-radius: 12px;
+                                border-left: 5px solid #ef4444;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                            ">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span class="material-icons" style="color: #ef4444; font-size: 22px;">savings</span>
+                                    <strong style="color: #334155; font-size: 0.95em;">Total Avances</strong>
+                                </div>
+                                <span style="font-weight: 800; color: #ef4444; font-size: 1.5em;">${formatCurrency(totalAdvances)}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- SALAIRE NET - CARD PREMIUM -->
+                        <div style="
+                            background: linear-gradient(135deg, #FF69B4 0%, #FF1493 50%, #BA55D3 100%);
+                            padding: 20px;
+                            border-radius: 16px;
+                            text-align: center;
+                            box-shadow: 0 8px 24px rgba(255, 105, 180, 0.4);
+                            border: 2px solid rgba(255, 255, 255, 0.3);
+                        ">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
+                                <span class="material-icons" style="color: white; font-size: 32px;">payments</span>
+                                <strong style="color: white; font-size: 1.2em; letter-spacing: 0.5px;">SALAIRE NET À PAYER</strong>
+                            </div>
+                            <div style="
+                                font-weight: 900;
+                                color: white;
+                                font-size: 2.5em;
+                                text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                                letter-spacing: 1px;
+                            ">${formatCurrency(netSalaryToPay)}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- TABLEAU DÉTAILS PAR JOUR -->
+                    <div style="
+                        background: rgba(255, 255, 255, 0.5);
+                        backdrop-filter: blur(10px);
+                        -webkit-backdrop-filter: blur(10px);
+                        border: 2px solid rgba(148, 163, 184, 0.2);
+                        border-radius: 16px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                    ">
+                        <div style="
+                            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                            padding: 16px 20px;
+                            border-bottom: 2px solid rgba(148, 163, 184, 0.3);
+                        ">
+                            <h4 style="
+                                margin: 0;
+                                color: white;
+                                font-size: 1.2em;
+                                font-weight: 700;
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                            ">
+                                <span class="material-icons">calendar_month</span>
+                                Détails Journaliers
+                            </h4>
+                        </div>
+                        
+                        <div style="max-height: 450px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead style="position: sticky; top: 0; z-index: 1;">
+                                    <tr style="background: linear-gradient(135deg, rgba(51, 65, 85, 0.95), rgba(30, 41, 59, 0.95)); backdrop-filter: blur(8px);">
+                                        <th style="padding: 14px 16px; text-align: left; color: white; font-weight: 700; font-size: 0.95em;">
+                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">event</span>
+                                            Date
+                                        </th>
+                                        <th style="padding: 14px 16px; text-align: left; color: white; font-weight: 700; font-size: 0.95em;">
+                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">fact_check</span>
+                                            Statut
+                                        </th>
+                                        <th style="padding: 14px 16px; text-align: center; color: white; font-weight: 700; font-size: 0.95em;">
+                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">schedule</span>
+                                            Total Heures
+                                        </th>
+                                        <th style="padding: 14px 16px; text-align: right; color: white; font-weight: 700; font-size: 0.95em;">
+                                            <span class="material-icons" style="vertical-align: middle; font-size: 18px; margin-right: 6px;">account_balance_wallet</span>
+                                            Avance
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
             `;
 
-
-            dailyDetails.forEach(detail => {
-                // OVANA: Destructure object fa tsy array
+            dailyDetails.forEach((detail, index) => {
                 const { dateStr, presenceData, duration } = detail;
                 
                 const dayOfWeek = new Date(dateStr).getDay();
@@ -9331,43 +9612,74 @@
                     .filter(adv => adv.employeeId === employeeId && adv.date === dateStr)
                     .reduce((sum, adv) => sum + adv.amount, 0);
                 
-                let status = `<span style="color: #ef4444 !important; font-weight: 700;">❌ Absent</span>`;
+                let status = `<span style="color: #ef4444; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="material-icons" style="font-size: 18px;">cancel</span> Absent
+                </span>`;
+                
                 if (presenceData) {
                     const arrival = formatDisplayTime(presenceData.arrivee);
                     const departure = formatDisplayTime(presenceData.depart);
-                    status = `<span style="color: #10b981 !important; font-weight: 700;">✅ Présent (${arrival} - ${departure})</span>`;
+                    status = `<span style="color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        <span class="material-icons" style="font-size: 18px;">check_circle</span> Présent
+                    </span>
+                    <div style="font-size: 0.85em; color: #64748b; margin-top: 4px;">${arrival} → ${departure}</div>`;
                 }
                 
-                let durationStyle = 'font-weight: 600; color: #64748b;';
+                const HALFDAYINMINUTES = 240; // 4h
+                const MINIMUMHOURSINMINUTES = 480; // 8h
+                
+                let durationStyle = 'font-weight: 700; color: #94a3b8;';
+                let durationIcon = '';
+                
                 if (duration.totalMinutes > 0 && duration.totalMinutes < HALFDAYINMINUTES) {
-                    durationStyle = 'color: #ef4444 !important; font-weight: 700;';
+                    durationStyle = 'color: #ef4444; font-weight: 800;';
+                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">error</span>';
                 } else if (duration.totalMinutes >= HALFDAYINMINUTES && duration.totalMinutes < MINIMUMHOURSINMINUTES) {
-                    durationStyle = 'color: #f59e0b !important; font-weight: 700;';
+                    durationStyle = 'color: #f59e0b; font-weight: 800;';
+                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">warning</span>';
                 } else if (duration.totalMinutes >= MINIMUMHOURSINMINUTES) {
-                    durationStyle = 'color: #10b981 !important; font-weight: 700;';
+                    durationStyle = 'color: #10b981; font-weight: 800;';
+                    durationIcon = '<span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">check_circle</span>';
                 }
                 
-                let rowStyle = isWeekend ? 'background-color: rgba(148, 163, 184, 0.2); opacity: 0.7;' : '';
+                let rowStyle = '';
+                if (isWeekend) {
+                    rowStyle = 'background: rgba(148, 163, 184, 0.15); opacity: 0.7;';
+                } else if (index % 2 === 0) {
+                    rowStyle = 'background: rgba(241, 245, 249, 0.5);';
+                }
                 
                 tableHTML += `
-                    <tr style="${rowStyle}">
-                        <td style="padding: 10px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant); color: #e2e8f0 !important; font-weight: 600;">${formatDate(dateStr)}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant);">${status}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant); text-align: center; ${durationStyle}">${duration.displayText}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant); text-align: right; color: ${advanceOnDay > 0 ? '#ef4444' : '#64748b'} !important; font-weight: 700;">${advanceOnDay > 0 ? formatCurrency(advanceOnDay) : '-'}</td>
+                    <tr style="${rowStyle} transition: all 0.2s ease;" 
+                        onmouseover="this.style.background='rgba(255, 105, 180, 0.08)'" 
+                        onmouseout="this.style.background='${rowStyle ? rowStyle.split(':')[1].split(';')[0] : 'transparent'}'">
+                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); font-weight: 600; color: #1e293b;">
+                            ${formatDate(dateStr)}
+                        </td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8);">
+                            ${status}
+                        </td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); text-align: center; ${durationStyle}">
+                            ${durationIcon}${duration.displayText}
+                        </td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.8); text-align: right; color: ${advanceOnDay > 0 ? '#ef4444' : '#94a3b8'}; font-weight: 700; font-size: 1.05em;">
+                            ${advanceOnDay > 0 ? formatCurrency(advanceOnDay) : '-'}
+                        </td>
                     </tr>
                 `;
             });
 
-
             tableHTML += `
-                        </tbody>
-                    </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             `;
 
             container.innerHTML = tableHTML;
         }
+
 
         function fixTextVisibility() {
             // Target tous les divs avec background clair
@@ -9444,44 +9756,107 @@
         // ===================================================
         //  Fonction de recherche pour le Smart Search
         // ===================================================
+        // Fonction de recherche pour le Smart Search
         function handleSmartSearch() {
-            const searchTerm = document.getElementById('smartSearchInput').value.toLowerCase();
-            const resultsContainer = document.getElementById('smartSearchResults');
-            const reportContainer = document.getElementById('employeeStatusResults');
+        const searchTerm = document.getElementById('smartSearchInput').value.toLowerCase();
+        const resultsContainer = document.getElementById('smartSearchResults');
+        const reportContainer = document.getElementById('employeeStatusResults');
 
-            if (searchTerm.length < 2) {
-                resultsContainer.innerHTML = '';
-                reportContainer.innerHTML = '';
-                return;
-            }
-
-            const results = employees.filter(emp => 
-                emp.name.toLowerCase().includes(searchTerm) ||
-                emp.position.toLowerCase().includes(searchTerm)
-            );
-
-            if (results.length > 0) {
-                // --- FANITSIANA ETO ---
-                resultsContainer.innerHTML = results.map(emp => {
-                    // 1. Alaina ny anaran'ny vondrona
-                    const group = groups.find(g => g.id === emp.groupId);
-                    const groupName = group ? group.name : "<i>Sans groupe</i>";
-
-                    // 2. Ampidirina ao anatin'ny HTML ilay anarana
-                    return `
-                        <div class="employee-item" style="cursor: pointer;" onclick="selectEmployeeForStat('${emp.id}')">
-                            <div class="employee-info">
-                                <h4>${emp.name}</h4>
-                                <p>${emp.position} - <strong>Groupe: ${groupName}</strong></p>
-                            </div>
-                            <span class="material-icons">arrow_forward_ios</span>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                resultsContainer.innerHTML = `<p style="text-align: center; padding: 10px;">Aucun employé trouvé.</p>`;
-            }
+        if (searchTerm.length < 2) {
+            resultsContainer.innerHTML = '';
+            reportContainer.innerHTML = '';
+            return;
         }
+
+        const results = employees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) || 
+            emp.position.toLowerCase().includes(searchTerm)
+        );
+
+        if (results.length > 0) {
+            resultsContainer.innerHTML = results.map(emp => {
+            // 1. Alaina ny anaranny vondrona
+            const group = groups.find(g => g.id === emp.groupId);
+            const groupName = group ? group.name : '<i>Sans groupe</i>';
+            
+            // 2. VAOVAO - Kajiana ny pointages (QR, Facial, Manuel)
+            const today = new Date().toISOString().split('T')[0];
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            
+            // Kajy ny pointages QR
+            const qrCount = qrAttendance.filter(att => 
+                att.employeeId === emp.id && att.date.startsWith(currentMonth)
+            ).length;
+            
+            // Kajy ny pointages Facial
+            const facialCount = Object.keys(attendance).filter(date => {
+                if (date.startsWith(currentMonth)) {
+                const dayData = attendance[date]?.[emp.id];
+                return dayData && dayData.method === 'FACIAL';
+                }
+                return false;
+            }).length;
+            
+            // Kajy ny pointages Manuel
+            const manualCount = Object.keys(attendance).filter(date => {
+                if (date.startsWith(currentMonth)) {
+                const dayData = attendance[date]?.[emp.id];
+                return dayData && dayData.method === 'MANUAL';
+                }
+                return false;
+            }).length;
+            
+            // Pointage anio
+            const todayPresence = attendance[today]?.[emp.id];
+            const isPresentToday = !!todayPresence;
+            
+            // 3. Ampidirina ao anatinny HTML
+            return `
+                <div class="employee-item" style="cursor: pointer;" onclick="selectEmployeeForStat('${emp.id}')">
+                <div class="employee-info">
+                    <h4>${emp.name}</h4>
+                    <p>${emp.position} - <strong>Groupe: ${groupName}</strong></p>
+                    
+                    <!-- VAOVAO: Badges Pointages -->
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                    ${isPresentToday ? `
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-icons" style="font-size: 14px;">check_circle</span>
+                        Présent
+                        </span>
+                    ` : ''}
+                    
+                    ${qrCount > 0 ? `
+                        <span style="background: rgba(103, 80, 164, 0.15); color: #6750A4; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-icons" style="font-size: 14px;">qr_code_scanner</span>
+                        ${qrCount} QR
+                        </span>
+                    ` : ''}
+                    
+                    ${facialCount > 0 ? `
+                        <span style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-icons" style="font-size: 14px;">face</span>
+                        ${facialCount} Facial
+                        </span>
+                    ` : ''}
+                    
+                    ${manualCount > 0 ? `
+                        <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-icons" style="font-size: 14px;">edit</span>
+                        ${manualCount} Manuel
+                        </span>
+                    ` : ''}
+                    </div>
+                </div>
+                <span class="material-icons">arrow_forward_ios</span>
+                </div>
+            `;
+            }).join('');
+        } else {
+            resultsContainer.innerHTML = '<p style="text-align: center; padding: 10px;">Aucun employé trouvé.</p>';
+        }
+        }
+
 
 
                 // ===================================================
