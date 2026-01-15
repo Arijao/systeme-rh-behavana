@@ -12543,13 +12543,38 @@
                         btnStart.style.opacity = '0.5';
                         
                         const enrolledData = await FaceRecognition.enrollFace(video, employe);
-                        
-                        // Update dans la variable globale
+
+                        console.log('🎯 Enrollment terminé:', enrolledData.name);
+                        console.log('📦 Descriptors:', enrolledData.facedescriptors?.length);
+                        console.log('✅ Flag enrolled:', enrolledData.faceenrolled);
+
+                        // 1. Update variable en mémoire
                         const index = employees.findIndex(e => e.id === employeId);
-                        if (index > -1) {
+                        if (index !== -1) {
                             employees[index] = enrolledData;
                         }
-                        await saveData(); // Utilise la fonction de sauvegarde existante
+
+                        // 2. ⭐ IMPORTANTE: Sauvegarder DIRECTEMENT dans IndexedDB
+                        try {
+                            await dbManager.put('employees', enrolledData);
+                            console.log('✅ Sauvegardé dans IndexedDB:', enrolledData.name);
+                            
+                            // 3. Vérifier immédiatement
+                            const verif = await dbManager.get('employees', enrolledData.id);
+                            console.log('🔍 Vérification DB:', {
+                                name: verif.name,
+                                faceenrolled: verif.faceenrolled,
+                                descriptors: verif.facedescriptors?.length
+                            });
+                        } catch (dbError) {
+                            console.error('❌ Erreur sauvegarde IndexedDB:', dbError);
+                            alert('❌ Erreur de sauvegarde! Les données d\'enrollment n\'ont pas été sauvegardées.');
+                            throw dbError;
+                        }
+
+                        // 4. Aussi saveData pour le reste
+                        await saveData();
+
 
                         
                         status.innerHTML = '✅ Enrollment vita!';
