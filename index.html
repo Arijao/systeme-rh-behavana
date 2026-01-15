@@ -12752,7 +12752,7 @@
                 `;
                 
                 // ⭐ VAOVAO: Alaina ny enrolled eto - APRES camera start
-                const enrolled = employees.filter(e => e.facedescriptors && e.facedescriptors.length > 0);
+                const enrolled = employees.filter(e => e.face_descriptors && e.face_descriptors.length > 0);
                 
                 console.log('📊 Employés enrolled:', enrolled.length);
                 
@@ -12802,8 +12802,8 @@
                             // Afficher succès
                             status.innerHTML = `
                                 <span class="material-icons" style="font-size: 64px; color: #10b981; animation: bounce 0.5s;">check_circle</span>
-                                <h3 style="margin: 12px 0 4px 0; color: #064e3b; font-size: 1.4em;">${employee.name}</h3>
-                                <p style="margin: 4px 0 0 0; color: #059669; font-weight: 600;">${employee.position}</p>
+                                <h3 style="margin: 12px 0 4px 0; color: #064e3b; font-size: 1.4em;">${employee.nom || employee.name}</h3>
+                                <p style="margin: 4px 0 0 0; color: #059669; font-weight: 600;">${employee.poste || employee.position || ''}</p>
                                 <p style="margin: 8px 0 0 0; font-size: 0.9em; color: #64748b;">
                                     Confiance: <strong style="color: #10b981;">${confidence}%</strong>
                                 </p>
@@ -12814,7 +12814,7 @@
                             
                             // Remplir recherche
                             setTimeout(() => {
-                                document.getElementById('smartSearchInput').value = employee.name;
+                                document.getElementById('smartSearchInput').value = employee.nom || employee.name;
                                 handleSmartSearch();
                                 
                                 setTimeout(() => {
