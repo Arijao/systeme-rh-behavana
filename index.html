@@ -12354,40 +12354,18 @@
                     if(statusElement) statusElement.style.background = '#f0f0f0';
                 }
                 
-                if (descriptors.length !== instructions.length) {
-                    console.error('❌ Descriptors incomplets:', descriptors.length, '/', instructions.length);
+                if (descriptors.length < instructions.length) {
                     throw new Error('Tsy feno ny sary voaray. Avereno azafady.');
                 }
-
-                console.log('✅ Enrollment OK:', descriptors.length, 'descriptors voaray.');
-
-                // ⭐ CONSTRUCTION EXPLICITE DE L'OBJET
-                const enrolledEmployee = {
-                    id: employeData.id,
-                    name: employeData.name,
-                    position: employeData.position,
-                    gender: employeData.gender,
-                    salary: employeData.salary,
-                    groupId: employeData.groupId,
-                    useGroupSalary: employeData.useGroupSalary,
-                    customSalary: employeData.customSalary,
-                    status: employeData.status,
-                    departureDate: employeData.departureDate,
-                    facedescriptors: descriptors,
-                    faceenrolled: true,
-                    faceenrollmentdate: new Date().toISOString()
+                
+                console.log(`✅ Enrollment OK: ${descriptors.length} descriptors voaray.`);
+                
+                return {
+                    ...employeData,
+                    face_descriptors: descriptors,
+                    face_enrolled: true,
+                    face_enrollment_date: new Date().toISOString()
                 };
-
-                // ⭐ DEBUG AVANT RETURN
-                console.log('📦 Objet enrollment créé:', {
-                    name: enrolledEmployee.name,
-                    hasDescriptors: !!enrolledEmployee.facedescriptors,
-                    descriptorsCount: enrolledEmployee.facedescriptors?.length,
-                    enrolled: enrolledEmployee.faceenrolled
-                });
-
-                return enrolledEmployee;
-
             },
 
 
@@ -12565,38 +12543,13 @@
                         btnStart.style.opacity = '0.5';
                         
                         const enrolledData = await FaceRecognition.enrollFace(video, employe);
-
-                        console.log('🎯 Enrollment terminé:', enrolledData.name);
-                        console.log('📦 Descriptors:', enrolledData.facedescriptors?.length);
-                        console.log('✅ Flag enrolled:', enrolledData.faceenrolled);
-
-                        // 1. Update variable en mémoire
+                        
+                        // Update dans la variable globale
                         const index = employees.findIndex(e => e.id === employeId);
-                        if (index !== -1) {
+                        if (index > -1) {
                             employees[index] = enrolledData;
                         }
-
-                        // 2. ⭐ IMPORTANTE: Sauvegarder DIRECTEMENT dans IndexedDB
-                        try {
-                            await dbManager.put('employees', enrolledData);
-                            console.log('✅ Sauvegardé dans IndexedDB:', enrolledData.name);
-                            
-                            // 3. Vérifier immédiatement
-                            const verif = await dbManager.get('employees', enrolledData.id);
-                            console.log('🔍 Vérification DB:', {
-                                name: verif.name,
-                                faceenrolled: verif.faceenrolled,
-                                descriptors: verif.facedescriptors?.length
-                            });
-                        } catch (dbError) {
-                            console.error('❌ Erreur sauvegarde IndexedDB:', dbError);
-                            alert('❌ Erreur de sauvegarde! Les données d\'enrollment n\'ont pas été sauvegardées.');
-                            throw dbError;
-                        }
-
-                        // 4. Aussi saveData pour le reste
-                        await saveData();
-
+                        await saveData(); // Utilise la fonction de sauvegarde existante
 
                         
                         status.innerHTML = '✅ Enrollment vita!';
@@ -12643,7 +12596,7 @@
         }
 
         // ===================================================================
-        // RECONNAISSANCE FACIALE POUR RECHERCHE STATUT - 
+        // RECONNAISSANCE FACIALE POUR RECHERCHE STATUT - CORRECTED
         // ===================================================================
         async function openFaceRecognitionForStatusSearch() {
             console.log('👤 Démarrage reconnaissance faciale pour recherche statut');
@@ -12655,23 +12608,7 @@
                 return;
             }
             
-            // ⭐ UTILISER LA VARIABLE EN MÉMOIRE (comme Présence/Avance/Payroll)
-            console.log('📦 Utilisation des employés en mémoire...');
-
-            // Filter enrolled depuis la variable globale
-            const enrolled = employees.filter(e => {
-
-                const hasDescriptors = e.facedescriptors && Array.isArray(e.facedescriptors) && e.facedescriptors.length > 0;
-                const isEnrolled = e.faceenrolled === true;
-                
-                if (hasDescriptors || isEnrolled) {
-                    console.log('✅ Enrolled:', e.name, '- Descriptors:', e.facedescriptors?.length || 0);
-                }
-                
-                return hasDescriptors;
-            });
-            
-            console.log('📊 Total employés enrolled:', enrolled.length);
+            // ⭐ NESORINA: Tsy mila check enrolled - avelao ny scan no hanao izany
             
             // 2. Créer modal custom automatique
             const modal = document.createElement('div');
@@ -12722,23 +12659,10 @@
                         </button>
                     </div>
                     
-                    <!-- Vidéo avec fix miroir -->
+                    <!-- Vidéo -->
                     <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto 16px; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden;">
-                        <video id="faceSearchVideo" autoplay playsinline muted style="
-                            width: 100%; 
-                            height: 100%; 
-                            object-fit: cover;
-                            transform: scaleX(-1);
-                        "></video>
-                        <canvas id="faceSearchCanvas" style="
-                            position: absolute; 
-                            top: 0; 
-                            left: 0; 
-                            width: 100%; 
-                            height: 100%; 
-                            pointer-events: none;
-                            transform: scaleX(-1);
-                        "></canvas>
+                        <video id="faceSearchVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <canvas id="faceSearchCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
                     </div>
                     
                     <!-- Status -->
@@ -12759,12 +12683,9 @@
                     
                     <!-- Info -->
                     <div style="text-align: center; font-size: 0.9em; color: #64748b;">
-                        <p style="margin: 0 0 4px 0;">
+                        <p style="margin: 0;">
                             <span class="material-icons" style="font-size: 16px; vertical-align: middle;">info</span>
                             La reconnaissance se fait automatiquement
-                        </p>
-                        <p style="margin: 0; font-size: 0.85em; color: #94a3b8;">
-                            Employés enregistrés: <strong style="color: #0ea5e9;">${enrolled.length}</strong>
                         </p>
                     </div>
                 </div>
@@ -12822,19 +12743,6 @@
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 
-                // Vérifier enrolled après caméra
-                if (enrolled.length === 0) {
-                    status.innerHTML = `
-                        <span class="material-icons" style="font-size: 48px; color: #f59e0b;">warning</span>
-                        <p style="margin: 12px 0 0 0; color: #f59e0b; font-weight: 600;">
-                            ⚠️ Aucun employé enregistré<br>
-                            <span style="font-size: 0.9em; color: #64748b;">Veuillez d'abord enregistrer des visages dans l'onglet "Face-Présence"</span>
-                        </p>
-                    `;
-                    setTimeout(closeModal, 4000);
-                    return;
-                }
-                
                 status.innerHTML = `
                     <span class="material-icons" style="font-size: 48px; color: #10b981; animation: bounce 1s ease-in-out;">face</span>
                     <p style="margin: 12px 0 0 0; color: #1e293b; font-weight: 600;">
@@ -12842,6 +12750,24 @@
                         <span style="font-size: 0.9em; color: #64748b;">Regardez la caméra</span>
                     </p>
                 `;
+                
+                // ⭐ VAOVAO: Alaina ny enrolled eto - APRES camera start
+                const enrolled = employees.filter(e => e.facedescriptors && e.facedescriptors.length > 0);
+                
+                console.log('📊 Employés enrolled:', enrolled.length);
+                
+                // Raha tsy misy enrolled, mampiseho warning fa mitohy ihany
+                if (enrolled.length === 0) {
+                    status.innerHTML = `
+                        <span class="material-icons" style="font-size: 48px; color: #f59e0b;">warning</span>
+                        <p style="margin: 12px 0 0 0; color: #f59e0b; font-weight: 600;">
+                            ⚠️ Aucun employé enregistré<br>
+                            <span style="font-size: 0.9em; color: #64748b;">Veuillez d'abord enregistrer des visages</span>
+                        </p>
+                    `;
+                    setTimeout(closeModal, 3000);
+                    return;
+                }
                 
                 // 6. Reconnaissance automatique en boucle
                 recognitionInterval = setInterval(async () => {
@@ -12884,25 +12810,16 @@
                             `;
                             
                             // Son succès
-                            if (typeof playSuccessSound === 'function') {
-                                playSuccessSound();
-                            }
+                            playSuccessSound();
                             
                             // Remplir recherche
                             setTimeout(() => {
-                                const searchInput = document.getElementById('smartSearchInput');
-                                if (searchInput) {
-                                    searchInput.value = employee.name;
-                                    if (typeof handleSmartSearch === 'function') {
-                                        handleSmartSearch();
-                                    }
-                                    
-                                    setTimeout(() => {
-                                        if (typeof selectEmployeeForStat === 'function') {
-                                            selectEmployeeForStat(employee.id);
-                                        }
-                                    }, 300);
-                                }
+                                document.getElementById('smartSearchInput').value = employee.name;
+                                handleSmartSearch();
+                                
+                                setTimeout(() => {
+                                    selectEmployeeForStat(employee.id);
+                                }, 300);
                                 
                                 // Fermer modal
                                 setTimeout(() => {
@@ -12919,12 +12836,12 @@
                             }, 1000);
                         }
                     } catch (error) {
-                        console.error('❌ Erreur reconnaissance:', error);
+                        console.error('Erreur reconnaissance:', error);
                     }
                 }, 1000); // Reconnaissance chaque seconde
                 
             } catch (error) {
-                console.error('❌ Erreur caméra:', error);
+                console.error('Erreur caméra:', error);
                 status.innerHTML = `
                     <span class="material-icons" style="font-size: 48px; color: #ef4444;">videocam_off</span>
                     <p style="margin: 12px 0 0 0; color: #ef4444; font-weight: 600;">
@@ -12936,6 +12853,7 @@
                 setTimeout(closeModal, 3000);
             }
         }
+
 
 
         // ==========================================
