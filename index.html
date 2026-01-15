@@ -9347,206 +9347,184 @@
                     </div>
 
                     <!-- STATISTIQUES POINTAGES PAR MÉTHODE - GLASSMORPHISM -->
+                    <!-- STATISTIQUES POINTAGES - Compact -->
                     <div style="
-                        background: linear-gradient(135deg, rgba(103, 80, 164, 0.1) 0%, rgba(124, 77, 255, 0.1) 100%);
+                        background: linear-gradient(135deg, rgba(237, 233, 254, 0.4) 0%, rgba(221, 214, 254, 0.4) 100%);
                         backdrop-filter: blur(12px);
                         -webkit-backdrop-filter: blur(12px);
-                        border: 2px solid rgba(103, 80, 164, 0.25);
+                        border: 1.5px solid rgba(103, 80, 164, 0.2);
                         border-radius: 16px;
-                        padding: 24px;
+                        padding: 20px;
                         margin-bottom: 24px;
-                        box-shadow: 0 8px 32px rgba(103, 80, 164, 0.15);
+                        box-shadow: 0 4px 16px rgba(103, 80, 164, 0.08);
                     ">
                         <h4 style="
-                            margin: 0 0 20px 0;
+                            margin: 0 0 16px 0;
                             display: flex;
                             align-items: center;
-                            gap: 10px;
-                            font-size: 1.3em;
+                            gap: 8px;
+                            font-size: 1.15em;
                             font-weight: 700;
                             color: #6750A4;
                         ">
-                            <span class="material-icons" style="font-size: 28px;">analytics</span>
+                            <span class="material-icons" style="font-size: 22px;">analytics</span>
                             Statistiques des Pointages - ${month}
                         </h4>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
                             <!-- Total -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.6);
+                                background: rgba(255, 255, 255, 0.65);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 16px;
-                                border-radius: 12px;
+                                padding: 12px;
+                                border-radius: 10px;
                                 text-align: center;
-                                border: 1px solid rgba(103, 80, 164, 0.2);
-                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.1);
+                                border: 1px solid rgba(103, 80, 164, 0.15);
+                                box-shadow: 0 2px 8px rgba(103, 80, 164, 0.06);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.2)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.1)';">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
-                                    <span class="material-icons" style="color: #6750A4; font-size: 24px;">apps</span>
-                                </div>
-                                <div style="font-size: 2.2em; font-weight: 800; color: #6750A4; line-height: 1;">${totalPointages}</div>
-                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Total</div>
+                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(103, 80, 164, 0.12)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(103, 80, 164, 0.06)';">
+                                <span class="material-icons" style="color: #6750A4; font-size: 22px; display: block; margin-bottom: 6px;">apps</span>
+                                <div style="font-size: 1.9em; font-weight: 800; color: #6750A4; line-height: 1;">${totalPointages}</div>
+                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Total</div>
                             </div>
                             
                             <!-- QR Code -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.6);
+                                background: rgba(255, 255, 255, 0.65);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 16px;
-                                border-radius: 12px;
+                                padding: 12px;
+                                border-radius: 10px;
                                 text-align: center;
-                                border: 1px solid rgba(103, 80, 164, 0.2);
-                                box-shadow: 0 4px 12px rgba(103, 80, 164, 0.1);
+                                border: 1px solid rgba(103, 80, 164, 0.15);
+                                box-shadow: 0 2px 8px rgba(103, 80, 164, 0.06);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(103, 80, 164, 0.2)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(103, 80, 164, 0.1)';">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
-                                    <span class="material-icons" style="color: #6750A4; font-size: 24px;">qr_code_scanner</span>
-                                </div>
-                                <div style="font-size: 2.2em; font-weight: 800; color: #6750A4; line-height: 1;">${qrPointagesCount}</div>
-                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">QR Code</div>
+                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(103, 80, 164, 0.12)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(103, 80, 164, 0.06)';">
+                                <span class="material-icons" style="color: #6750A4; font-size: 22px; display: block; margin-bottom: 6px;">qr_code_scanner</span>
+                                <div style="font-size: 1.9em; font-weight: 800; color: #6750A4; line-height: 1;">${qrPointagesCount}</div>
+                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">QR Code</div>
                             </div>
                             
                             <!-- Facial -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.6);
+                                background: rgba(255, 255, 255, 0.65);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 16px;
-                                border-radius: 12px;
+                                padding: 12px;
+                                border-radius: 10px;
                                 text-align: center;
-                                border: 1px solid rgba(14, 165, 233, 0.2);
-                                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+                                border: 1px solid rgba(14, 165, 233, 0.15);
+                                box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(14, 165, 233, 0.2)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(14, 165, 233, 0.1)';">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
-                                    <span class="material-icons" style="color: #0ea5e9; font-size: 24px;">face</span>
-                                </div>
-                                <div style="font-size: 2.2em; font-weight: 800; color: #0ea5e9; line-height: 1;">${facialPointages}</div>
-                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Facial</div>
+                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(14, 165, 233, 0.12)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(14, 165, 233, 0.06)';">
+                                <span class="material-icons" style="color: #0ea5e9; font-size: 22px; display: block; margin-bottom: 6px;">face</span>
+                                <div style="font-size: 1.9em; font-weight: 800; color: #0ea5e9; line-height: 1;">${facialPointages}</div>
+                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Facial</div>
                             </div>
                             
                             <!-- Manuel -->
                             <div style="
-                                background: rgba(255, 255, 255, 0.6);
+                                background: rgba(255, 255, 255, 0.65);
                                 backdrop-filter: blur(8px);
                                 -webkit-backdrop-filter: blur(8px);
-                                padding: 16px;
-                                border-radius: 12px;
+                                padding: 12px;
+                                border-radius: 10px;
                                 text-align: center;
-                                border: 1px solid rgba(245, 158, 11, 0.2);
-                                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+                                border: 1px solid rgba(245, 158, 11, 0.15);
+                                box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06);
                                 transition: all 0.3s ease;
-                            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(245, 158, 11, 0.2)';" 
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.1)';">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px;">
-                                    <span class="material-icons" style="color: #f59e0b; font-size: 24px;">edit</span>
-                                </div>
-                                <div style="font-size: 2.2em; font-weight: 800; color: #f59e0b; line-height: 1;">${manualPointages}</div>
-                                <div style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-top: 6px;">Manuel</div>
+                            " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 16px rgba(245, 158, 11, 0.12)';" 
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.06)';">
+                                <span class="material-icons" style="color: #f59e0b; font-size: 22px; display: block; margin-bottom: 6px;">edit</span>
+                                <div style="font-size: 1.9em; font-weight: 800; color: #f59e0b; line-height: 1;">${manualPointages}</div>
+                                <div style="font-size: 0.85em; color: #64748b; font-weight: 600; margin-top: 4px;">Manuel</div>
                             </div>
                         </div>
                     </div>
 
+
                     <!-- RÉSUMÉ MENSUEL - GLASSMORPHISM -->
                     <div style="
-                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+                        background: linear-gradient(135deg, rgba(240, 253, 244, 0.4) 0%, rgba(209, 250, 229, 0.4) 100%);
                         backdrop-filter: blur(12px);
                         -webkit-backdrop-filter: blur(12px);
-                        border: 2px solid rgba(16, 185, 129, 0.25);
+                        border: 1.5px solid rgba(16, 185, 129, 0.2);
                         border-radius: 16px;
-                        padding: 24px;
+                        padding: 20px;
                         margin-bottom: 24px;
-                        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+                        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
                     ">
                         <h4 style="
-                            margin: 0 0 20px 0;
-                            font-size: 1.3em;
+                            margin: 0 0 16px 0;
+                            font-size: 1.15em;
                             font-weight: 700;
                             color: #059669;
                             display: flex;
                             align-items: center;
-                            gap: 10px;
+                            gap: 8px;
                         ">
-                            <span class="material-icons" style="font-size: 28px;">summarize</span>
+                            <span class="material-icons" style="font-size: 22px;">summarize</span>
                             Résumé du Mois
                         </h4>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <!-- Card 1: Jours de Présence -->
                             <div style="
-                                padding: 16px;
-                                background: rgba(255, 255, 255, 0.7);
+                                padding: 12px 14px;
+                                background: rgba(255, 255, 255, 0.6);
                                 backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #10b981;
-                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                border-radius: 10px;
+                                border-left: 4px solid #10b981;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
                             ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #10b981; font-size: 22px;">event_available</span>
-                                    <strong style="color: #334155; font-size: 0.95em;">Jours de Présence</strong>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span class="material-icons" style="color: #10b981; font-size: 20px;">event_available</span>
+                                    <strong style="color: #334155; font-size: 0.9em;">Jours de Présence</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #1e293b; font-size: 1.5em;">${presenceDays}</span>
-                                <span style="color: #64748b; font-weight: 600;"> / ${daysInMonth} jours</span>
+                                <span style="font-weight: 800; color: #1e293b; font-size: 1.4em;">${presenceDays}</span>
+                                <span style="color: #64748b; font-weight: 600; font-size: 0.95em;"> / ${daysInMonth}</span>
                             </div>
                             
+                            <!-- Card 2: Total Heures -->
                             <div style="
-                                padding: 16px;
-                                background: rgba(255, 255, 255, 0.7);
+                                padding: 12px 14px;
+                                background: rgba(255, 255, 255, 0.6);
                                 backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #3b82f6;
-                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                border-radius: 10px;
+                                border-left: 4px solid #3b82f6;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
                             ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #3b82f6; font-size: 22px;">schedule</span>
-                                    <strong style="color: #334155; font-size: 0.95em;">Total Heures Travaillées</strong>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span class="material-icons" style="color: #3b82f6; font-size: 20px;">schedule</span>
+                                    <strong style="color: #334155; font-size: 0.9em;">Total Heures</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #3b82f6; font-size: 1.5em;">${monthlyHoursText}</span>
+                                <span style="font-weight: 800; color: #3b82f6; font-size: 1.4em;">${monthlyHoursText}</span>
                             </div>
                             
+                            <!-- Card 3: Total Avances -->
                             <div style="
-                                padding: 16px;
-                                background: rgba(255, 255, 255, 0.7);
+                                padding: 12px 14px;
+                                background: rgba(255, 255, 255, 0.6);
                                 backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #ef4444;
-                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                border-radius: 10px;
+                                border-left: 4px solid #ef4444;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
                             ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #ef4444; font-size: 22px;">savings</span>
-                                    <strong style="color: #334155; font-size: 0.95em;">Total Avances</strong>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span class="material-icons" style="color: #ef4444; font-size: 20px;">savings</span>
+                                    <strong style="color: #334155; font-size: 0.9em;">Total Avances</strong>
                                 </div>
-                                <span style="font-weight: 800; color: #ef4444; font-size: 1.5em;">${formatCurrency(totalAdvances)}</span>
+                                <span style="font-weight: 800; color: #ef4444; font-size: 1.4em;">${formatCurrency(totalAdvances)}</span>
                             </div>
                         </div>
                         
-                        <!-- SALAIRE NET - CARD PREMIUM -->
-                        <div style="
-                            background: linear-gradient(135deg, #FF69B4 0%, #FF1493 50%, #BA55D3 100%);
-                            padding: 20px;
-                            border-radius: 16px;
-                            text-align: center;
-                            box-shadow: 0 8px 24px rgba(255, 105, 180, 0.4);
-                            border: 2px solid rgba(255, 255, 255, 0.3);
-                        ">
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
-                                <span class="material-icons" style="color: white; font-size: 32px;">payments</span>
-                                <strong style="color: white; font-size: 1.2em; letter-spacing: 0.5px;">SALAIRE NET À PAYER</strong>
-                            </div>
-                            <div style="
-                                font-weight: 900;
-                                color: white;
-                                font-size: 2.5em;
-                                text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-                                letter-spacing: 1px;
-                            ">${formatCurrency(netSalaryToPay)}</div>
-                        </div>
+                        <!-- Card Salaire Net Glassmorphism (voir code ci-dessus) -->
                     </div>
+
                     
                     <!-- TABLEAU DÉTAILS PAR JOUR -->
                     <div style="
