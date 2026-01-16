@@ -12637,12 +12637,6 @@
                             ctx.lineWidth = 2;
                             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
                             
-                            // Debug info
-                            ctx.fillStyle = '#FFEB3B';
-                            ctx.font = '12px Arial';
-                            ctx.fillText(`Scale: ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}`, 10, 20);
-                            ctx.fillText(`Canvas: ${canvas.width}x${canvas.height}`, 10, 35);
-                            ctx.fillText(`Video: ${video.videoWidth}x${video.videoHeight}`, 10, 50);
                         }
                         
                         animationId = requestAnimationFrame(drawLandmarks);
