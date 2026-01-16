@@ -1843,15 +1843,17 @@
         /* Fanalana ny effet miroir amin'ny camera + canvas landmarks */
         #enrollVideo,
         #pointageVideo, 
-        #selectionVideo,
-        #enrollCanvas {
+        #selectionVideo {
             -webkit-transform: scaleX(-1);
             -moz-transform: scaleX(-1);
             -o-transform: scaleX(-1);
             transform: scaleX(-1);
         }
-
-
+        #enrollCanvas,
+        #pointageCanvas,
+        #selectionCanvas {
+            transform: none !important;
+        }    
         /* ===gris sidéral glassmorphism!===*/
         label, .form-group label {
             color: rgba(203, 213, 225, 0.9);
@@ -12551,24 +12553,29 @@
                 });
                 video.srcObject = stream;
 
-                // Fampisehoana landmarks amin'ny fotoana tena izy
+                // ========================================
+                // VAHAOLANA FENO - LANDMARKS MANUAL DRAW
+                // ========================================
+
                 video.onplay = () => {
-                    // ✅ FANOVANA: Mampiasa getBoundingClientRect() hatrany
+                    // ✅ Setup dimensions miaraka amin'ny getBoundingClientRect
                     const rect = video.getBoundingClientRect();
-                    const displaySize = { 
-                        width: rect.width,    // ← Dimension ASEHO (responsive)
-                        height: rect.height 
-                    };
                     
-                    // ✅ Canvas mitovy amin'ny dimension aseho
                     canvas.width = rect.width;
                     canvas.height = rect.height;
-                    
-                    // ✅ CSS size mba tsy hisy distortion
                     canvas.style.width = rect.width + 'px';
                     canvas.style.height = rect.height + 'px';
                     
-                    faceapi.matchDimensions(canvas, displaySize);
+                    // Position canvas mifanaraka amin'ny video
+                    canvas.style.position = 'absolute';
+                    canvas.style.top = '0';
+                    canvas.style.left = '0';
+                    
+                    console.log('📐 Initial Setup:', {
+                        videoNative: `${video.videoWidth}x${video.videoHeight}`,
+                        videoDisplay: `${rect.width}x${rect.height}`,
+                        canvas: `${canvas.width}x${canvas.height}`
+                    });
                     
                     async function drawLandmarks() {
                         if (video.paused || video.ended) return;
@@ -12582,20 +12589,57 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         
                         if (detections) {
-                            // ✅ Re-calculate dimension isaky ny frame (raha miova ny window)
+                            // ✅ STEP 1: Maka dimension marina ankehitriny
                             const currentRect = video.getBoundingClientRect();
-                            const currentDisplaySize = { 
-                                width: currentRect.width, 
-                                height: currentRect.height 
-                            };
                             
-                            const resizedDetections = faceapi.resizeResults(detections, currentDisplaySize);
-                            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                            // ✅ STEP 2: Calculer scale factor
+                            const scaleX = currentRect.width / video.videoWidth;
+                            const scaleY = currentRect.height / video.videoHeight;
                             
-                            const box = resizedDetections.detection.box;
+                            console.log('🔍 Scale:', { scaleX, scaleY });
+                            
+                            // ✅ STEP 3: Mandrafitra landmarks manually
+                            const landmarks = detections.landmarks;
+                            const positions = landmarks.positions;
+                            
+                            ctx.fillStyle = '#00FF00';
+                            
+                            positions.forEach((point, index) => {
+                                // ⚠️ IMPORTANTE: Mirrored video → inversena ny X
+                                // Video dia transform: scaleX(-1) ao CSS
+                                const x = currentRect.width - (point.x * scaleX);
+                                const y = point.y * scaleY;
+                                
+                                // Mandrafitra teboka (point)
+                                ctx.beginPath();
+                                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                                ctx.fill();
+                                
+                                // Debug: Mampiseho index ho an'ny test
+                                if (index % 10 === 0) {
+                                    ctx.fillStyle = '#FFFF00';
+                                    ctx.fillText(index, x + 5, y);
+                                    ctx.fillStyle = '#00FF00';
+                                }
+                            });
+                            
+                            // ✅ STEP 4: Mandrafitra bounding box
+                            const box = detections.detection.box;
+                            const boxX = currentRect.width - ((box.x + box.width) * scaleX);
+                            const boxY = box.y * scaleY;
+                            const boxWidth = box.width * scaleX;
+                            const boxHeight = box.height * scaleY;
+                            
                             ctx.strokeStyle = '#FFEB3B';
                             ctx.lineWidth = 2;
-                            ctx.strokeRect(box.x, box.y, box.width, box.height);
+                            ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+                            
+                            // Debug info
+                            ctx.fillStyle = '#FFEB3B';
+                            ctx.font = '12px Arial';
+                            ctx.fillText(`Scale: ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}`, 10, 20);
+                            ctx.fillText(`Canvas: ${canvas.width}x${canvas.height}`, 10, 35);
+                            ctx.fillText(`Video: ${video.videoWidth}x${video.videoHeight}`, 10, 50);
                         }
                         
                         animationId = requestAnimationFrame(drawLandmarks);
@@ -12604,7 +12648,7 @@
                     drawLandmarks();
                 };
 
-                // ✅ AMPIDIRINA: Event listener rehefa miova ny window size
+                // ✅ BONUS: Window Resize Handler
                 let resizeTimeout;
                 window.addEventListener('resize', () => {
                     clearTimeout(resizeTimeout);
@@ -12615,10 +12659,14 @@
                             canvas.height = rect.height;
                             canvas.style.width = rect.width + 'px';
                             canvas.style.height = rect.height + 'px';
+                            
+                            console.log('🔄 Resize:', {
+                                newCanvas: `${canvas.width}x${canvas.height}`,
+                                newDisplay: `${rect.width}x${rect.height}`
+                            });
                         }
                     }, 100);
                 });
-
                 
                 btnStart.onclick = async () => {
                     try {
