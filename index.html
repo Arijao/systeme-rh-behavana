@@ -1829,16 +1829,19 @@
             }
         }
     
-        /* Fanalana ny effet miroir amin'ny camera + canvas landmarks */
-        #enrollVideo,
-        #pointageVideo, 
-        #selectionVideo,
-        #enrollCanvas {
+        /* Fanalana ny effet miroir aminny camera - VIDEO IHANY (tsy ny canvas) */
+        #enrollVideo, #pointageVideo, #selectionVideo {
             -webkit-transform: scaleX(-1);
             -moz-transform: scaleX(-1);
             -o-transform: scaleX(-1);
             transform: scaleX(-1);
         }
+
+        /* Canvas TSY mirrored mba hifanitsy tsara ny landmarks */
+        #enrollCanvas {
+            transform: scaleX(1);  /* Normal, tsy mirrored */
+        }
+
 
 
         /* ===gris sidéral glassmorphism!===*/
