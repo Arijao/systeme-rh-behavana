@@ -1196,10 +1196,16 @@
             width: 100%;
             max-width: 400px;
             margin: 0 auto;
-            aspect-ratio: 4/3;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .video-container {
+                max-width: 100%;
+                border-radius: 0;
+            }
         }
 
         @media (max-height: 500px) {
@@ -1208,9 +1214,14 @@
             }
         }
 
-        #qrVideo {
+        #qrVideo,
+        #enrollVideo,
+        #pointageVideo,
+        #selectionVideo {
             width: 100%;
             height: auto;
+            display: block;  /* ← AMPIANA */
+            object-fit: cover;  /* ← IMPORTANTE! */
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
@@ -12253,7 +12264,19 @@
             reader.readAsDataURL(file);
         }
 
-
+        /**
+         * Mamerina ny marina ny dimension canvas
+         * mba hifanaraka amin'ny tena haben'ny vidéo
+         */
+        function resizeCanvas(video, canvas) {
+            const rect = video.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            // Afenao ny Canvas CSS size mba hifanaraka amin'ny video
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+        }
 
         // ==========================================
         // FACE RECOGNITION MODULE
@@ -12530,14 +12553,20 @@
 
                 // Fampisehoana landmarks amin'ny fotoana tena izy
                 video.onplay = () => {
+                    // ✅ FANOVANA: Mampiasa getBoundingClientRect() hatrany
+                    const rect = video.getBoundingClientRect();
                     const displaySize = { 
-                        width: video.videoWidth,   // Tena dimension vidéo
-                        height: video.videoHeight 
+                        width: rect.width,    // ← Dimension ASEHO (responsive)
+                        height: rect.height 
                     };
                     
-                    // Miantoka fa ny canvas dia mitovy dimension
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    // ✅ Canvas mitovy amin'ny dimension aseho
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    
+                    // ✅ CSS size mba tsy hisy distortion
+                    canvas.style.width = rect.width + 'px';
+                    canvas.style.height = rect.height + 'px';
                     
                     faceapi.matchDimensions(canvas, displaySize);
                     
@@ -12553,7 +12582,14 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         
                         if (detections) {
-                            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                            // ✅ Re-calculate dimension isaky ny frame (raha miova ny window)
+                            const currentRect = video.getBoundingClientRect();
+                            const currentDisplaySize = { 
+                                width: currentRect.width, 
+                                height: currentRect.height 
+                            };
+                            
+                            const resizedDetections = faceapi.resizeResults(detections, currentDisplaySize);
                             faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
                             
                             const box = resizedDetections.detection.box;
@@ -12564,9 +12600,24 @@
                         
                         animationId = requestAnimationFrame(drawLandmarks);
                     }
-                    
+
                     drawLandmarks();
                 };
+
+                // ✅ AMPIDIRINA: Event listener rehefa miova ny window size
+                let resizeTimeout;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        if (video && !video.paused) {
+                            const rect = video.getBoundingClientRect();
+                            canvas.width = rect.width;
+                            canvas.height = rect.height;
+                            canvas.style.width = rect.width + 'px';
+                            canvas.style.height = rect.height + 'px';
+                        }
+                    }, 100);
+                });
 
                 
                 btnStart.onclick = async () => {
@@ -12773,8 +12824,16 @@
                 video.srcObject = stream;
                 await video.play();
                 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                await video.play();
+
+                // ✅ Andrasana kely mba ho ready tsara ny video
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const rect = video.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
                 
                 status.innerHTML = `
                     <span class="material-icons" style="font-size: 48px; color: #10b981; animation: bounce 1s ease-in-out;">face</span>
