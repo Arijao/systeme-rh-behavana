@@ -1206,6 +1206,14 @@
                 max-width: 100%;
                 border-radius: 0;
             }
+            
+            #enrollVideo,
+            #pointageVideo,
+            #selectionVideo {
+                width: 100% !important;
+                height: auto !important;
+                object-fit: contain !important;
+            }
         }
 
         @media (max-height: 500px) {
@@ -1221,7 +1229,7 @@
             width: 100%;
             height: auto;
             display: block;  /* ← AMPIANA */
-            object-fit: cover;  /* ← IMPORTANTE! */
+            object-fit: contain;  /* ← IMPORTANTE! */
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
