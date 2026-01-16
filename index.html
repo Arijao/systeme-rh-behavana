@@ -9732,53 +9732,77 @@
                             Résumé du Mois
                         </h4>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 18px;">
-                            <div style="
-                                padding: 14px;
-                                background: rgba(255, 255, 255, 0.85);
-                                backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #10b981;
-                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-                            ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #10b981; font-size: 22px;">event_available</span>
-                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Jours de Présence</strong>
-                                </div>
-                                <span style="font-weight: 900; color: #1e293b; font-size: 1.6em;">${presenceDays}</span>
-                                <span style="color: #475569; font-weight: 700; font-size: 1.05em;"> / ${daysInMonth}</span>
+                        div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px;">
+
+                        <!-- Jours de Présence - Glassmorphism malefaka -->
+                        <div style="
+                            padding: 12px 16px;
+                            background: linear-gradient(135deg, rgba(51, 65, 85, 0.45) 0%, rgba(30, 41, 59, 0.5) 100%);
+                            backdrop-filter: blur(20px) saturate(150%);
+                            -webkit-backdrop-filter: blur(20px) saturate(150%);
+                            border-radius: 14px;
+                            border: 1.5px solid rgba(148, 163, 184, 0.25);
+                            border-left: 4px solid #10b981;
+                            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                            transition: all 0.3s ease;"
+                            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(16, 185, 129, 0.25)'; this.style.borderColor='rgba(16, 185, 129, 0.4)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(16, 185, 129, 0.15)';">
+                            
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span class="material-icons" style="color: #10b981; font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">event_available</span>
+                                <strong style="color: #f1f5f9; font-size: 0.9em; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">Jours de Présence</strong>
                             </div>
                             
-                            <div style="
-                                padding: 14px;
-                                background: rgba(255, 255, 255, 0.85);
-                                backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #3b82f6;
-                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-                            ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #3b82f6; font-size: 22px;">schedule</span>
-                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Total Heures</strong>
-                                </div>
-                                <span style="font-weight: 900; color: #3b82f6; font-size: 1.6em;">${monthlyHoursText}</span>
-                            </div>
-                            
-                            <div style="
-                                padding: 14px;
-                                background: rgba(255, 255, 255, 0.85);
-                                backdrop-filter: blur(8px);
-                                border-radius: 12px;
-                                border-left: 5px solid #ef4444;
-                                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-                            ">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <span class="material-icons" style="color: #ef4444; font-size: 22px;">savings</span>
-                                    <strong style="color: #1e293b; font-size: 0.95em; font-weight: 700;">Total Avances</strong>
-                                </div>
-                                <span style="font-weight: 900; color: #ef4444; font-size: 1.6em;">${formatCurrency(totalAdvances)}</span>
-                            </div>
+                            <span style="font-weight: 800; color: #f1f5f9; font-size: 1.4em; text-shadow: 0 2px 6px rgba(0,0,0,0.5);">${presenceDays}</span>
+                            <span style="color: #cbd5e1; font-weight: 600; font-size: 0.95em; text-shadow: 0 1px 3px rgba(0,0,0,0.4); margin-left: 4px;">/${daysInMonth}</span>
                         </div>
+
+                        <!-- Total Heures - Glassmorphism malefaka -->
+                        <div style="
+                            padding: 12px 16px;
+                            background: linear-gradient(135deg, rgba(51, 65, 85, 0.45) 0%, rgba(30, 41, 59, 0.5) 100%);
+                            backdrop-filter: blur(20px) saturate(150%);
+                            -webkit-backdrop-filter: blur(20px) saturate(150%);
+                            border-radius: 14px;
+                            border: 1.5px solid rgba(148, 163, 184, 0.25);
+                            border-left: 4px solid #3b82f6;
+                            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                            transition: all 0.3s ease;"
+                            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(59, 130, 246, 0.25)'; this.style.borderColor='rgba(59, 130, 246, 0.4)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(59, 130, 246, 0.15)';">
+                            
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span class="material-icons" style="color: #3b82f6; font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">schedule</span>
+                                <strong style="color: #f1f5f9; font-size: 0.9em; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">Total Heures</strong>
+                            </div>
+                            
+                            <span style="font-weight: 800; color: #f1f5f9; font-size: 1.4em; text-shadow: 0 2px 6px rgba(0,0,0,0.5);">${monthlyHoursText}</span>
+                        </div>
+
+                        <!-- Total Avances - Glassmorphism malefaka -->
+                        <div style="
+                            padding: 12px 16px;
+                            background: linear-gradient(135deg, rgba(51, 65, 85, 0.45) 0%, rgba(30, 41, 59, 0.5) 100%);
+                            backdrop-filter: blur(20px) saturate(150%);
+                            -webkit-backdrop-filter: blur(20px) saturate(150%);
+                            border-radius: 14px;
+                            border: 1.5px solid rgba(148, 163, 184, 0.25);
+                            border-left: 4px solid #ef4444;
+                            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                            transition: all 0.3s ease;"
+                            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(239, 68, 68, 0.25)'; this.style.borderColor='rgba(239, 68, 68, 0.4)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(239, 68, 68, 0.15)';">
+                            
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span class="material-icons" style="color: #ef4444; font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">savings</span>
+                                <strong style="color: #f1f5f9; font-size: 0.9em; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">Total Avances</strong>
+                            </div>
+                            
+                            <span style="font-weight: 800; color: #fca5a5; font-size: 1.4em; text-shadow: 0 2px 6px rgba(0,0,0,0.5);">${formatCurrency(totalAdvances)}</span>
+                            </div>
+
+                        </div>
+
                         
                         <!-- SALAIRE NET À PAYER - CARD GLASSMORPHISM -->
                         <div style="
