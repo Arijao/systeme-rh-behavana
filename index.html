@@ -2990,6 +2990,11 @@
                 top: 20px;
             }
         }
+
+        .swal2-container {
+            z-index: 999999 !important;
+        }
+
     </style>
 
     <!-- Face Recognition: chargé une seule fois en head (CDN ligne 17). Éviter doublon avec js/face-api.min.js. -->
@@ -9559,13 +9564,43 @@
         // ===================================================
         function importData(event) {
             const file = event.target.files[0];
+
             if (file) {
-                handleImportedFile(file); // Miantso ilay fonction iraisana
+
+                // Akatona ny settings panel
+                closeSettings();
+
+                // Loading kely aloha
+                setTimeout(() => {
+                    Swal.fire({
+                        title: "Préparation du fichier...",
+                        text: "Lecture de la sauvegarde",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    // Miantso import réel
+                    setTimeout(() => {
+                        handleImportedFile(file);
+                    }, 600); // fotoana kely hahatsapan'ny user fa misy traitement
+                }, 300);
             }
-            // Diovina foana ny input mba hahafahana mampiditra rakitra mitovy anarana indray
+
             event.target.value = '';
         }
 
+
+        const SETTINGS_ANIMATION_TIME = 350;
+
+        function closeSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const overlay = document.getElementById('settingsOverlay');
+
+            if (panel && overlay) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
 
         function updateLastBackupInfo() {
             const infoElement = document.getElementById('lastBackupInfo');
