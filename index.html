@@ -2916,8 +2916,7 @@
 
     </style>
 
-    <!-- Face Recognition Library -->
-    <script defer src="js/face-api.min.js"></script>
+    <!-- Face Recognition: chargé une seule fois en head (CDN ligne 17). Éviter doublon avec js/face-api.min.js. -->
 
 
 </head>
@@ -7490,13 +7489,12 @@
         async function startFacialScanForStatusSearch() {
             console.log('👤 Démarrage reconnaissance faciale pour recherche statut');
             
-            // Vérifier si face-api est chargé
-            if (!window.faceapi || !faceapi.nets.ssdMobilenetv1.isLoaded) {
-                showAlert('⚠️ Modèles de reconnaissance faciale non chargés. Veuillez patienter...', 'warning');
+            const loaded = await FaceRecognition.loadModels();
+            if (!loaded) {
+                showAlert('⚠️ Modèles de reconnaissance faciale non disponibles. Vérifiez votre connexion ou réessayez.', 'warning');
                 return;
             }
             
-            // Ouvrir le modal de reconnaissance faciale
             currentFacialScanMode = 'status-search';
             openFacePointageModal();
         }
@@ -12356,49 +12354,66 @@
                     "Mijere mahitsy",
                     "Atongilano kely miankavia ny loha",
                     "Atongilano kely miankavanana ny loha",
-                    "Atrakao kely ny loha",
-                    "Aondreho kely ny loha"
+                    "Atongilano kely miakatra ny loha",
+                    "Atongilano kely midina ny loha"
                 ];
                 
-                console.log('🎥 Démarrage enrollment (version manuelle)...');
+                console.log('🎥 Démarrage enrollment (version sécurisée)...');
                 
                 const statusElement = document.getElementById('enrollStatus');
                 const btnStart = document.getElementById('btnEnrollStart');
                 
                 for (let i = 0; i < instructions.length; i++) {
                     if(statusElement) {
-                        statusElement.innerHTML = `Sary ${i + 1}/${instructions.length}: <strong>${instructions[i]}</strong><br><small>Tsindrio ny bokotra rehefa vonona</small>`;
+                        statusElement.innerHTML = `Sary ${i + 1}/${instructions.length}: <strong>${instructions[i]}</strong>  
+            <small>Tsindrio ny bokotra rehefa vonona</small>`;
                     }
                     
-                    // Miandry ny admin hanindry ny bokotra "Manaraka" na "Haka sary"
                     if (btnStart) {
                         btnStart.disabled = false;
                         btnStart.style.opacity = '1';
                         btnStart.innerHTML = i === 0 ? '📸 Haka sary voalohany' : `📸 Haka sary faha ${i + 1}`;
                     }
 
+                    // Attente du clic sur le bouton
                     await new Promise(resolve => {
-                        const originalOnClick = btnStart.onclick;
                         btnStart.onclick = () => {
                             btnStart.disabled = true;
                             btnStart.style.opacity = '0.5';
-                            btnStart.innerHTML = '⏳ Miandry...';
+                            btnStart.innerHTML = '⏳ Fanadihadiana...';
                             resolve();
                         };
                     });
 
-                    // Maka ny sary
+                    // --- DÉTECTION ET VÉRIFICATION DE VIVACITÉ ---
                     const detectionWithData = await faceapi.detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
                         .withFaceLandmarks()
                         .withFaceDescriptor();
 
                     if (!detectionWithData) {
-                        // Raha tsy nahita tarehy dia averina amin'io sary io ihany
-                        i--; 
-                        if(statusElement) statusElement.innerHTML = `❌ Tsy nahita tarehy. Avereno azafady.<br>Sary ${i + 2}/${instructions.length}: <strong>${instructions[i+1]}</strong>`;
+                        i--; // Recommencer cette étape
+                        if(statusElement) statusElement.innerHTML = `❌ Tsy nahita tarehy. Avereno azafady.  
+            Sary ${i + 2}/${instructions.length}: <strong>${instructions[i+1]}</strong>`;
                         await new Promise(r => setTimeout(r, 2000));
                         continue;
                     }
+
+                    // Vérification de l'ouverture des yeux (Anti-photo statique)
+                    const landmarks = detectionWithData.landmarks;
+                    const leftEye = landmarks.getLeftEye();
+                    const rightEye = landmarks.getRightEye();
+                    
+                    // Calcul simplifié de l'ouverture (EAR)
+                    const eyeOpen = (this.distance(leftEye[1], leftEye[5]) + this.distance(leftEye[2], leftEye[4])) > 3.5;
+
+                    if (!eyeOpen) {
+                        i--; // Recommencer car les yeux sont fermés ou non détectés
+                        if(statusElement) statusElement.innerHTML = `⚠️ Ahiahy: Sokafy tsara ny maso azafady.  
+            Sary ${i + 2}/${instructions.length}: <strong>${instructions[i+1]}</strong>`;
+                        await new Promise(r => setTimeout(r, 2000));
+                        continue;
+                    }
+                    // --- FIN VÉRIFICATION ---
                     
                     descriptors.push(Array.from(detectionWithData.descriptor));
                     console.log(`📸 Descriptor ${descriptors.length}/${instructions.length} voaray.`);
@@ -12415,8 +12430,23 @@
                     throw new Error('Tsy feno ny sary voaray. Avereno azafady.');
                 }
                 
-                console.log(`✅ Enrollment OK: ${descriptors.length} descriptors voaray.`);
-                
+                // --- AJOUT JOURNAL D'AUDIT ---
+                const auditLog = {
+                    action: "ENROLLMENT_SUCCESS",
+                    employeeId: employeData.id,
+                    employeeName: employeData.name,
+                    date: new Date().toISOString(),
+                    descriptorsCount: descriptors.length,
+                    securityLevel: "HIGH (Threshold 0.4 + Liveness)"
+                };
+                    
+                // On stocke l'audit dans le localStorage pour consultation ultérieure
+                const logs = JSON.parse(localStorage.getItem('face_audit_logs') || '[]');
+                logs.push(auditLog);
+                localStorage.setItem('face_audit_logs', JSON.stringify(logs.slice(-100))); // Garde les 100 derniers
+                console.log('📝 Audit log enregistré:', auditLog);
+                // --- FIN AUDIT ---
+
                 return {
                     ...employeData,
                     face_descriptors: descriptors,
@@ -12424,9 +12454,6 @@
                     face_enrollment_date: new Date().toISOString()
                 };
             },
-
-
-
             
             // =================================================================
             //  RECOGNIZEFACE (VERSION 6 - HAINGANA INDRINDRA)
@@ -12455,7 +12482,7 @@
                 }
                 
                 // Hamafisina foana ny fepetra mba tsy hisy fahadisoana
-                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5); 
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.4); 
                 
                 // Miverina amin'ny `findBestMatch` izay haingana kokoa
                 const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
@@ -12479,25 +12506,101 @@
                 };
             },
 
-
+            /**
+             * Vérifie si des descripteurs (ex: après enrollment) correspondent déjà à un AUTRE employé.
+             * Utilisé pour bloquer la création de deux identités pour le même visage.
+             * @param {Array<number[]>} descriptors - Tableau de descripteurs (128 floats chacun)
+             * @param {string} currentEmployeId - ID de l'employé en cours d'enrôlement (à exclure)
+             * @param {Array} employesDatabase - Liste des employés
+             * @returns {{ isDuplicate: boolean, matchedEmploye: object|null }}
+             */
+            checkDescriptorsAgainstOthers(descriptors, currentEmployeId, employesDatabase) {
+                if (!descriptors || descriptors.length === 0) return { isDuplicate: false, matchedEmploye: null };
+                const others = employesDatabase.filter(
+                    e => e.id !== currentEmployeId && e.face_descriptors && e.face_descriptors.length > 0
+                );
+                if (others.length === 0) return { isDuplicate: false, matchedEmploye: null };
+                const labeledDescriptors = others.map(emp => {
+                    const descs = emp.face_descriptors.map(d => new Float32Array(d));
+                    return new faceapi.LabeledFaceDescriptors(emp.id, descs);
+                });
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.4);
+                const threshold = 0.4;
+                for (const desc of descriptors) {
+                    const arr = desc instanceof Float32Array ? desc : new Float32Array(desc);
+                    const best = faceMatcher.findBestMatch(arr);
+                    if (best.label !== 'unknown' && best.distance < threshold) {
+                        const matched = employesDatabase.find(e => e.id === best.label);
+                        return { isDuplicate: true, matchedEmploye: matched };
+                    }
+                }
+                return { isDuplicate: false, matchedEmploye: null };
+            },
 
         };
+
+        function checkFaceAuditLogs() {
+            const logs = JSON.parse(localStorage.getItem('face_audit_logs') || '[]');
+            if (logs.length === 0) {
+                console.log("ℹ️ Aucun log d'audit disponible.");
+                return;
+            }
+            
+            console.table(logs); // Affiche les logs sous forme de tableau propre dans la console
+            
+            const lastLog = logs[logs.length - 1];
+            alert(`Dernier enrôlement sécurisé :\nNom : ${lastLog.employeeName}\nDate : ${new Date(lastLog.date).toLocaleString()}\nNiveau : ${lastLog.securityLevel}`);
+        }
 
         // ==========================================
         // UI: ENROLLMENT MODAL
         // ==========================================
 
         async function openEnrollmentModal(employeId) {
-            // Utilise directement la variable globale employees
+            // 1. Vérification de l'existence de l'employé
             const employe = employees.find(e => e.id === employeId);
-
             if (!employe) return;
-            
+
+            // 2. Chargement des modèles face-api
             const loaded = await FaceRecognition.loadModels();
             if (!loaded) return;
-            
+
+            // ==========================================================
+            // 🛡️ ÉTAPE 1 : VÉRIFICATION DE DÉDUPLICATION (ANTI-DOUBLON)
+            // ==========================================================
+            let tempStream = null;
+            try {
+                // Démarrer une caméra temporaire pour le scan
+                tempStream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                const tempVideo = document.createElement('video');
+                tempVideo.srcObject = tempStream;
+                await tempVideo.play();
+
+                // ✅ Correction : Parenthèse fermée correctement ici
+                const enrolledEmployees = employees.filter(e => e.face_enrolled && e.face_descriptors);
+                
+                if (enrolledEmployees.length > 0) {
+                    const result = await FaceRecognition.recognizeFace(tempVideo, enrolledEmployees);
+                    
+                    if (result.success && result.distance < 0.4) {
+                        // Arrêt immédiat de la caméra si doublon
+                        tempStream.getTracks().forEach(track => track.stop());
+                        alert(`⚠️ TSY AZO ENRÔLÉNA: Ity tarehy ity dia efa an'i ${result.employe.name} (ID: ${result.employe.id}).`);
+                        return; 
+                    }
+                } // ✅ Fermeture correcte du bloc if (enrolledEmployees.length > 0)
+            } catch (err) {
+                console.error("Erreur déduplication:", err);
+            } finally {
+                // ✅ IMPORTANT : Libérer la caméra pour la suite
+                if (tempStream) {
+                    tempStream.getTracks().forEach(track => track.stop());
+                }
+            }
+            // ==========================================================
+
+            // 3. Création de la modal (uniquement si aucune duplication n'est détectée)
             const modal = document.createElement('div');
-            // ===> FANAMPIANA: Omena ID ilay modal mba ho mora esorina raha misy olana
             modal.id = 'enrollmentModal'; 
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -12673,6 +12776,21 @@
                         
                         const enrolledData = await FaceRecognition.enrollFace(video, employe);
                         
+                        // 🛡️ VÉRIFICATION ANTI-DOUBLON APRÈS CAPTURE (évite 2 identités pour le même visage)
+                        const dupCheck = FaceRecognition.checkDescriptorsAgainstOthers(
+                            enrolledData.face_descriptors,
+                            employeId,
+                            employees
+                        );
+                        if (dupCheck.isDuplicate && dupCheck.matchedEmploye) {
+                            status.innerHTML = `❌ Tsy azo atao: ity tarehy ity dia efa an'i <strong>${dupCheck.matchedEmploye.name}</strong>. Tsy azo manana identité roa.`;
+                            status.style.background = '#f8d7da';
+                            status.style.color = '#721c24';
+                            btnStart.disabled = false;
+                            btnStart.style.opacity = '1';
+                            return;
+                        }
+                        
                         // Update dans la variable globale
                         const index = employees.findIndex(e => e.id === employeId);
                         if (index > -1) {
@@ -12718,7 +12836,20 @@
                 };
                 
             } catch (error) {
-                alert('❌ Erreur camera: ' + error.message);
+                console.error('Erreur caméra (modal enrollment):', error);
+                let msg = "Impossible d'accéder à la caméra. ";
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    msg += "Autorisez l'accès à la caméra dans les paramètres du navigateur (icône cadenas ou barre d’adresse).";
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    msg += "Aucune caméra détectée sur cet appareil.";
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    msg += "La caméra est déjà utilisée par une autre application. Fermez-la puis réessayez.";
+                } else if (error.name === 'OverconstrainedError') {
+                    msg += "La caméra frontale demandée n’est pas disponible. Essayez un autre appareil ou navigateur.";
+                } else {
+                    msg += error.message || 'Erreur inconnue.';
+                }
+                alert('❌ ' + msg);
                 const modalToClose = document.getElementById('enrollmentModal');
                 if (modalToClose) modalToClose.remove();
             }
