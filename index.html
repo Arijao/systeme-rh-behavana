@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Système de Gestion RH - QR Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
@@ -11722,70 +11723,112 @@
             }
 
             try {
+                // 1. Vakiana ilay fichier
                 const fileContent = await file.text();
                 const data = JSON.parse(fileContent);
 
-                if (!data.employees || !data.attendance || !data.dbType) {
-                    showAlert("Erreur: Le fichier de sauvegarde semble invalide ou corrompu.", 'error');
+                // 2. Validation fichier
+                if (!data || !data.employees || !data.attendance || !data.dbType) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Fichier invalide",
+                        text: "Le fichier de sauvegarde semble corrompu ou non compatible."
+                    });
                     return;
                 }
 
-                const confirmationMessage = `
-                    Vous êtes sur le point de restaurer une sauvegarde.
-                    ATTENTION: Toutes les données actuelles seront écrasées.
-                    
-                    Date de la sauvegarde: ${formatDate(data.exportDate || new Date())}
-                    Version: ${data.version || 'Inconnue'}
-                    
-                    Êtes-vous sûr de vouloir continuer ?
+                // 3. Confirmation moderne
+                const confirmationHtml = `
+                    <p>Vous êtes sur le point de restaurer une sauvegarde.</p>
+                    <p><strong>Toutes les données actuelles seront écrasées.</strong></p>
+                    <br>
+                    <p><b>Date:</b> ${formatDate(data.exportDate || new Date())}</p>
+                    <p><b>Version:</b> ${data.version || 'Inconnue'}</p>
                 `;
 
-                if (confirm(confirmationMessage)) {
-                    // 1. Ampidirina ao anaty variables ireo angona vaovao
-                    employees = data.employees || [];
-                    attendance = data.attendance || {};
-                    payrolls = data.payrolls || [];
-                    advances = data.advances || [];
-                    qrAttendance = data.qrAttendance || [];
-                    groups = data.groups || [];
-                    
-                    // Ampidirina koa ny paramètres raha misy
-                    if (data.settings) {
-                        currentTheme = data.settings.theme || 'light';
-                        qrSettings = data.settings.qrSettings || { size: 256, color: '#6750A4' };
-                    }
+                const result = await Swal.fire({
+                    title: "Restaurer la sauvegarde ?",
+                    html: confirmationHtml,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Oui, restaurer",
+                    cancelButtonText: "Annuler",
+                    confirmButtonColor: "#6750A4",
+                    cancelButtonColor: "#6c757d",
+                    reverseButtons: true,
+                    width: "90%"
+                });
 
-                    // 2. Tehirizina ao amin'ny IndexedDB ireo angona vaovao ireo
-                    await saveData();
-                    
-                    // 3. Fafana ilay baiko "reload" ary soloina amin'ny fanavaozana ny interface
-                    showAlert('Données importées avec succès! L\'interface va être mise à jour.', 'success');
-                    
-                    // Antsoina ireo function rehetra ilaina mba hamenoana indray ny pejy
-                    // toy ny hoe vao nosokafana ilay izy.
-                    updateStats();
-                    setCurrentDate();
-                    setCurrentMonth();
-                    populateEmployeeSelects();
-                    populateGroupSelects();
-                    initializeTheme();
-                    displayDashboardCharts();
-                    runSmartChecks();
-                    
-                    // Averina any amin'ny fizarana voalohany (Tableau de Bord)
-                    showSection('dashboard');
-                    // Ataovy "active" ilay bokotra mifanaraka aminy
-                    document.querySelector('.nav-tab[onclick="showSection(\'dashboard\')"]').classList.add('active');
+                if (!result.isConfirmed) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "Annulé",
+                        text: "Importation annulée par l'utilisateur.",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    return;
+                }
 
-                } else {
-                    showAlert("Importation annulée par l'utilisateur.", "info");
-                }    
-                
+                // 4. Loading pendant import
+                Swal.fire({
+                    title: "Importation...",
+                    text: "Veuillez patienter",
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                // 5. Ampidirina variables
+                employees = data.employees || [];
+                attendance = data.attendance || {};
+                payrolls = data.payrolls || [];
+                advances = data.advances || [];
+                qrAttendance = data.qrAttendance || [];
+                groups = data.groups || [];
+
+                if (data.settings) {
+                    currentTheme = data.settings.theme || 'light';
+                    qrSettings = data.settings.qrSettings || { size: 256, color: '#6750A4' };
+                }
+
+                // 6. Save IndexedDB
+                await saveData();
+
+                // 7. Refresh interface
+                updateStats();
+                setCurrentDate();
+                setCurrentMonth();
+                populateEmployeeSelects();
+                populateGroupSelects();
+                initializeTheme();
+                displayDashboardCharts();
+                runSmartChecks();
+
+                showSection('dashboard');
+
+                const dashboardTab = document.querySelector('.nav-tab[onclick="showSection(\'dashboard\')"]');
+                if (dashboardTab) dashboardTab.classList.add('active');
+
+                // 8. Success
+                Swal.fire({
+                    icon: "success",
+                    title: "Importation réussie",
+                    text: "Les données ont été restaurées avec succès.",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
             } catch (error) {
-                showAlert('Erreur lors de l\'importation: Fichier invalide ou corrompu.', 'error');
                 console.error("Erreur d'importation:", error);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: "Fichier invalide ou corrompu lors de l'importation."
+                });
             }
         }
+
 
         
                 // =======================================================================
@@ -14154,7 +14197,7 @@
                     return; // Stop ici
                 }
                 
-                // ✅ TAILLE OK → Générer QR Code
+                //  TAILLE OK → Générer QR Code
                 console.log('✅ Taille OK pour QR Code!');
                 
                 // Créer QR avec qrcode-generator
