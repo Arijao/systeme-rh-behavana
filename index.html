@@ -2914,6 +2914,81 @@
             }
         }
 
+        /* =====================================================
+        TOAST NOTIFICATIONS
+        ===================================================== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: -400px; /* Hors écran au départ */
+            min-width: 300px;
+            max-width: 500px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            font-size: 15px;
+            font-weight: 500;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .toast.show {
+            right: 20px; /* Glisse vers la gauche */
+        }
+
+        /* Types de toast */
+        .toast-error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .toast-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.95) 0%, rgba(217, 119, 6, 0.95) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Animation shake pour les erreurs */
+        .toast-error.show {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Responsive mobile */
+        @media (max-width: 768px) {
+            .toast {
+                top: 60px;
+                right: -100%;
+                min-width: calc(100% - 40px);
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .toast.show {
+                right: auto;
+                top: 20px;
+            }
+        }
     </style>
 
     <!-- Face Recognition: chargé une seule fois en head (CDN ligne 17). Éviter doublon avec js/face-api.min.js. -->
@@ -12576,7 +12651,7 @@
                 tempVideo.srcObject = tempStream;
                 await tempVideo.play();
 
-                // ✅ Correction : Parenthèse fermée correctement ici
+                // Correction : Parenthèse fermée correctement ici
                 const enrolledEmployees = employees.filter(e => e.face_enrolled && e.face_descriptors);
                 
                 if (enrolledEmployees.length > 0) {
@@ -12585,14 +12660,19 @@
                     if (result.success && result.distance < 0.4) {
                         // Arrêt immédiat de la caméra si doublon
                         tempStream.getTracks().forEach(track => track.stop());
-                        alert(`⚠️ TSY AZO ENRÔLÉNA: Ity tarehy ity dia efa an'i ${result.employe.name} (ID: ${result.employe.id}).`);
+                        showToast(
+                            `⚠️ TSY AZO ENRÔLÉNA: Ity tarehy ity fa efa an'i ${result.employe.name} (ID: ${result.employe.id}).`,
+                            'error',
+                            5000 // Durée 5 secondes
+                        );
+                        
                         return; 
                     }
-                } // ✅ Fermeture correcte du bloc if (enrolledEmployees.length > 0)
+                } // Fermeture correcte du bloc if (enrolledEmployees.length > 0)
             } catch (err) {
                 console.error("Erreur déduplication:", err);
             } finally {
-                // ✅ IMPORTANT : Libérer la caméra pour la suite
+                //  IMPORTANT : Libérer la caméra pour la suite
                 if (tempStream) {
                     tempStream.getTracks().forEach(track => track.stop());
                 }
@@ -14786,6 +14866,38 @@
             }
         }
 
+        // =====================================================
+        // TOAST NOTIFICATION SYSTEM
+        // =====================================================
+        function showToast(message, type = 'info', duration = 3000) {
+            // Créer l'élément toast
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-icons" style="font-size: 24px;">
+                        ${type === 'error' ? 'error' : type === 'success' ? 'check_circle' : 'info'}
+                    </span>
+                    <span style="flex: 1;">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; color: inherit; cursor: pointer; padding: 4px;">
+                        <span class="material-icons" style="font-size: 20px;">close</span>
+                    </button>
+                </div>
+            `;
+            
+            // Ajouter au DOM
+            document.body.appendChild(toast);
+            
+            // Animation d'entrée
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto-suppression après durée
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
     </script>
 </body>
 </html>
